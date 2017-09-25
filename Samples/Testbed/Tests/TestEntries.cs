@@ -91,6 +91,8 @@ namespace tainicom.Aether.Physics2D.Samples.Testbed.Tests
             new TestEntry {Name = "Multithread SolveVelocityConstraints() Test 2", CreateTest = Multithread2Test.Create},
             new TestEntry {Name = "Body Pool", CreateTest = BodyPoolTest.Create},
             new TestEntry {Name = "Collision Test", CreateTest = CollisionTest.Create},
+            new TestEntry {Name = "SPH1", CreateTest = SPH1Test.Create},
+            new TestEntry {Name = "SPH2", CreateTest = SPH2Test.Create},
 
             //FPE tests
             new TestEntry {Name = "YuPeng Polygon", CreateTest = YuPengPolygonTest.Create},
