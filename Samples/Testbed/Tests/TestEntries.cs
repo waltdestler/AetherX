@@ -33,6 +33,9 @@ namespace tainicom.Aether.Physics2D.Samples.Testbed.Tests
     {
         public static TestEntry[] TestList =
         {
+            // New Helio Tests
+            new TestEntry {Name = "R.U.B.E. Loader Test", CreateTest = RubeLoaderTest.Create},
+
             //Original tests
             new TestEntry {Name = "Continuous Test", CreateTest = ContinuousTest.Create},
             new TestEntry {Name = "Time of Impact", CreateTest = TimeOfImpactTest.Create},
