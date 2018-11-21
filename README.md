@@ -1,34 +1,15 @@
-# Aether.Physics2D
+# Aether.Physics2D (fork for Helio)
 
-Aether.Physics2D is a 2D collision detection system.
+Helio is a game engine under development which aims to support a large (e.g. 100km x 100km) 2D multiplayer world.
 
-![3DCameraDemo](Documentation//Images/3DCameraDemo.png)
+Box2D is the foundational physics engine, which was then ported to C# as Farseer and evolved independently. Farseer is now abandoned and lives on in Aether.Physics2D, which is still maintained as of Nov 2018. This is a fork of Aether.Physics2D enhanced to support the specific needs of the Helio engine, some of which are below:
 
-# Features
+# Added Features
 
-- Continuous collision detection (with time of impact solver)
-- Contact callbacks: begin, end, pre-solve, post-solve
-- Convex and concave polyons and circles.
-- Multiple shapes per body
-- Dynamic tree and quad tree broadphase
-- Fast broadphase AABB queries and raycasts
-- Collision groups and categories
-- Sleep management
-- Friction and restitution
-- Stable stacking with a linear-time solver
-- Revolute, prismatic, distance, pulley, gear, mouse joint, and other joint types
-- Joint limits and joint motors
-- Controllers (gravity, force generators)
-- Tools to decompose concave polygons, find convex hulls and boolean operations
-- Factories to simplify the creation of bodies
-- Fluid dynamics
+- Ability to load a R.U.B.E. (Really Useful Box2D Editor) world via JSON. 
+- Additional test bed cases to benchmark performance of very large worlds.
 
-# Downloads
+# Existing Features
 
-https://www.nuget.org/packages/Aether.Physics2D
-
-https://www.nuget.org/packages/Aether.Physics2D.Diagnostics
-
-https://github.com/tainicom/Aether.Physics2D/releases/tag/v1.3.1
-
-![LightAndShadowsDemo](Documentation//Images/LightAndShadowsDemo.png)
+Please see the original repo at: 
+https://github.com/tainicom/Aether.Physics2D
