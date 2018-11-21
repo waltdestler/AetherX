@@ -34,6 +34,7 @@ namespace tainicom.Aether.Physics2D.Samples.Testbed.Tests
         public static TestEntry[] TestList =
         {
             // New Helio Tests
+            new TestEntry {Name = "Max Body Test", CreateTest = MaxBodyTest.Create},
             new TestEntry {Name = "R.U.B.E. Loader Test", CreateTest = RubeLoaderTest.Create},
 
             //Original tests

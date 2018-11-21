@@ -1,0 +1,870 @@
+
+{
+  "collisionbitplanes" : 
+  {
+    "names" : 
+    [
+      "bitplane1",
+      "bitplane2",
+      "bitplane3",
+      "bitplane4",
+      "bitplane5",
+      "bitplane6",
+      "bitplane7",
+      "bitplane8",
+      "bitplane9",
+      "bitplane10",
+      "bitplane11",
+      "bitplane12",
+      "bitplane13",
+      "bitplane14",
+      "bitplane15",
+      "bitplane16",
+      "bitplane17",
+      "bitplane18",
+      "bitplane19",
+      "bitplane20",
+      "bitplane21",
+      "bitplane22",
+      "bitplane23",
+      "bitplane24",
+      "bitplane25",
+      "bitplane26",
+      "bitplane27",
+      "bitplane28",
+      "bitplane29",
+      "bitplane30",
+      "bitplane31",
+      "bitplane32"
+    ]
+  },
+  "metaworld" : 
+  {
+    "allowSleep" : true,
+    "autoClearForces" : true,
+    "continuousPhysics" : true,
+    "exportOptions" : 
+    {
+      "compactCommonFloats" : false,
+      "compactZeroVecs" : false,
+      "saveFullPathForImages" : false,
+      "saveFullPathForSamplerOutput" : false,
+      "saveImagePathsRelativeToRUBEFile" : false,
+      "saveSamplerOutputPathsRelativeToRUBEFile" : false,
+      "useGsonFormat" : false,
+      "useHumanReadableFloats" : true,
+      "usePrettyPrint" : true
+    },
+    "gravity" : 
+    {
+      "x" : 0,
+      "y" : -10
+    },
+    "metabody" : 
+    [
+      
+      {
+        "angle" : 0,
+        "angularVelocity" : 0,
+        "awake" : true,
+        "fixture" : 
+        [
+          
+          {
+            "density" : 1,
+            "friction" : 0.2,
+            "id" : 1,
+            "name" : "fixture1",
+            "restitution" : 0.9,
+            "shapes" : 
+            [
+              
+              {
+                "type" : "polygon"
+              }
+            ],
+            "vertices" : 
+            {
+              "x" : [ 0.5, 0.5, -0.5, -0.5 ],
+              "y" : [ -0.5, 0.5, 0.5, -0.5 ]
+            }
+          }
+        ],
+        "id" : 1,
+        "linearVelocity" : 0,
+        "massData-I" : 0.1666666716337204,
+        "massData-mass" : 1,
+        "name" : "body1",
+        "position" : 
+        {
+          "x" : 4.026632308959961,
+          "y" : 0
+        },
+        "type" : "dynamic"
+      },
+      
+      {
+        "angle" : 0,
+        "angularVelocity" : 0,
+        "awake" : true,
+        "fixture" : 
+        [
+          
+          {
+            "density" : 1,
+            "friction" : 0.2,
+            "id" : 2,
+            "name" : "fixture1",
+            "restitution" : 0.9,
+            "shapes" : 
+            [
+              
+              {
+                "type" : "polygon"
+              }
+            ],
+            "vertices" : 
+            {
+              "x" : [ 0.5, 0.5, -0.5, -0.5 ],
+              "y" : [ -0.5, 0.5, 0.5, -0.5 ]
+            }
+          },
+          
+          {
+            "density" : 1,
+            "friction" : 0.2,
+            "id" : 3,
+            "name" : "fixture1",
+            "restitution" : 0.9,
+            "shapes" : 
+            [
+              
+              {
+                "type" : "polygon"
+              }
+            ],
+            "vertices" : 
+            {
+              "x" : [ 0.5, 0.5, -0.5, -0.5 ],
+              "y" : 
+              [
+                0.5131862163543701,
+                1.513186216354370,
+                1.513186216354370,
+                0.5131862163543701
+              ]
+            }
+          },
+          
+          {
+            "density" : 1,
+            "friction" : 0.2,
+            "id" : 4,
+            "name" : "fixture1",
+            "restitution" : 0.9,
+            "shapes" : 
+            [
+              
+              {
+                "type" : "polygon"
+              }
+            ],
+            "vertices" : 
+            {
+              "x" : [ 0.5, 0.5, -0.5, -0.5 ],
+              "y" : 
+              [
+                -1.493898868560791,
+                -0.4938948154449463,
+                -0.4938948154449463,
+                -1.493898868560791
+              ]
+            }
+          },
+          
+          {
+            "density" : 1,
+            "friction" : 0.2,
+            "id" : 5,
+            "name" : "fixture1",
+            "restitution" : 0.9,
+            "shapes" : 
+            [
+              
+              {
+                "type" : "polygon"
+              }
+            ],
+            "vertices" : 
+            {
+              "x" : [ 0.5, 0.5, -0.5, -0.5 ],
+              "y" : 
+              [
+                -2.486694574356079,
+                -1.486690521240234,
+                -1.486690521240234,
+                -2.486694574356079
+              ]
+            }
+          },
+          
+          {
+            "density" : 1,
+            "friction" : 0.2,
+            "id" : 6,
+            "name" : "fixture1",
+            "restitution" : 0.9,
+            "shapes" : 
+            [
+              
+              {
+                "type" : "polygon"
+              }
+            ],
+            "vertices" : 
+            {
+              "x" : 
+              [
+                1.508680462837219,
+                1.508680462837219,
+                0.5086804628372192,
+                0.5086804628372192
+              ],
+              "y" : 
+              [
+                0.5131862163543701,
+                1.513186216354370,
+                1.513186216354370,
+                0.5131862163543701
+              ]
+            }
+          },
+          
+          {
+            "density" : 1,
+            "friction" : 0.2,
+            "id" : 7,
+            "name" : "fixture1",
+            "restitution" : 0.9,
+            "shapes" : 
+            [
+              
+              {
+                "type" : "polygon"
+              }
+            ],
+            "vertices" : 
+            {
+              "x" : 
+              [
+                1.508680462837219,
+                1.508680462837219,
+                0.5086804628372192,
+                0.5086804628372192
+              ],
+              "y" : 
+              [
+                -2.486694574356079,
+                -1.486690521240234,
+                -1.486690521240234,
+                -2.486694574356079
+              ]
+            }
+          },
+          
+          {
+            "density" : 1,
+            "friction" : 0.2,
+            "id" : 8,
+            "name" : "fixture1",
+            "restitution" : 0.9,
+            "shapes" : 
+            [
+              
+              {
+                "type" : "polygon"
+              }
+            ],
+            "vertices" : 
+            {
+              "x" : 
+              [
+                2.517361164093018,
+                2.517361164093018,
+                1.517361044883728,
+                1.517361044883728
+              ],
+              "y" : 
+              [
+                -2.486694574356079,
+                -1.486690521240234,
+                -1.486690521240234,
+                -2.486694574356079
+              ]
+            }
+          },
+          
+          {
+            "density" : 1,
+            "friction" : 0.2,
+            "id" : 9,
+            "name" : "fixture1",
+            "restitution" : 0.9,
+            "shapes" : 
+            [
+              
+              {
+                "type" : "polygon"
+              }
+            ],
+            "vertices" : 
+            {
+              "x" : 
+              [
+                2.517361164093018,
+                2.517361164093018,
+                1.517361044883728,
+                1.517361044883728
+              ],
+              "y" : 
+              [
+                0.5131862163543701,
+                1.513186216354370,
+                1.513186216354370,
+                0.5131862163543701
+              ]
+            }
+          },
+          
+          {
+            "density" : 1,
+            "friction" : 0.2,
+            "id" : 10,
+            "name" : "fixture1",
+            "restitution" : 0.9,
+            "shapes" : 
+            [
+              
+              {
+                "type" : "polygon"
+              }
+            ],
+            "vertices" : 
+            {
+              "x" : 
+              [
+                3.526041746139526,
+                3.526041746139526,
+                2.526041507720947,
+                2.526041507720947
+              ],
+              "y" : 
+              [
+                -2.486694574356079,
+                -1.486690521240234,
+                -1.486690521240234,
+                -2.486694574356079
+              ]
+            }
+          },
+          
+          {
+            "density" : 1,
+            "friction" : 0.2,
+            "id" : 11,
+            "name" : "fixture1",
+            "restitution" : 0.9,
+            "shapes" : 
+            [
+              
+              {
+                "type" : "polygon"
+              }
+            ],
+            "vertices" : 
+            {
+              "x" : 
+              [
+                3.526041746139526,
+                3.526041746139526,
+                2.526041507720947,
+                2.526041507720947
+              ],
+              "y" : 
+              [
+                0.5131862163543701,
+                1.513186216354370,
+                1.513186216354370,
+                0.5131862163543701
+              ]
+            }
+          }
+        ],
+        "id" : 2,
+        "linearVelocity" : 0,
+        "massData-I" : 51.03683090209961,
+        "massData-center" : 
+        {
+          "x" : 1.210416674613953,
+          "y" : -0.4887948334217072
+        },
+        "massData-mass" : 10.00002098083496,
+        "name" : "body1",
+        "position" : 
+        {
+          "x" : -3.884841918945313,
+          "y" : 0
+        },
+        "type" : "dynamic"
+      },
+      
+      {
+        "angle" : 0,
+        "angularVelocity" : 0,
+        "awake" : true,
+        "fixture" : 
+        [
+          
+          {
+            "density" : 1,
+            "friction" : 0.2,
+            "id" : 12,
+            "name" : "fixture1",
+            "restitution" : 0.9,
+            "shapes" : 
+            [
+              
+              {
+                "type" : "polygon"
+              }
+            ],
+            "vertices" : 
+            {
+              "x" : 
+              [
+                3.526041746139526,
+                3.526041746139526,
+                2.526041507720947,
+                2.526041507720947
+              ],
+              "y" : 
+              [
+                0.5131862163543701,
+                1.513186216354370,
+                1.513186216354370,
+                0.5131862163543701
+              ]
+            }
+          },
+          
+          {
+            "density" : 1,
+            "friction" : 0.2,
+            "id" : 13,
+            "name" : "fixture1",
+            "restitution" : 0.9,
+            "shapes" : 
+            [
+              
+              {
+                "type" : "polygon"
+              }
+            ],
+            "vertices" : 
+            {
+              "x" : [ 0.5, 0.5, -0.5, -0.5 ],
+              "y" : 
+              [
+                0.5131862163543701,
+                1.513186216354370,
+                1.513186216354370,
+                0.5131862163543701
+              ]
+            }
+          },
+          
+          {
+            "density" : 1,
+            "friction" : 0.2,
+            "id" : 14,
+            "name" : "fixture1",
+            "restitution" : 0.9,
+            "shapes" : 
+            [
+              
+              {
+                "type" : "polygon"
+              }
+            ],
+            "vertices" : 
+            {
+              "x" : 
+              [
+                2.517361164093018,
+                2.517361164093018,
+                1.517361044883728,
+                1.517361044883728
+              ],
+              "y" : 
+              [
+                0.5131862163543701,
+                1.513186216354370,
+                1.513186216354370,
+                0.5131862163543701
+              ]
+            }
+          },
+          
+          {
+            "density" : 1,
+            "friction" : 0.2,
+            "id" : 15,
+            "name" : "fixture1",
+            "restitution" : 0.9,
+            "shapes" : 
+            [
+              
+              {
+                "type" : "polygon"
+              }
+            ],
+            "vertices" : 
+            {
+              "x" : 
+              [
+                3.526041746139526,
+                3.526041746139526,
+                2.526041507720947,
+                2.526041507720947
+              ],
+              "y" : 
+              [
+                -2.486694574356079,
+                -1.486690521240234,
+                -1.486690521240234,
+                -2.486694574356079
+              ]
+            }
+          },
+          
+          {
+            "density" : 1,
+            "friction" : 0.2,
+            "id" : 16,
+            "name" : "fixture1",
+            "restitution" : 0.9,
+            "shapes" : 
+            [
+              
+              {
+                "type" : "polygon"
+              }
+            ],
+            "vertices" : 
+            {
+              "x" : 
+              [
+                1.508680462837219,
+                1.508680462837219,
+                0.5086804628372192,
+                0.5086804628372192
+              ],
+              "y" : 
+              [
+                -2.486694574356079,
+                -1.486690521240234,
+                -1.486690521240234,
+                -2.486694574356079
+              ]
+            }
+          },
+          
+          {
+            "density" : 1,
+            "friction" : 0.2,
+            "id" : 17,
+            "name" : "fixture1",
+            "restitution" : 0.9,
+            "shapes" : 
+            [
+              
+              {
+                "type" : "polygon"
+              }
+            ],
+            "vertices" : 
+            {
+              "x" : [ 0.5, 0.5, -0.5, -0.5 ],
+              "y" : 
+              [
+                -1.493898868560791,
+                -0.4938948154449463,
+                -0.4938948154449463,
+                -1.493898868560791
+              ]
+            }
+          },
+          
+          {
+            "density" : 1,
+            "friction" : 0.2,
+            "id" : 18,
+            "name" : "fixture1",
+            "restitution" : 0.9,
+            "shapes" : 
+            [
+              
+              {
+                "type" : "polygon"
+              }
+            ],
+            "vertices" : 
+            {
+              "x" : [ 0.5, 0.5, -0.5, -0.5 ],
+              "y" : [ -0.5, 0.5, 0.5, -0.5 ]
+            }
+          },
+          
+          {
+            "density" : 1,
+            "friction" : 0.2,
+            "id" : 19,
+            "name" : "fixture1",
+            "restitution" : 0.9,
+            "shapes" : 
+            [
+              
+              {
+                "type" : "polygon"
+              }
+            ],
+            "vertices" : 
+            {
+              "x" : [ 0.5, 0.5, -0.5, -0.5 ],
+              "y" : 
+              [
+                -2.486694574356079,
+                -1.486690521240234,
+                -1.486690521240234,
+                -2.486694574356079
+              ]
+            }
+          },
+          
+          {
+            "density" : 1,
+            "friction" : 0.2,
+            "id" : 20,
+            "name" : "fixture1",
+            "restitution" : 0.9,
+            "shapes" : 
+            [
+              
+              {
+                "type" : "polygon"
+              }
+            ],
+            "vertices" : 
+            {
+              "x" : 
+              [
+                1.508680462837219,
+                1.508680462837219,
+                0.5086804628372192,
+                0.5086804628372192
+              ],
+              "y" : 
+              [
+                0.5131862163543701,
+                1.513186216354370,
+                1.513186216354370,
+                0.5131862163543701
+              ]
+            }
+          },
+          
+          {
+            "density" : 1,
+            "friction" : 0.2,
+            "id" : 21,
+            "name" : "fixture1",
+            "restitution" : 0.9,
+            "shapes" : 
+            [
+              
+              {
+                "type" : "polygon"
+              }
+            ],
+            "vertices" : 
+            {
+              "x" : 
+              [
+                2.517361164093018,
+                2.517361164093018,
+                1.517361044883728,
+                1.517361044883728
+              ],
+              "y" : 
+              [
+                -2.486694574356079,
+                -1.486690521240234,
+                -1.486690521240234,
+                -2.486694574356079
+              ]
+            }
+          },
+          
+          {
+            "density" : 1,
+            "friction" : 0.2,
+            "id" : 22,
+            "name" : "fixture1",
+            "restitution" : 0.9,
+            "shapes" : 
+            [
+              
+              {
+                "type" : "polygon"
+              }
+            ],
+            "vertices" : 
+            {
+              "x" : 
+              [
+                -1.481418609619141,
+                -1.481418609619141,
+                -2.481418609619141,
+                -2.481418609619141
+              ],
+              "y" : 
+              [
+                -0.9302759170532227,
+                0.06972408294677734,
+                0.06972408294677734,
+                -0.9302759170532227
+              ]
+            }
+          },
+          
+          {
+            "density" : 1,
+            "friction" : 0.2,
+            "id" : 23,
+            "name" : "fixture1",
+            "restitution" : 0.9,
+            "shapes" : 
+            [
+              
+              {
+                "type" : "polygon"
+              }
+            ],
+            "vertices" : 
+            {
+              "x" : 
+              [
+                -2.490099430084229,
+                -2.490099430084229,
+                -3.490099430084229,
+                -3.490099430084229
+              ],
+              "y" : 
+              [
+                -0.9302759170532227,
+                0.06972408294677734,
+                0.06972408294677734,
+                -0.9302759170532227
+              ]
+            }
+          },
+          
+          {
+            "density" : 1,
+            "friction" : 0.2,
+            "id" : 24,
+            "name" : "fixture1",
+            "restitution" : 0.9,
+            "shapes" : 
+            [
+              
+              {
+                "type" : "polygon"
+              }
+            ],
+            "vertices" : 
+            {
+              "x" : 
+              [
+                -0.4727380275726318,
+                -0.4727380275726318,
+                -1.472738265991211,
+                -1.472738265991211
+              ],
+              "y" : 
+              [
+                -0.9302759170532227,
+                0.06972408294677734,
+                0.06972408294677734,
+                -0.9302759170532227
+              ]
+            }
+          },
+          
+          {
+            "density" : 1,
+            "friction" : 0.2,
+            "id" : 25,
+            "name" : "fixture1",
+            "restitution" : 0.9,
+            "shapes" : 
+            [
+              
+              {
+                "type" : "polygon"
+              }
+            ],
+            "vertices" : 
+            {
+              "x" : 
+              [
+                -3.498779773712158,
+                -3.498779773712158,
+                -4.498779773712158,
+                -4.498779773712158
+              ],
+              "y" : 
+              [
+                -0.9302759170532227,
+                0.06972408294677734,
+                0.06972408294677734,
+                -0.9302759170532227
+              ]
+            }
+          }
+        ],
+        "id" : 3,
+        "linearVelocity" : 0,
+        "massData-I" : 82.24722290039063,
+        "massData-center" : 
+        {
+          "x" : 0.1543681472539902,
+          "y" : -0.4720752537250519
+        },
+        "massData-mass" : 14.00001907348633,
+        "name" : "body1",
+        "position" : 
+        {
+          "x" : -11.41425228118897,
+          "y" : 0
+        },
+        "type" : "dynamic"
+      }
+    ],
+    "positionIterations" : 3,
+    "stepsPerSecond" : 60.0,
+    "subStepping" : false,
+    "velocityIterations" : 8,
+    "warmStarting" : true
+  }
+}

@@ -50,6 +50,7 @@
     <Compile Include="Game1.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Tests\MaxBodyTest.cs" />
     <Compile Include="Tests\RubeLoaderTest.cs" />
     <Compile Include="Tests\AddPairTest.cs" />
     <Compile Include="Tests\AngleJointTest.cs" />
@@ -180,6 +181,10 @@
     <None Include="Data\strange.dat">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Include="Data\TestBodies.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Data\TestBodies.rube" />
   </ItemGroup>
   <ItemGroup>
     <BootstrapperPackage Include=".NETFramework,Version=v4.0">

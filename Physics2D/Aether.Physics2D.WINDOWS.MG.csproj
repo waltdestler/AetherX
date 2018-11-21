@@ -177,6 +177,7 @@
     <Compile Include="Loaders\RUBE\RubeLoader.cs" />
     <Compile Include="Loaders\RUBE\RubeModels.cs" />
     <Compile Include="Settings.cs" />
+    <Compile Include="Utilities\RandomGenerator.cs" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
