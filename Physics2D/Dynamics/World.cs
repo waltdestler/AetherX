@@ -134,7 +134,7 @@ namespace tainicom.Aether.Physics2D.Dynamics
         /// <summary>
         /// Initializes a new instance of the <see cref="World"/> class.
         /// </summary>
-        public World()
+        public World(IBroadPhase broadphaseSolver = null)
         {
             Island = new Island();
             Enabled = true;
@@ -158,7 +158,12 @@ namespace tainicom.Aether.Physics2D.Dynamics
 
             Fluid = new FluidSystem2(new Vector2(0, -1), 5000, 150, 150);
 
-            ContactManager = new ContactManager(new DynamicTreeBroadPhase());
+            if( broadphaseSolver == null)
+            {
+                // use default
+                broadphaseSolver = new DynamicTreeBroadPhase();
+            }
+            ContactManager = new ContactManager(broadphaseSolver);
             Gravity = new Vector2(0f, -9.80665f);
         }
 

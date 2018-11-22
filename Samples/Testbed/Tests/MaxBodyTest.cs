@@ -3,6 +3,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
 using System;
 using System.Collections.Generic;
+using tainicom.Aether.Physics2D.Collision;
 using tainicom.Aether.Physics2D.Collision.Shapes;
 using tainicom.Aether.Physics2D.Dynamics;
 using tainicom.Aether.Physics2D.Loaders.RUBE;
@@ -23,25 +24,53 @@ namespace tainicom.Aether.Physics2D.Samples.Testbed.Tests
 
         private MaxBodyTest()
         {
+  
+        }
+
+        public override void Initialize()
+        {
+            IBroadPhase broadphaseSolver;
+
+            switch (this.currentBroadPhaseName)
+            {
+                case DYNAMICTREE_BROADPHASE_NAME:
+                    broadphaseSolver = new DynamicTreeBroadPhase();
+                    break;
+
+                case QUADTREE_BROADPHASE_NAME:
+                    broadphaseSolver = new QuadTreeBroadPhase(new AABB(Vector2.Zero, WORLD_SIDE_SIZE, WORLD_SIDE_SIZE));
+                    break;
+
+                case BODY_DYNAMICTREE_BROADPHASE_NAME:
+                    throw new NotImplementedException();
+                    break;
+
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+
+            this.World = new World(broadphaseSolver);
+
             // enable multithreading
-            World.ContactManager.VelocityConstraintsMultithreadThreshold = 256;
-            World.ContactManager.PositionConstraintsMultithreadThreshold = 256;
-            World.ContactManager.CollideMultithreadThreshold = 256;
+            this.World.ContactManager.VelocityConstraintsMultithreadThreshold = 256;
+            this.World.ContactManager.PositionConstraintsMultithreadThreshold = 256;
+            this.World.ContactManager.CollideMultithreadThreshold = 256;
 
             this.World.Gravity = Vector2.Zero;
 
             this.CreateBounds();
 
             this.CreateBodies();
-        }
 
-        public override void Initialize()
-        {
+            // sets up debug drawing
             base.Initialize();
 
             // automatically enable additional performance info
             this.DebugView.AppendFlags(Diagnostics.DebugViewFlags.PerformanceGraph);
             this.DebugView.AppendFlags(Diagnostics.DebugViewFlags.DebugPanel);
+
+            // set zoom to show a meaningful part of the world
+            this.GameInstance.ViewZoom = 0.09f;
         }
 
         private void CreateBodies()
@@ -122,7 +151,7 @@ namespace tainicom.Aether.Physics2D.Samples.Testbed.Tests
             DrawString("Press 1-3 to set VelocityConstraints Threshold. (1-(0 - Always ON), 2-(256), 3-(int.MaxValue - Always OFF))");
             DrawString("Press 4-6 to set PositionConstraints Threshold. (4-(0 - Always ON), 5-(256), 6-(int.MaxValue - Always OFF))");
             DrawString("Press 7-9 to set Collide Threshold.             (7-(0 - Always ON), 8-(256), 9-(int.MaxValue - Always OFF))");
-            
+
             TextLine += 15 * 10;
             var threshold = cMgr.VelocityConstraintsMultithreadThreshold;
             if (threshold == 0) DrawString("VelocityConstraintsMultithreadThreshold: 0");
@@ -139,10 +168,21 @@ namespace tainicom.Aether.Physics2D.Samples.Testbed.Tests
             else if (threshold == 256) DrawString("CollideMultithreadThreshold:  256");
             else if (threshold == int.MaxValue) DrawString("CollideMultithreadThreshold: int.MaxValue");
             else DrawString("CollideMultithreadThreshold is Currently: " + threshold);
-            
-            if (gameTime.IsRunningSlowly)
-                DrawString("[IsRunningSlowly]");
+
+            DrawString("[IsRunningSlowly = "+ gameTime.IsRunningSlowly.ToString().ToUpper() + "]");
+            DrawString("Zoom = " + Math.Round(this.GameInstance.ViewZoom, 2) + ", World Radius (m) = " + WORLD_RADIUS + ", Meters per Body: " + METERS_PER_BODY);
+
+
+            TextLine += 15;
+            DrawString("Press A,B or C to set broadphase algorithm.     (A = "+ DYNAMICTREE_BROADPHASE_NAME + ", B = "+ QUADTREE_BROADPHASE_NAME + ", C = "+ BODY_DYNAMICTREE_BROADPHASE_NAME + ")");
+            DrawString("Current broadphase algorithm: " + currentBroadPhaseName);
+        
         }
+
+        const string DYNAMICTREE_BROADPHASE_NAME = "DynamicTree";
+        const string QUADTREE_BROADPHASE_NAME = "QuadTree";
+        const string BODY_DYNAMICTREE_BROADPHASE_NAME = "BodyDynamicTree";
+        private string currentBroadPhaseName = DYNAMICTREE_BROADPHASE_NAME;
 
         public override void DrawDebugView(GameTime gameTime, ref Matrix projection, ref Matrix view)
         {
@@ -192,6 +232,24 @@ namespace tainicom.Aether.Physics2D.Samples.Testbed.Tests
                 cMgr.CollideMultithreadThreshold = cMgr.VelocityConstraintsMultithreadThreshold;
 
             }
+            
+            // Broadphase switching
+            string newBroadPhaseName = this.currentBroadPhaseName; 
+            if (keyboardManager.IsNewKeyPress(Keys.A))
+                newBroadPhaseName = DYNAMICTREE_BROADPHASE_NAME;
+            if (keyboardManager.IsNewKeyPress(Keys.B))
+                newBroadPhaseName = QUADTREE_BROADPHASE_NAME;
+            if (keyboardManager.IsNewKeyPress(Keys.C))
+                newBroadPhaseName = BODY_DYNAMICTREE_BROADPHASE_NAME;
+            if(newBroadPhaseName != this.currentBroadPhaseName)
+            {
+                // store it
+                this.currentBroadPhaseName = newBroadPhaseName;
+
+                // restart sim so it may be applied.
+                this.Initialize();
+            }
+
         }
 
         public static Test Create()
