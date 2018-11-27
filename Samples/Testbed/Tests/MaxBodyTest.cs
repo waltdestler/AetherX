@@ -14,6 +14,33 @@ namespace tainicom.Aether.Physics2D.Samples.Testbed.Tests
 {
     public class MaxBodyTest : Test
     {
+        private Dictionary<Keys, int> WorldSideSizeOptions = new Dictionary<Keys, int>
+        {
+            { Keys.Q, 500 },
+            { Keys.W, 1000 },
+            { Keys.E, 2000 },
+            { Keys.R, 5000 },
+            { Keys.T, 10000 },
+            { Keys.Y, 15000 },
+            { Keys.U, 20000 },
+        };
+
+        private Dictionary<Keys, int> BodyTypeOptions = new Dictionary<Keys, int>
+        {
+            { Keys.U, 1 },  // single body, single fixture
+            { Keys.I, 2 }, // single body, multiple fixture            
+            { Keys.O, 3 }, // multiple body (joined by joints), multiple fixture 
+            { Keys.P, 4 }, // random 33% mix of all 3!!!
+        };
+
+        private Dictionary<Keys, int> MetersPerBodyOptions = new Dictionary<Keys, int>
+        {
+            { Keys.Z, 50 },  
+            { Keys.X, 100 },
+            { Keys.C, 200 },
+            { Keys.V, 300 }, 
+        };
+
         const float WORLD_SIDE_SIZE = 10000f;
         const float WORLD_RADIUS = WORLD_SIDE_SIZE / 2f;
 
@@ -68,6 +95,8 @@ namespace tainicom.Aether.Physics2D.Samples.Testbed.Tests
             // automatically enable additional performance info
             this.DebugView.AppendFlags(Diagnostics.DebugViewFlags.PerformanceGraph);
             this.DebugView.AppendFlags(Diagnostics.DebugViewFlags.DebugPanel);
+
+            this.DebugView.Enabled = false;
 
             // set zoom to show a meaningful part of the world
             this.GameInstance.ViewZoom = 0.09f;
@@ -174,9 +203,29 @@ namespace tainicom.Aether.Physics2D.Samples.Testbed.Tests
 
 
             TextLine += 15;
-            DrawString("Press A,B or C to set broadphase algorithm.     (A = "+ DYNAMICTREE_BROADPHASE_NAME + ", B = "+ QUADTREE_BROADPHASE_NAME + ", C = "+ BODY_DYNAMICTREE_BROADPHASE_NAME + ")");
+            DrawString("Press A, B or C to set broadphase algorithm.     (A = "+ DYNAMICTREE_BROADPHASE_NAME + ", B = "+ QUADTREE_BROADPHASE_NAME + ", C = "+ BODY_DYNAMICTREE_BROADPHASE_NAME + ")");
             DrawString("Current broadphase algorithm: " + currentBroadPhaseName);
-        
+
+            // World size options
+            TextLine += 15;
+            var worldSizeOptions = string.Empty;
+            foreach( var key in this.WorldSideSizeOptions.Keys )
+            {
+                worldSizeOptions += string.Format("{0} = {1}m, ", key.ToString(), this.WorldSideSizeOptions[key]);
+            }
+            DrawString("Current world size (width & height): " + WORLD_SIDE_SIZE.ToString() + "m");
+            DrawString(string.Format("Press one of these keys to change it: ({0})", worldSizeOptions));
+
+            // Meters-per-body options 
+            TextLine += 15;
+            var metersPerBodyOptions = string.Empty;
+            foreach (var key in this.MetersPerBodyOptions.Keys)
+            {
+                metersPerBodyOptions += string.Format("{0} = {1}m, ", key.ToString(), this.MetersPerBodyOptions[key]);
+            }
+            DrawString("Current meters-per-body: " + METERS_PER_BODY.ToString() + "m");
+            DrawString(string.Format("Press one of these keys to change it: ({0})", metersPerBodyOptions));
+
         }
 
         const string DYNAMICTREE_BROADPHASE_NAME = "DynamicTree";

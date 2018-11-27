@@ -259,9 +259,6 @@ namespace tainicom.Aether.Physics2D.Diagnostics
                     }
                 }
             }
-
-            if ((Flags & DebugViewFlags.DebugPanel) == DebugViewFlags.DebugPanel)
-                DrawDebugPanel();
         }
 
         private void DrawPerformanceGraph()
@@ -763,9 +760,6 @@ namespace tainicom.Aether.Physics2D.Diagnostics
         public void RenderDebugData(ref Matrix projection, ref Matrix view,
                                     BlendState blendState = null, SamplerState samplerState = null, DepthStencilState depthStencilState = null, RasterizerState rasterizerState = null, float alpha = 1.0f)
         {
-            if (!Enabled)
-                return;
-
             Matrix world = Matrix.Identity;
             RenderDebugData(ref projection, ref view, ref world, blendState, samplerState, depthStencilState, rasterizerState, alpha);
         }
@@ -773,28 +767,7 @@ namespace tainicom.Aether.Physics2D.Diagnostics
         public void RenderDebugData(ref Matrix projection, ref Matrix view, ref Matrix world,
                                     BlendState blendState = null, SamplerState samplerState = null, DepthStencilState depthStencilState = null, RasterizerState rasterizerState = null, float alpha = 1.0f)
         {
-            if (!Enabled)
-                return;
-
-            if (!_updatePerformanceGraphCalled)
-                UpdatePerformanceGraph(World.UpdateTime);
-            _updatePerformanceGraphCalled = false;
-
-
-            //Nothing is enabled - don't draw the debug view.
-            if (Flags == 0)
-                return;
-
-            _primitiveBatch.Begin(ref projection, ref view, ref world, blendState, samplerState, depthStencilState, rasterizerState, alpha);
-            DrawDebugData();
-            _primitiveBatch.End();
-
-            if ((Flags & DebugViewFlags.PerformanceGraph) == DebugViewFlags.PerformanceGraph)
-            {
-                _primitiveBatch.Begin(ref _localProjection, ref _localView, ref _localWorld, blendState, samplerState, depthStencilState, rasterizerState, alpha);
-                DrawPerformanceGraph();
-                _primitiveBatch.End();
-            }
+            #region Render strings (regardless of whether other things are enabled)
 
             // begin the sprite batch effect
             _batch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend);
@@ -812,14 +785,48 @@ namespace tainicom.Aether.Physics2D.Diagnostics
             _batch.End();
 
             _stringData.Clear();
+
+            #endregion
+
+            //Nothing is enabled - don't draw the debug view.
+            if (Flags == 0)
+                return;
+
+            #region Performance Graph
+
+            if (!_updatePerformanceGraphCalled)
+                UpdatePerformanceGraph(World.UpdateTime);
+            _updatePerformanceGraphCalled = false;
+
+            if ((Flags & DebugViewFlags.PerformanceGraph) == DebugViewFlags.PerformanceGraph)
+            {
+                _primitiveBatch.Begin(ref _localProjection, ref _localView, ref _localWorld, blendState, samplerState, depthStencilState, rasterizerState, alpha);
+                DrawPerformanceGraph();
+                _primitiveBatch.End();
+            }
+
+            #endregion
+
+            #region Debug Panel
+
+            if ((Flags & DebugViewFlags.DebugPanel) == DebugViewFlags.DebugPanel)
+                DrawDebugPanel();
+
+            #endregion
+
+            // drawing disabled, so abort.
+            if (!Enabled)
+                return;
+
+            // render bodies, joints, controllers, etc.
+            _primitiveBatch.Begin(ref projection, ref view, ref world, blendState, samplerState, depthStencilState, rasterizerState, alpha);
+            DrawDebugData();
+            _primitiveBatch.End();
         }
 
         public void RenderDebugData(ref Matrix projection,
                                     BlendState blendState = null, SamplerState samplerState = null, DepthStencilState depthStencilState = null, RasterizerState rasterizerState = null, float alpha = 1.0f)
         {
-            if (!Enabled)
-                return;
-
             Matrix view = Matrix.Identity;
             Matrix world = Matrix.Identity;
             RenderDebugData(ref projection, ref view, ref world, blendState, samplerState, depthStencilState, rasterizerState, alpha);
