@@ -33,6 +33,7 @@ using tainicom.Aether.Physics2D.Samples.Testbed.Tests;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using Helio.Common;
 
 namespace tainicom.Aether.Physics2D.Samples.Testbed
 {
@@ -264,12 +265,20 @@ namespace tainicom.Aether.Physics2D.Samples.Testbed
                 _test.DebugView.AppendFlags(flag);
         }
 
+        private FrequencyTracker renderFrequency = new FrequencyTracker();
+
         /// <summary>
         /// This is called when the game should draw itself.
         /// </summary>
         /// <param name="gameTime">Provides a snapshot of timing values.</param>
         protected override void Draw(GameTime gameTime)
         {
+            this.renderFrequency.Update();
+
+            // render frequency tracker data (fps)
+            var renderFpsPos = new Vector2(200, 15);
+            _test.DebugView.DrawString(renderFpsPos, "Avg. Renders Per Sec: " + Math.Round( this.renderFrequency.AverageOccurrencesPerSecond, 1));
+
             _test.DrawTitle(50, 15, _entry.Name);
 
             if (_testSelection != _testIndex)
