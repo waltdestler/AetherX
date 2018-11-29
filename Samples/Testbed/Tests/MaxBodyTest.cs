@@ -41,8 +41,8 @@ namespace tainicom.Aether.Physics2D.Samples.Testbed.Tests
             { Keys.V, 300 }, 
         };
 
-        const float WORLD_SIDE_SIZE = 10000f;
-        const float WORLD_RADIUS = WORLD_SIDE_SIZE / 2f;
+        private float WorldSideSize { get; set; }
+        private float WorldRadius { get { return this.WorldSideSize / 2f; } }
 
         // NOTE: This should always be greater than the biggest test body, otherwise things 
         //       could overlap, which is a huge perf reduction.
@@ -51,7 +51,8 @@ namespace tainicom.Aether.Physics2D.Samples.Testbed.Tests
 
         private MaxBodyTest()
         {
-  
+            // default to smallest world size
+            this.WorldSideSize = this.WorldSideSizeOptions[Keys.Q];
         }
 
         public override void Initialize()
@@ -65,7 +66,7 @@ namespace tainicom.Aether.Physics2D.Samples.Testbed.Tests
                     break;
 
                 case QUADTREE_BROADPHASE_NAME:
-                    broadphaseSolver = new QuadTreeBroadPhase(new AABB(Vector2.Zero, WORLD_SIDE_SIZE, WORLD_SIDE_SIZE));
+                    broadphaseSolver = new QuadTreeBroadPhase(new AABB(Vector2.Zero, WorldSideSize, WorldSideSize));
                     break;
 
                 case BODY_DYNAMICTREE_BROADPHASE_NAME:
@@ -119,14 +120,14 @@ namespace tainicom.Aether.Physics2D.Samples.Testbed.Tests
 
             var selectedBodyIndex = BOX_BODY_INDEX;
 
-            for (var x = METERS_PER_BODY; x < WORLD_SIDE_SIZE - METERS_PER_BODY; x += METERS_PER_BODY)
+            for (var x = METERS_PER_BODY; x < WorldSideSize - METERS_PER_BODY; x += METERS_PER_BODY)
             {
-                for (var y = METERS_PER_BODY; y < WORLD_SIDE_SIZE - METERS_PER_BODY; y += METERS_PER_BODY)
+                for (var y = METERS_PER_BODY; y < WorldSideSize - METERS_PER_BODY; y += METERS_PER_BODY)
                 {
                     var bodyDef = tempWorld.BodyList[selectedBodyIndex];
                     var body = bodyDef.DeepClone(this.World);
 
-                    body.Position = new Vector2(x - WORLD_RADIUS, y - WORLD_RADIUS);
+                    body.Position = new Vector2(x - WorldRadius, y - WorldRadius);
                     body.LinearVelocity = RandomGenerator.Vector2(MAX_LINEAR_VELOCITY);
                     body.AngularVelocity = RandomGenerator.Float(-MAX_ANGULAR_VELOCITY, MAX_ANGULAR_VELOCITY);
                 }
@@ -137,7 +138,7 @@ namespace tainicom.Aether.Physics2D.Samples.Testbed.Tests
             // create ring of edges
             var edgeVertices = new List<Vector2>();
             const float EDGE_SIZE = 10f;
-            var edgesPerSide = (int)Math.Ceiling(WORLD_SIDE_SIZE / EDGE_SIZE);
+            var edgesPerSide = (int)Math.Ceiling(WorldSideSize / EDGE_SIZE);
             var edgeXOffset = (edgesPerSide * EDGE_SIZE) / -2.0f;
             var edgeYOffset = edgeXOffset;
             for ( var i = 0; i < edgesPerSide; i++)
@@ -151,7 +152,7 @@ namespace tainicom.Aether.Physics2D.Samples.Testbed.Tests
 
                 // create a body for the BOTTOM edge
                 var bottomBody = this.World.CreateBody(Vector2.Zero, 0, BodyType.Static);
-                var bottomOffset = new Vector2(0, WORLD_SIDE_SIZE);
+                var bottomOffset = new Vector2(0, WorldSideSize);
                 bottomBody.CreateFixture(new EdgeShape(horz1 + bottomOffset, horz2 + bottomOffset));
 
 
@@ -164,7 +165,7 @@ namespace tainicom.Aether.Physics2D.Samples.Testbed.Tests
 
                 // create a body for the RIGHT edge
                 var rightBody = this.World.CreateBody(Vector2.Zero, 0, BodyType.Static);
-                var rightOffset = new Vector2(WORLD_SIDE_SIZE, 0);
+                var rightOffset = new Vector2(WorldSideSize, 0);
                 rightBody.CreateFixture(new EdgeShape(vert1 + rightOffset, vert2 + rightOffset));
 
             };
@@ -199,7 +200,7 @@ namespace tainicom.Aether.Physics2D.Samples.Testbed.Tests
             else DrawString("CollideMultithreadThreshold is Currently: " + threshold);
 
             DrawString("[IsRunningSlowly = "+ gameTime.IsRunningSlowly.ToString().ToUpper() + "]");
-            DrawString("Zoom = " + Math.Round(this.GameInstance.ViewZoom, 2) + ", World Radius (m) = " + WORLD_RADIUS + ", Meters per Body: " + METERS_PER_BODY);
+            DrawString("Zoom = " + Math.Round(this.GameInstance.ViewZoom, 2) + ", World Radius (m) = " + WorldRadius + ", Meters per Body: " + METERS_PER_BODY);
 
 
             TextLine += 15;
@@ -213,7 +214,7 @@ namespace tainicom.Aether.Physics2D.Samples.Testbed.Tests
             {
                 worldSizeOptions += string.Format("{0} = {1}m, ", key.ToString(), this.WorldSideSizeOptions[key]);
             }
-            DrawString("Current world size (width & height): " + WORLD_SIDE_SIZE.ToString() + "m");
+            DrawString("Current world size (width & height): " + WorldSideSize.ToString() + "m");
             DrawString(string.Format("Press one of these keys to change it: ({0})", worldSizeOptions));
 
             // Meters-per-body options 
@@ -297,6 +298,20 @@ namespace tainicom.Aether.Physics2D.Samples.Testbed.Tests
 
                 // restart sim so it may be applied.
                 this.Initialize();
+            }
+
+            foreach( var key in this.WorldSideSizeOptions.Keys)
+            {
+                if( keyboardManager.IsNewKeyPress(key) )
+                {
+                    var pressedSize = this.WorldSideSizeOptions[key];
+                    if( pressedSize != this.WorldSideSize )
+                    {
+                        this.WorldSideSize = pressedSize;
+                        this.Initialize();
+                    }
+                    break;
+                }
             }
 
         }
