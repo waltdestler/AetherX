@@ -21,8 +21,7 @@ namespace tainicom.Aether.Physics2D.Samples.Testbed.Tests
             { Keys.E, 2000 },
             { Keys.R, 5000 },
             { Keys.T, 10000 },
-            { Keys.Y, 15000 },
-            { Keys.U, 20000 },
+            { Keys.Y, 15000 }
         };
 
         private Dictionary<Keys, int> BodyTypeOptions = new Dictionary<Keys, int>
@@ -47,12 +46,15 @@ namespace tainicom.Aether.Physics2D.Samples.Testbed.Tests
         // NOTE: This should always be greater than the biggest test body, otherwise things 
         //       could overlap, which is a huge perf reduction.
         //       Square this to get the square-meters-per-body.
-        const float METERS_PER_BODY = 100f;
+        private float MetersPerBody;
 
         private MaxBodyTest()
         {
             // default to smallest world size
             this.WorldSideSize = this.WorldSideSizeOptions[Keys.Q];
+
+            // set to 100m per body
+            this.MetersPerBody = this.MetersPerBodyOptions[Keys.X];
         }
 
         public override void Initialize()
@@ -120,9 +122,9 @@ namespace tainicom.Aether.Physics2D.Samples.Testbed.Tests
 
             var selectedBodyIndex = BOX_BODY_INDEX;
 
-            for (var x = METERS_PER_BODY; x < WorldSideSize - METERS_PER_BODY; x += METERS_PER_BODY)
+            for (var x = MetersPerBody; x < WorldSideSize - MetersPerBody; x += MetersPerBody)
             {
-                for (var y = METERS_PER_BODY; y < WorldSideSize - METERS_PER_BODY; y += METERS_PER_BODY)
+                for (var y = MetersPerBody; y < WorldSideSize - MetersPerBody; y += MetersPerBody)
                 {
                     var bodyDef = tempWorld.BodyList[selectedBodyIndex];
                     var body = bodyDef.DeepClone(this.World);
@@ -200,11 +202,11 @@ namespace tainicom.Aether.Physics2D.Samples.Testbed.Tests
             else DrawString("CollideMultithreadThreshold is Currently: " + threshold);
 
             DrawString("[IsRunningSlowly = "+ gameTime.IsRunningSlowly.ToString().ToUpper() + "]");
-            DrawString("Zoom = " + Math.Round(this.GameInstance.ViewZoom, 2) + ", World Radius (m) = " + WorldRadius + ", Meters per Body: " + METERS_PER_BODY);
+            DrawString("Zoom = " + Math.Round(this.GameInstance.ViewZoom, 2) + ", World Radius (m) = " + WorldRadius + ", Meters per Body: " + MetersPerBody);
 
 
             TextLine += 15;
-            DrawString("Press A, B or C to set broadphase algorithm.     (A = "+ DYNAMICTREE_BROADPHASE_NAME + ", B = "+ QUADTREE_BROADPHASE_NAME + ", C = "+ BODY_DYNAMICTREE_BROADPHASE_NAME + ")");
+            DrawString("Press to set broadphase algorithm. (J = "+ DYNAMICTREE_BROADPHASE_NAME + ", K = "+ QUADTREE_BROADPHASE_NAME + ", L = "+ BODY_DYNAMICTREE_BROADPHASE_NAME + ")");
             DrawString("Current broadphase algorithm: " + currentBroadPhaseName);
 
             // World size options
@@ -224,7 +226,7 @@ namespace tainicom.Aether.Physics2D.Samples.Testbed.Tests
             {
                 metersPerBodyOptions += string.Format("{0} = {1}m, ", key.ToString(), this.MetersPerBodyOptions[key]);
             }
-            DrawString("Current meters-per-body: " + METERS_PER_BODY.ToString() + "m");
+            DrawString("Current meters-per-body: " + MetersPerBody.ToString() + "m");
             DrawString(string.Format("Press one of these keys to change it: ({0})", metersPerBodyOptions));
 
         }
@@ -285,12 +287,12 @@ namespace tainicom.Aether.Physics2D.Samples.Testbed.Tests
             
             // Broadphase switching
             string newBroadPhaseName = this.currentBroadPhaseName; 
-            if (keyboardManager.IsNewKeyPress(Keys.A))
+            if (keyboardManager.IsNewKeyPress(Keys.J))
                 newBroadPhaseName = DYNAMICTREE_BROADPHASE_NAME;
-            if (keyboardManager.IsNewKeyPress(Keys.B))
+            if (keyboardManager.IsNewKeyPress(Keys.K))
                 newBroadPhaseName = QUADTREE_BROADPHASE_NAME;
-            if (keyboardManager.IsNewKeyPress(Keys.C))
-                newBroadPhaseName = BODY_DYNAMICTREE_BROADPHASE_NAME;
+            //if (keyboardManager.IsNewKeyPress(Keys.L))
+            //    newBroadPhaseName = BODY_DYNAMICTREE_BROADPHASE_NAME;
             if(newBroadPhaseName != this.currentBroadPhaseName)
             {
                 // store it
@@ -299,7 +301,8 @@ namespace tainicom.Aether.Physics2D.Samples.Testbed.Tests
                 // restart sim so it may be applied.
                 this.Initialize();
             }
-
+            
+            // World side size.
             foreach( var key in this.WorldSideSizeOptions.Keys)
             {
                 if( keyboardManager.IsNewKeyPress(key) )
@@ -310,6 +313,23 @@ namespace tainicom.Aether.Physics2D.Samples.Testbed.Tests
                         this.WorldSideSize = pressedSize;
                         this.Initialize();
                     }
+
+                    break;
+                }
+            }
+
+            // Meters per body.
+            foreach (var key in this.MetersPerBodyOptions.Keys)
+            {
+                if (keyboardManager.IsNewKeyPress(key))
+                {
+                    var newMetersPerBody = this.MetersPerBodyOptions[key];
+                    if (newMetersPerBody != this.MetersPerBody)
+                    {
+                        this.MetersPerBody = newMetersPerBody;
+                        this.Initialize();
+                    }
+
                     break;
                 }
             }
