@@ -40,8 +40,15 @@ namespace tainicom.Aether.Physics2D.Samples.Testbed.Tests
             { Keys.V, 300 }, 
         };
 
+        private Dictionary<Keys, BodyStructureType> BodyStructureTypeOptions = new Dictionary<Keys, BodyStructureType>
+        {
+            { Keys.G, BodyStructureType.SingleFixtureBox },
+            { Keys.H, BodyStructureType.TwelveFixtureStructure }
+        };
+
         private float WorldSideSize { get; set; }
         private float WorldRadius { get { return this.WorldSideSize / 2f; } }
+        private BodyStructureType BodyStructureType = BodyStructureType.SingleFixtureBox;
 
         // NOTE: This should always be greater than the biggest test body, otherwise things 
         //       could overlap, which is a huge perf reduction.
@@ -116,11 +123,11 @@ namespace tainicom.Aether.Physics2D.Samples.Testbed.Tests
             const float MAX_ANGULAR_VELOCITY = 1.0F;
 
             // add the specific body
-            const int COMPLEX_BODY_INDEX = 2;
-            const int C_BODY_INDEX = 1;
-            const int BOX_BODY_INDEX = 0;
+            //const int COMPLEX_BODY_INDEX = 2;
+            //const int C_BODY_INDEX = 1;
+            //const int BOX_BODY_INDEX = 0;
 
-            var selectedBodyIndex = BOX_BODY_INDEX;
+            var selectedBodyIndex = (int)this.BodyStructureType; //BOX_BODY_INDEX;
 
             for (var x = MetersPerBody; x < WorldSideSize - MetersPerBody; x += MetersPerBody)
             {
@@ -229,6 +236,16 @@ namespace tainicom.Aether.Physics2D.Samples.Testbed.Tests
             DrawString("Current meters-per-body: " + MetersPerBody.ToString() + "m");
             DrawString(string.Format("Press one of these keys to change it: ({0})", metersPerBodyOptions));
 
+            // Body structure type options 
+            TextLine += 15;
+            var bodyStructureTypeOptions = string.Empty;
+            foreach (var key in this.BodyStructureTypeOptions.Keys)
+            {
+                bodyStructureTypeOptions += string.Format("{0} = {1}, ", key.ToString(), this.BodyStructureTypeOptions[key].ToString());
+            }
+            DrawString("Current body structure type: " + this.BodyStructureType.ToString());
+            DrawString(string.Format("Press one of these keys to change it: ({0})", bodyStructureTypeOptions));
+
         }
 
         const string DYNAMICTREE_BROADPHASE_NAME = "DynamicTree";
@@ -313,7 +330,6 @@ namespace tainicom.Aether.Physics2D.Samples.Testbed.Tests
                         this.WorldSideSize = pressedSize;
                         this.Initialize();
                     }
-
                     break;
                 }
             }
@@ -329,7 +345,21 @@ namespace tainicom.Aether.Physics2D.Samples.Testbed.Tests
                         this.MetersPerBody = newMetersPerBody;
                         this.Initialize();
                     }
+                    break;
+                }
+            }
 
+            // Body structure type.
+            foreach (var key in this.BodyStructureTypeOptions.Keys)
+            {
+                if (keyboardManager.IsNewKeyPress(key))
+                {
+                    var newBodyStructureType = this.BodyStructureTypeOptions[key];
+                    if (newBodyStructureType != this.BodyStructureType)
+                    {
+                        this.BodyStructureType = newBodyStructureType;
+                        this.Initialize();
+                    }
                     break;
                 }
             }
@@ -340,5 +370,11 @@ namespace tainicom.Aether.Physics2D.Samples.Testbed.Tests
         {
             return new MaxBodyTest();
         }
+    }
+
+    public enum BodyStructureType
+    {
+        SingleFixtureBox = 0,
+        TwelveFixtureStructure = 2
     }
 }
