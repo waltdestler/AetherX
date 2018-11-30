@@ -169,11 +169,11 @@ namespace tainicom.Aether.Physics2D.Samples.Testbed
             GamePadState newGamePad = GamePad.GetState(PlayerIndex.One);
             MouseState newMouseState = Mouse.GetState();
 
-            if (_keyboardManager.IsKeyDown(Keys.Z)) // Press 'z' to zoom out.
-                ViewZoom = Math.Min((float)Math.Pow(Math.E, -0.05f) * ViewZoom, 20.0f);
-            else if (_keyboardManager.IsKeyDown(Keys.X)) // Press 'x' to zoom in.
-                ViewZoom = Math.Max((float)Math.Pow(Math.E, +0.05f) * ViewZoom, 0.02f);
-            else if (_keyboardManager.IsKeyDown(Keys.Subtract)) // Press '-' to zoom out.
+            //if (_keyboardManager.IsKeyDown(Keys.Z)) // Press 'z' to zoom out.
+            //    ViewZoom = Math.Min((float)Math.Pow(Math.E, -0.05f) * ViewZoom, 20.0f);
+            //else if (_keyboardManager.IsKeyDown(Keys.X)) // Press 'x' to zoom in.
+            //    ViewZoom = Math.Max((float)Math.Pow(Math.E, +0.05f) * ViewZoom, 0.02f);
+            if (_keyboardManager.IsKeyDown(Keys.Subtract)) // Press '-' to zoom out.
                 ViewZoom = Math.Min((float)Math.Pow(Math.E, -0.05f) * ViewZoom, 20.0f);
             else if (_keyboardManager.IsKeyDown(Keys.Add)) // Press 'x' to zoom in.
                 ViewZoom = Math.Max((float)Math.Pow(Math.E, +0.05f) * ViewZoom, 0.02f);

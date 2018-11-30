@@ -106,10 +106,10 @@ namespace tainicom.Aether.Physics2D.Samples.Testbed.Tests
             this.DebugView.AppendFlags(Diagnostics.DebugViewFlags.PerformanceGraph);
             this.DebugView.AppendFlags(Diagnostics.DebugViewFlags.DebugPanel);
 
-            this.DebugView.Enabled = false;
+            this.DebugView.Enabled = true;
 
             // set zoom to show a meaningful part of the world
-            this.GameInstance.ViewZoom = 0.09f;
+            //this.GameInstance.ViewZoom = 0.09f;
         }
 
         private void CreateBodies()
@@ -211,6 +211,9 @@ namespace tainicom.Aether.Physics2D.Samples.Testbed.Tests
             DrawString("[IsRunningSlowly = "+ gameTime.IsRunningSlowly.ToString().ToUpper() + "]");
             DrawString("Zoom = " + Math.Round(this.GameInstance.ViewZoom, 2) + ", World Radius (m) = " + WorldRadius + ", Meters per Body: " + MetersPerBody);
 
+            TextLine += 15;
+            DrawString("Press Left Alt to toggle debug rendering of game world.");
+            DrawString("Debug rendering enabled: " + this.DebugView.Enabled);
 
             TextLine += 15;
             DrawString("Press to set broadphase algorithm. (J = "+ DYNAMICTREE_BROADPHASE_NAME + ", K = "+ QUADTREE_BROADPHASE_NAME + ", L = "+ BODY_DYNAMICTREE_BROADPHASE_NAME + ")");
@@ -362,6 +365,11 @@ namespace tainicom.Aether.Physics2D.Samples.Testbed.Tests
                     }
                     break;
                 }
+            }
+
+            if( keyboardManager.IsNewKeyPress(Keys.LeftAlt))
+            {
+                this.DebugView.Enabled = !this.DebugView.Enabled;
             }
 
         }
