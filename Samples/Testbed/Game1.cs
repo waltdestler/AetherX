@@ -60,6 +60,8 @@ namespace tainicom.Aether.Physics2D.Samples.Testbed
 
         private float _viewZoom;
 
+        private PerformanceTree PerformanceTree { get; set; }
+
         public Game1()
         {
             _graphics = new GraphicsDeviceManager(this);
@@ -104,6 +106,9 @@ namespace tainicom.Aether.Physics2D.Samples.Testbed
         protected override void Initialize()
         {
             base.Initialize();
+
+            // init the perf tree
+            this.PerformanceTree = new PerformanceTree();
 
             //Set window defaults. Parent game can override in constructor
             Window.AllowUserResizing = true;
@@ -158,6 +163,12 @@ namespace tainicom.Aether.Physics2D.Samples.Testbed
         /// <param name="gameTime">Provides a snapshot of timing values.</param>
         protected override void Update(GameTime gameTime)
         {
+            // update the update FPS
+            this.UpdateFrequency.Update();
+
+            // begin "update" region
+            this.PerformanceTree.StartRegion("Update");
+
             // clear graphics here because some tests already draw during update
             GraphicsDevice.Clear(Color.Black);
 
@@ -255,6 +266,8 @@ namespace tainicom.Aether.Physics2D.Samples.Testbed
             }
 
             _test.DebugView.UpdatePerformanceGraph(_test.World.UpdateTime);
+
+            this.PerformanceTree.EndRegion();
         }
 
         private void EnableOrDisableFlag(DebugViewFlags flag)
@@ -265,7 +278,8 @@ namespace tainicom.Aether.Physics2D.Samples.Testbed
                 _test.DebugView.AppendFlags(flag);
         }
 
-        private FrequencyTracker renderFrequency = new FrequencyTracker();
+        private FrequencyTracker DrawFrequency = new FrequencyTracker();
+        private FrequencyTracker UpdateFrequency = new FrequencyTracker();
 
         /// <summary>
         /// This is called when the game should draw itself.
@@ -273,13 +287,30 @@ namespace tainicom.Aether.Physics2D.Samples.Testbed
         /// <param name="gameTime">Provides a snapshot of timing values.</param>
         protected override void Draw(GameTime gameTime)
         {
-            this.renderFrequency.Update();
+            // mark the end of the previous loop and start the next
+            this.PerformanceTree.End();
+            this.PerformanceTree.Start();
 
-            // render frequency tracker data (fps)
-            var renderFpsPos = new Vector2(200, 15);
-            _test.DebugView.DrawString(renderFpsPos, "Avg. Renders Per Sec: " + Math.Round( this.renderFrequency.AverageOccurrencesPerSecond, 1));
+            this.PerformanceTree.StartRegion("Draw");
+
+            this.DrawFrequency.Update();
 
             _test.DrawTitle(50, 15, _entry.Name);
+
+            // show the "update" FPS
+            var performanceLinePos = new Vector2(800, 200);
+            _test.DebugView.DrawString(performanceLinePos, "Game Loops Per Sec (update): " + Math.Round(this.UpdateFrequency.AverageOccurrencesPerSecond, 1));
+
+            // show the "draw" FPS
+            performanceLinePos += new Vector2(0, 15);
+            _test.DebugView.DrawString(performanceLinePos, "Game Loops Per Sec (draw): " + Math.Round(this.DrawFrequency.AverageOccurrencesPerSecond, 1));
+
+            // draw the performance tree
+            foreach (var perfLine in this.PerformanceTree.PerformanceDetailLines)
+            {
+                performanceLinePos += new Vector2(0, 15);
+                _test.DebugView.DrawString(performanceLinePos, perfLine);
+            }
 
             if (_testSelection != _testIndex)
             {
@@ -291,6 +322,8 @@ namespace tainicom.Aether.Physics2D.Samples.Testbed
             _test.DrawDebugView(gameTime, ref Projection, ref View);
 
             base.Draw(gameTime);
+
+            this.PerformanceTree.EndRegion();
         }
 
         private void ResetCamera()
