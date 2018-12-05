@@ -106,7 +106,8 @@ namespace tainicom.Aether.Physics2D.Samples.Testbed.Tests
             // automatically enable additional performance info
             this.DebugView.AppendFlags(Diagnostics.DebugViewFlags.PerformanceGraph);
             this.DebugView.AppendFlags(Diagnostics.DebugViewFlags.DebugPanel);
-
+            this.DebugView.AppendFlags(Diagnostics.DebugViewFlags.AABB);
+           
             this.DebugView.Enabled = true;
 
             // set zoom to show a meaningful part of the world
