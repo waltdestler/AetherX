@@ -1,4 +1,4 @@
-# XFarseer Physics
+# FarseerX Physics Engine
 
 Box2D is the foundational physics engine, which was then ported to C# as Farseer and evolved independently. Farseer is now abandoned and lives on in Aether.Physics2D, which is still maintained as of Nov 2018. This is a fork of Aether.Physics2D which is enhanced to include further optimizations specifically for a huge, expansive world.
 
