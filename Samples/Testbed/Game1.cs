@@ -33,7 +33,6 @@ using tainicom.Aether.Physics2D.Samples.Testbed.Tests;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
-using Helio.Common;
 
 namespace tainicom.Aether.Physics2D.Samples.Testbed
 {

@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace Helio.Common
+namespace tainicom.Aether.Physics2D.Diagnostics
 {
     public class PerformanceRegion
     {

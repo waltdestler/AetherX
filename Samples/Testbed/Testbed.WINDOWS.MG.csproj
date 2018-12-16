@@ -212,10 +212,6 @@
     </BootstrapperPackage>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\Helio.Common\Helio.Common.csproj">
-      <Project>{AA6BE229-0597-4B3A-B37C-485829763D70}</Project>
-      <Name>Helio.Common</Name>
-    </ProjectReference>
     <ProjectReference Include="..\..\Physics2D.Diagnostics\Diagnostics\Aether.Physics2D.Diagnostics.WINDOWS.MG.csproj">
       <Project>{2ED9AD24-DFBA-441D-BCFB-EAA9520D804D}</Project>
       <Name>Aether.Physics2D.Diagnostics.WINDOWS.MG</Name>

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 
-namespace Helio.Common
+namespace tainicom.Aether.Physics2D.Diagnostics
 {
     public class FrequencyTracker
     {
