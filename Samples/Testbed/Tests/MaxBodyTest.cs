@@ -67,27 +67,27 @@ namespace tainicom.Aether.Physics2D.Samples.Testbed.Tests
 
         public override void Initialize()
         {
-            IBroadPhase broadphaseSolver;
+            //IBroadPhase broadphaseSolver;
 
-            switch (this.currentBroadPhaseName)
-            {
-                case DYNAMICTREE_BROADPHASE_NAME:
-                    broadphaseSolver = new DynamicTreeBroadPhase();
-                    break;
+            //switch (this.currentBroadPhaseName)
+            //{
+            //    case DYNAMICTREE_BROADPHASE_NAME:
+            //        broadphaseSolver = new DynamicTreeBroadPhase();
+            //        break;
 
-                case QUADTREE_BROADPHASE_NAME:
-                    broadphaseSolver = new QuadTreeBroadPhase(new AABB(Vector2.Zero, WorldSideSize, WorldSideSize));
-                    break;
+            //    case QUADTREE_BROADPHASE_NAME:
+            //        broadphaseSolver = new QuadTreeBroadPhase(new AABB(Vector2.Zero, WorldSideSize, WorldSideSize));
+            //        break;
 
-                case BODY_DYNAMICTREE_BROADPHASE_NAME:
-                    throw new NotImplementedException();
-                    break;
+            //    case BODY_DYNAMICTREE_BROADPHASE_NAME:
+            //        throw new NotImplementedException();
+            //        break;
 
-                default:
-                    throw new ArgumentOutOfRangeException();
-            }
+            //    default:
+            //        throw new ArgumentOutOfRangeException();
+            //}
 
-            this.World = new World(broadphaseSolver);
+            this.World = new World();
 
             // enable multithreading
             this.World.ContactManager.VelocityConstraintsMultithreadThreshold = 256;

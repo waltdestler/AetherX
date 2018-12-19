@@ -213,13 +213,15 @@ namespace tainicom.Aether.Physics2D.Diagnostics
 
             if ((Flags & DebugViewFlags.AABB) == DebugViewFlags.AABB)
             {
-                Color color = new Color(0.9f, 0.3f, 0.9f);
-                IBroadPhase bp = World.ContactManager.BroadPhase;
+                Color fixtureAABBcolor = new Color(0.9f, 0.3f, 0.9f);
+                //IBroadPhase bp = World.ContactManager.BroadPhase;
 
                 foreach (Body body in World.BodyList)
                 {
                     if (body.Enabled == false)
                         continue;
+
+                    var fixtureTree = body.FixtureTree;
 
                     foreach (Fixture f in body.FixtureList)
                     {
@@ -227,9 +229,9 @@ namespace tainicom.Aether.Physics2D.Diagnostics
                         {
                             FixtureProxy proxy = f.Proxies[t];
                             AABB aabb;
-                            bp.GetFatAABB(proxy.ProxyId, out aabb);
+                            fixtureTree.GetFatAABB(proxy.ProxyId, out aabb);
 
-                            DrawAABB(ref aabb, color);
+                            DrawAABB(ref aabb, fixtureAABBcolor);
                         }
                     }
                 }
@@ -240,7 +242,7 @@ namespace tainicom.Aether.Physics2D.Diagnostics
                 foreach (Body b in World.BodyList)
                 {
                     Transform xf = b.GetTransform();
-                    xf.p = b.WorldCenter;
+                    xf.Position = b.WorldCenter;
                     DrawTransform(ref xf);
                 }
             }
@@ -386,12 +388,12 @@ namespace tainicom.Aether.Physics2D.Diagnostics
             if (!joint.IsFixedType())
             {
                 Transform xf2 = b2.GetTransform();
-                x2 = xf2.p;
+                x2 = xf2.Position;
             }
 
             Vector2 p1 = joint.WorldAnchorA;
             Vector2 p2 = joint.WorldAnchorB;
-            Vector2 x1 = xf1.p;
+            Vector2 x1 = xf1.Position;
 
             Color color = new Color(0.5f, 0.8f, 0.8f);
 
@@ -460,7 +462,7 @@ namespace tainicom.Aether.Physics2D.Diagnostics
 
                         Vector2 center = Transform.Multiply(circle.Position, ref xf);
                         float radius = circle.Radius;
-                        Vector2 axis = xf.q.ToVector2();
+                        Vector2 axis = xf.Rotation.ToVector2();
 
                         DrawSolidCircle(center, radius, axis, color);
                     }
@@ -619,13 +621,13 @@ namespace tainicom.Aether.Physics2D.Diagnostics
         public override void DrawTransform(ref Transform transform)
         {
             const float axisScale = 0.4f;
-            Vector2 p1 = transform.p;
+            Vector2 p1 = transform.Position;
 
-            var xAxis = transform.q.ToVector2();
+            var xAxis = transform.Rotation.ToVector2();
             Vector2 p2 = p1 + axisScale * xAxis;
             DrawSegment(p1, p2, Color.Red);
             
-            var yAxis = new Vector2(-transform.q.Imaginary, transform.q.Real);
+            var yAxis = new Vector2(-transform.Rotation.Imaginary, transform.Rotation.Real);
             p2 = p1 + axisScale * yAxis;
             DrawSegment(p1, p2, Color.Green);
         }

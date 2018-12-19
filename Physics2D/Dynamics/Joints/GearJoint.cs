@@ -154,7 +154,7 @@ namespace tainicom.Aether.Physics2D.Dynamics.Joints
                 _localAxisC = prismatic.LocalXAxis;
 
                 Vector2 pC = _localAnchorC;
-                Vector2 pA = Complex.Divide(Complex.Multiply(ref _localAnchorA, ref xfA.q) + (xfA.p - xfC.p), ref xfC.q);
+                Vector2 pA = Complex.Divide(Complex.Multiply(ref _localAnchorA, ref xfA.Rotation) + (xfA.Position - xfC.Position), ref xfC.Rotation);
                 coordinateA = Vector2.Dot(pA - pC, _localAxisC);
             }
 
@@ -186,7 +186,7 @@ namespace tainicom.Aether.Physics2D.Dynamics.Joints
                 _localAxisD = prismatic.LocalXAxis;
 
                 Vector2 pD = _localAnchorD;
-                Vector2 pB = Complex.Divide(Complex.Multiply(ref _localAnchorB, ref xfB.q) + (xfB.p - xfD.p), ref xfD.q);
+                Vector2 pB = Complex.Divide(Complex.Multiply(ref _localAnchorB, ref xfB.Rotation) + (xfB.Position - xfD.Position), ref xfD.Rotation);
                 coordinateB = Vector2.Dot(pB - pD, _localAxisD);
             }
 

@@ -30,6 +30,8 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using tainicom.Aether.Physics2D.Common;
 using Microsoft.Xna.Framework;
+using System.Threading;
+using tainicom.Aether.Physics2D.Dynamics;
 
 namespace tainicom.Aether.Physics2D.Collision
 {
@@ -67,8 +69,11 @@ namespace tainicom.Aether.Physics2D.Collision
     /// </summary>
     public class DynamicTree<T>
     {
-        private Stack<int> _raycastStack = new Stack<int>(256);
-        private Stack<int> _queryStack = new Stack<int>(256);
+        //private Stack<int> _raycastStack = new Stack<int>(256);
+        //private Stack<int> _queryStack = new Stack<int>(256);
+        private readonly ThreadLocal<Stack<int>> _raycastStack = new ThreadLocal<Stack<int>>(() => new Stack<int>(256));
+        private readonly ThreadLocal<Stack<int>> _queryStack = new ThreadLocal<Stack<int>>(() => new Stack<int>(256));
+
         private int _freeList;
         private int _nodeCapacity;
         private int _nodeCount;
@@ -76,11 +81,29 @@ namespace tainicom.Aether.Physics2D.Collision
         private int _root;
         internal const int NullNode = -1;
 
+        private readonly Func<AABB, int, object, bool> _queryPairsOtherQueryCallback;
+        private DynamicTree<T> _queryPairsCurOtherTree;
+        private Action<T, T> _queryPairsCurCallback;
+        private T _queryPairsCurUserData;
+
+        public AABB RootAABB
+        {
+            get
+            {
+                if (_root != NullNode)
+                    return _nodes[_root].AABB;
+                else
+                    return new AABB();
+            }
+        }
+
         /// <summary>
         /// Constructing the tree initializes the node pool.
         /// </summary>
         public DynamicTree()
         {
+            _queryPairsOtherQueryCallback = QueryPairsOtherQueryCallback;
+
             _root = NullNode;
 
             _nodeCapacity = 16;
@@ -185,7 +208,7 @@ namespace tainicom.Aether.Physics2D.Collision
         /// <param name="aabb">The aabb.</param>
         /// <param name="userData">The user data.</param>
         /// <returns>Index of the created proxy</returns>
-        public int AddProxy(ref AABB aabb)
+        public int AddProxy(ref AABB aabb, T userData)
         {
             int proxyId = AllocateNode();
 
@@ -193,6 +216,7 @@ namespace tainicom.Aether.Physics2D.Collision
             Vector2 r = new Vector2(Settings.AABBExtension, Settings.AABBExtension);
             _nodes[proxyId].AABB.LowerBound = aabb.LowerBound - r;
             _nodes[proxyId].AABB.UpperBound = aabb.UpperBound + r;
+            _nodes[proxyId].UserData = userData;
             _nodes[proxyId].Height = 0;
 
             InsertLeaf(proxyId);
@@ -331,14 +355,15 @@ namespace tainicom.Aether.Physics2D.Collision
         /// </summary>
         /// <param name="callback">The callback.</param>
         /// <param name="aabb">The aabb.</param>
-        public void Query(Func<int, bool> callback, ref AABB aabb)
+        public void Query(Func<AABB, int, object, bool> callback, ref AABB aabb, out bool proceeded, object userData)
         {
-            _queryStack.Clear();
-            _queryStack.Push(_root);
+            Stack<int> queryStack = _queryStack.Value;
+            queryStack.Clear();
+            queryStack.Push(_root);
 
-            while (_queryStack.Count > 0)
+            while (queryStack.Count > 0)
             {
-                int nodeId = _queryStack.Pop();
+                int nodeId = queryStack.Pop();
                 if (nodeId == NullNode)
                 {
                     continue;
@@ -350,20 +375,80 @@ namespace tainicom.Aether.Physics2D.Collision
                 {
                     if (node.IsLeaf())
                     {
-                        bool proceed = callback(nodeId);
+                        bool proceed = callback(aabb, nodeId, userData);
                         if (proceed == false)
                         {
+                            proceeded = false;
                             return;
                         }
                     }
                     else
                     {
-                        _queryStack.Push(node.Child1);
-                        _queryStack.Push(node.Child2);
+                        queryStack.Push(node.Child1);
+                        queryStack.Push(node.Child2);
                     }
                 }
             }
+            proceeded = true;
         }
+
+
+        /// <summary>
+        /// Finds all of the overlapping pairs between this DynamicTree and the specified other DynamicTree.
+        /// </summary>
+        public void QueryPairsWith(DynamicTree<T> other, Transform t1, Transform t2, Vector2 displacement, Action<T, T> callback)
+        {
+            if (_nodeCount > other._nodeCount)
+            {
+                other.QueryPairsWith(this, t2, t1, -displacement, callback);
+                return;
+            }
+
+            _queryPairsCurOtherTree = other;
+            _queryPairsCurCallback = callback;
+
+            Stack<int> stack = _queryStack.Value;
+            if (_root != NullNode)
+                stack.Push(_root);
+
+            while (stack.Count > 0)
+            {
+                TreeNode<T> node = _nodes[stack.Pop()];
+                if (node.IsLeaf())
+                {
+                    AABB aabb = node.AABB;
+
+                    // Transform into other coordinate system and predict displacement.
+                    AABB.Transform(ref t1, ref aabb);
+                    aabb.Displace(displacement);
+                    AABB.InvTransform(ref t2, ref aabb);
+
+                    _queryPairsCurUserData = node.UserData;
+                    Debug.Assert(((FixtureProxy)(object)_queryPairsCurUserData).Fixture != null);
+                    other.Query(_queryPairsOtherQueryCallback, ref aabb, out _, null);
+                }
+                else
+                {
+                    if (node.Child1 != NullNode)
+                        stack.Push(node.Child1);
+                    if (node.Child2 != NullNode)
+                        stack.Push(node.Child2);
+                }
+            }
+
+            _queryPairsCurOtherTree = null;
+            _queryPairsCurCallback = null;
+            _queryPairsCurUserData = default(T);
+        }
+
+        private bool QueryPairsOtherQueryCallback(AABB aabb, int proxyID, object userData)
+        {
+            T otherData = _queryPairsCurOtherTree.GetUserData(proxyID);
+            Debug.Assert(((FixtureProxy)(object)otherData).Fixture != null);
+            _queryPairsCurCallback(_queryPairsCurUserData, otherData);
+            return true;
+        }
+
 
         /// <summary>
         /// Ray-cast against the proxies in the tree. This relies on the callback
@@ -374,7 +459,7 @@ namespace tainicom.Aether.Physics2D.Collision
         /// </summary>
         /// <param name="callback">A callback class that is called for each proxy that is hit by the ray.</param>
         /// <param name="input">The ray-cast input data. The ray extends from p1 to p1 + maxFraction * (p2 - p1).</param>
-        public void RayCast(Func<RayCastInput, int, float> callback, ref RayCastInput input)
+        public void RayCast(Func<RayCastInput, int, object, float> callback, ref RayCastInput input, out float maxFraction, object userData)
         {
             Vector2 p1 = input.Point1;
             Vector2 p2 = input.Point2;
@@ -388,7 +473,7 @@ namespace tainicom.Aether.Physics2D.Collision
             // Separating axis for segment (Gino, p80).
             // |dot(v, p1 - c)| > dot(|v|, h)
 
-            float maxFraction = input.MaxFraction;
+            maxFraction = input.MaxFraction;
 
             // Build a bounding box for the segment.
             AABB segmentAABB = new AABB();
@@ -398,12 +483,13 @@ namespace tainicom.Aether.Physics2D.Collision
                 Vector2.Max(ref p1, ref t, out segmentAABB.UpperBound);
             }
 
-            _raycastStack.Clear();
-            _raycastStack.Push(_root);
+            Stack<int> raycastStack = _raycastStack.Value;
+            raycastStack.Clear();
+            raycastStack.Push(_root);
 
-            while (_raycastStack.Count > 0)
+            while (raycastStack.Count > 0)
             {
-                int nodeId = _raycastStack.Pop();
+                int nodeId = raycastStack.Pop();
                 if (nodeId == NullNode)
                 {
                     continue;
@@ -433,11 +519,12 @@ namespace tainicom.Aether.Physics2D.Collision
                     subInput.Point2 = input.Point2;
                     subInput.MaxFraction = maxFraction;
 
-                    float value = callback(subInput, nodeId);
+                    float value = callback(subInput, nodeId, userData);
 
                     if (value == 0.0f)
                     {
                         // the client has terminated the raycast.
+                        maxFraction = value;
                         return;
                     }
 
@@ -452,8 +539,8 @@ namespace tainicom.Aether.Physics2D.Collision
                 }
                 else
                 {
-                    _raycastStack.Push(node.Child1);
-                    _raycastStack.Push(node.Child2);
+                    raycastStack.Push(node.Child1);
+                    raycastStack.Push(node.Child2);
                 }
             }
         }
@@ -503,6 +590,7 @@ namespace tainicom.Aether.Physics2D.Collision
             Debug.Assert(0 < _nodeCount);
             _nodes[nodeId].ParentOrNext = _freeList;
             _nodes[nodeId].Height = -1;
+            _nodes[nodeId].UserData = default(T);
             _freeList = nodeId;
             --_nodeCount;
         }

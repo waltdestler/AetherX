@@ -26,7 +26,7 @@ namespace tainicom.Aether.Physics2D.Samples.Testbed.Tests
             _worldSize = 2 * GameInstance.ConvertScreenToWorld(GameInstance.Window.ClientBounds.Width, 0);
 
             //Create a World using QuadTree constructor
-            World = new World(new AABB(-_worldSize / 2, _worldSize / 2));
+            World = new World();//new AABB(-_worldSize / 2, _worldSize / 2));
             World.Gravity = new Vector2(0.0f, -10.0f);
 
             //Create a World using DynamicTree constructor

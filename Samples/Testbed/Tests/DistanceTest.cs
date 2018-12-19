@@ -45,21 +45,21 @@ namespace tainicom.Aether.Physics2D.Samples.Testbed.Tests
 
         private DistanceTest()
         {
-            {
-                _transformA = Transform.Identity;
-                _transformA.p = new Vector2(0.0f, -0.2f);
-                Vertices vertices = PolygonTools.CreateRectangle(10.0f, 0.2f);
-                _polygonA = new PolygonShape(vertices, 0);
-            }
+            //{
+            //    _transformA = Transform.Identity;
+            //    _transformA.p = new Vector2(0.0f, -0.2f);
+            //    Vertices vertices = PolygonTools.CreateRectangle(10.0f, 0.2f);
+            //    _polygonA = new PolygonShape(vertices, 0);
+            //}
 
-            {
-                _positionB = new Vector2(12.017401f, 0.13678508f);
-                _angleB = -0.0109265f;
-                _transformB = new Transform(_positionB, _angleB);
+            //{
+            //    _positionB = new Vector2(12.017401f, 0.13678508f);
+            //    _angleB = -0.0109265f;
+            //    _transformB = new Transform(_positionB, _angleB);
 
-                Vertices vertices = PolygonTools.CreateRectangle(2.0f, 0.1f);
-                _polygonB = new PolygonShape(vertices, 0);
-            }
+            //    Vertices vertices = PolygonTools.CreateRectangle(2.0f, 0.1f);
+            //    _polygonB = new PolygonShape(vertices, 0);
+            //}
         }
 
         public override void Update(GameSettings settings, GameTime gameTime)

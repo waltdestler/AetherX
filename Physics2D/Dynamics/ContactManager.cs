@@ -27,6 +27,8 @@
 * 3. This notice may not be removed or altered from any source distribution. 
 */
 
+using Microsoft.Xna.Framework;
+using System;
 using System.Collections.Generic;
 using tainicom.Aether.Physics2D.Collision;
 using tainicom.Aether.Physics2D.Dynamics.Contacts;
@@ -67,7 +69,7 @@ namespace tainicom.Aether.Physics2D.Dynamics
         /// </summary>
         public BeginContactDelegate BeginContact;
 
-        public IBroadPhase BroadPhase;
+        public IBroadPhase<BodyProxy> BroadPhase;
 
         public readonly ContactListHead ContactList;
         public int ContactCount { get; private set; }
@@ -99,9 +101,14 @@ namespace tainicom.Aether.Physics2D.Dynamics
         public EndContactDelegate EndContact;
 
         /// <summary>
-        /// Fires when the broadphase detects that two Fixtures are close to each other.
+        /// Fires when the broadphase detects that two bodies are close to each other.
         /// </summary>
-        public BroadphaseDelegate OnBroadphaseCollision;
+        public BroadphaseDelegate<BodyProxy> OnBroadphaseCollision;
+
+        /// <summary>
+        /// Fires when the fixture-phase detects that two Fixtures are close to each other.
+        /// </summary>
+        public Action<FixtureProxy, FixtureProxy> OnFixturePhaseCollision;
 
         /// <summary>
         /// Fires after the solver has run
@@ -113,22 +120,40 @@ namespace tainicom.Aether.Physics2D.Dynamics
         /// </summary>
         public PreSolveDelegate PreSolve;
 
-        internal ContactManager(IBroadPhase broadPhase)
+        internal ContactManager(IBroadPhase<BodyProxy> broadPhase)
         {
             ContactList = new ContactListHead();
             ContactCount = 0;
             _contactPoolList = new ContactListHead();
 
             BroadPhase = broadPhase;
-            OnBroadphaseCollision = AddPair;
+            OnBroadphaseCollision = AddPairBroadPhase;
+            OnFixturePhaseCollision = AddPairFixturePhase;
         }
 
         // Broad-phase callback.
-        private void AddPair(int proxyIdA, int proxyIdB)
+        private void AddPairBroadPhase(ref BodyProxy proxyA, ref BodyProxy proxyB)
         {
-            FixtureProxy proxyA = BroadPhase.GetProxy(proxyIdA);
-            FixtureProxy proxyB = BroadPhase.GetProxy(proxyIdB);
-            
+            Body bodyA = proxyA.Body;
+            Body bodyB = proxyB.Body;
+
+            // Are the fixtures on the same body?
+            if (bodyA == bodyB)
+            {
+                return;
+            }
+
+            // Does a joint override collision? Is at least one body dynamic?
+            if (bodyB.ShouldCollide(bodyA) == false)
+                return;
+
+            Vector2 displacement = bodyB._displacement - bodyA._displacement;
+            bodyA.FixtureTree.QueryPairsWith(bodyB.FixtureTree, bodyA._xf, bodyB._xf, displacement, OnFixturePhaseCollision);
+        }
+
+        // Fixture-phase callback.
+        private void AddPairFixturePhase(FixtureProxy proxyA, FixtureProxy proxyB)
+        {
             Fixture fixtureA = proxyA.Fixture;
             Fixture fixtureB = proxyB.Fixture;
 
@@ -139,10 +164,10 @@ namespace tainicom.Aether.Physics2D.Dynamics
             Body bodyB = fixtureB.Body;
 
             // Are the fixtures on the same body?
-            if (bodyA == bodyB)
-            {
-                return;
-            }
+            //if (bodyA == bodyB)
+            //{
+            //    return;
+            //}
 
             // Does a contact already exist?
             for (ContactEdge ceB = bodyB.ContactList; ceB != null; ceB = ceB.Next)
@@ -169,8 +194,8 @@ namespace tainicom.Aether.Physics2D.Dynamics
             }
 
             // Does a joint override collision? Is at least one body dynamic?
-            if (bodyB.ShouldCollide(bodyA) == false)
-                return;
+            //if (bodyB.ShouldCollide(bodyA) == false)
+            //    return;
 
             //Check default filter
             if (ShouldCollide(fixtureA, fixtureB) == false)
@@ -396,8 +421,13 @@ namespace tainicom.Aether.Physics2D.Dynamics
 
                 int proxyIdA = fixtureA.Proxies[indexA].ProxyId;
                 int proxyIdB = fixtureB.Proxies[indexB].ProxyId;
-
-                bool overlap = BroadPhase.TestOverlap(proxyIdA, proxyIdB);
+                fixtureA.Body.FixtureTree.GetFatAABB(proxyIdA, out AABB aabbA);
+                AABB.Transform(ref fixtureA.Body._xf, ref aabbA);
+                aabbA.Displace(-fixtureA.Body._displacement);
+                fixtureB.Body.FixtureTree.GetFatAABB(proxyIdB, out AABB aabbB);
+                AABB.Transform(ref fixtureB.Body._xf, ref aabbB);
+                aabbB.Displace(-fixtureB.Body._displacement);
+                bool overlap = AABB.TestOverlap(ref aabbA, ref aabbB);//BroadPhase.TestOverlap(proxyIdA, proxyIdB);
 
                 // Here we destroy contacts that cease to overlap in the broad-phase.
                 if (overlap == false)

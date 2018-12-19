@@ -81,6 +81,10 @@ namespace tainicom.Aether.Physics2D.Dynamics
                 _velocities = new Velocity[bodyCapacity];
                 _positions = new Position[bodyCapacity];
             }
+            else
+            {
+                Array.Clear(Bodies, 0, Bodies.Length);
+            }
 
             if (_contacts == null || _contacts.Length < contactCapacity)
             {

@@ -135,6 +135,17 @@ namespace tainicom.Aether.Physics2D.Dynamics.Contacts
             {
                 Contact contact = contacts[i];
 
+                // Contact may have been destroyed during collision handling.
+                if (contact.FixtureA == null || contact.FixtureB == null)
+                {
+                    Debug.Assert(contact.FixtureA == null && contact.FixtureB == null);
+
+                    _count--;
+                    Array.Copy(contacts, i + 1, contacts, i, _count - i);
+                    i--;
+                    continue;
+                }
+
                 Fixture fixtureA = contact.FixtureA;
                 Fixture fixtureB = contact.FixtureB;
                 Shape shapeA = fixtureA.Shape;
@@ -241,8 +252,8 @@ namespace tainicom.Aether.Physics2D.Dynamics.Contacts
 
                 Transform xfA = new Transform(Vector2.Zero, aA);
                 Transform xfB = new Transform(Vector2.Zero, aB);
-                xfA.p = cA - Complex.Multiply(ref localCenterA, ref xfA.q);
-                xfB.p = cB - Complex.Multiply(ref localCenterB, ref xfB.q);
+                xfA.Position = cA - Complex.Multiply(ref localCenterA, ref xfA.Rotation);
+                xfB.Position = cB - Complex.Multiply(ref localCenterB, ref xfB.Rotation);
 
                 Vector2 normal;
                 FixedArray2<Vector2> points;
@@ -883,8 +894,8 @@ namespace tainicom.Aether.Physics2D.Dynamics.Contacts
                 {
                     Transform xfA = new Transform(Vector2.Zero, aA);
                     Transform xfB = new Transform(Vector2.Zero, aB);
-                    xfA.p = cA - Complex.Multiply(ref localCenterA, ref xfA.q);
-                    xfB.p = cB - Complex.Multiply(ref localCenterB, ref xfB.q);
+                    xfA.Position = cA - Complex.Multiply(ref localCenterA, ref xfA.Rotation);
+                    xfB.Position = cB - Complex.Multiply(ref localCenterB, ref xfB.Rotation);
 
                     Vector2 normal;
                     Vector2 point;
@@ -977,8 +988,8 @@ namespace tainicom.Aether.Physics2D.Dynamics.Contacts
                 {
                     Transform xfA = new Transform(Vector2.Zero, aA);
                     Transform xfB = new Transform(Vector2.Zero, aB);
-                    xfA.p = cA - Complex.Multiply(ref localCenterA, ref xfA.q);
-                    xfB.p = cB - Complex.Multiply(ref localCenterB, ref xfB.q);
+                    xfA.Position = cA - Complex.Multiply(ref localCenterA, ref xfA.Rotation);
+                    xfB.Position = cB - Complex.Multiply(ref localCenterB, ref xfB.Rotation);
 
                     Vector2 normal;
                     Vector2 point;
@@ -1070,7 +1081,7 @@ namespace tainicom.Aether.Physics2D.Dynamics.Contacts
 
                     case ManifoldType.FaceA:
                         {
-                            normal = Complex.Multiply(ref manifold.LocalNormal, ref xfA.q);
+                            normal = Complex.Multiply(ref manifold.LocalNormal, ref xfA.Rotation);
                             Vector2 planePoint = Transform.Multiply(ref manifold.LocalPoint, ref xfA);
 
                             for (int i = 0; i < manifold.PointCount; ++i)
@@ -1085,7 +1096,7 @@ namespace tainicom.Aether.Physics2D.Dynamics.Contacts
 
                     case ManifoldType.FaceB:
                         {
-                            normal = Complex.Multiply(ref manifold.LocalNormal, ref xfB.q);
+                            normal = Complex.Multiply(ref manifold.LocalNormal, ref xfB.Rotation);
                             Vector2 planePoint = Transform.Multiply(ref manifold.LocalPoint, ref xfB);
 
                             for (int i = 0; i < manifold.PointCount; ++i)
@@ -1129,7 +1140,7 @@ namespace tainicom.Aether.Physics2D.Dynamics.Contacts
 
                     case ManifoldType.FaceA:
                         {
-                            Complex.Multiply(ref pc.localNormal, ref xfA.q, out normal);
+                            Complex.Multiply(ref pc.localNormal, ref xfA.Rotation, out normal);
                             Vector2 planePoint = Transform.Multiply(ref pc.localPoint, ref xfA);
 
                             Vector2 clipPoint = Transform.Multiply(pc.localPoints[index], ref xfB);
@@ -1140,7 +1151,7 @@ namespace tainicom.Aether.Physics2D.Dynamics.Contacts
 
                     case ManifoldType.FaceB:
                         {
-                            Complex.Multiply(ref pc.localNormal, ref xfB.q, out normal);
+                            Complex.Multiply(ref pc.localNormal, ref xfB.Rotation, out normal);
                             Vector2 planePoint = Transform.Multiply(ref pc.localPoint, ref xfB);
 
                             Vector2 clipPoint = Transform.Multiply(pc.localPoints[index], ref xfA);

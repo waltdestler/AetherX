@@ -117,7 +117,7 @@ namespace tainicom.Aether.Physics2D.Collision
                 Vector2 a = localPointB2 - localPointB1;
                 _axis = new Vector2(a.Y, -a.X);
                 _axis.Normalize();
-                Vector2 normal = Complex.Multiply(ref _axis, ref xfB.q);
+                Vector2 normal = Complex.Multiply(ref _axis, ref xfB.Rotation);
 
                 _localPoint = 0.5f * (localPointB1 + localPointB2);
                 Vector2 pointB = Transform.Multiply(ref _localPoint, ref xfB);
@@ -141,7 +141,7 @@ namespace tainicom.Aether.Physics2D.Collision
                 Vector2 a = localPointA2 - localPointA1;
                 _axis = new Vector2(a.Y, -a.X);
                 _axis.Normalize();
-                Vector2 normal = Complex.Multiply(ref _axis, ref xfA.q);
+                Vector2 normal = Complex.Multiply(ref _axis, ref xfA.Rotation);
 
                 _localPoint = 0.5f * (localPointA1 + localPointA2);
                 Vector2 pointA = Transform.Multiply(ref _localPoint, ref xfA);
@@ -167,8 +167,8 @@ namespace tainicom.Aether.Physics2D.Collision
             {
                 case SeparationFunctionType.Points:
                     {
-                        Vector2 axisA =  Complex.Divide(ref _axis, ref xfA.q);
-                        Vector2 axisB = -Complex.Divide(ref _axis, ref xfB.q);
+                        Vector2 axisA =  Complex.Divide(ref _axis, ref xfA.Rotation);
+                        Vector2 axisB = -Complex.Divide(ref _axis, ref xfB.Rotation);
 
                         indexA = _proxyA.GetSupport(axisA);
                         indexB = _proxyB.GetSupport(axisB);
@@ -185,10 +185,10 @@ namespace tainicom.Aether.Physics2D.Collision
 
                 case SeparationFunctionType.FaceA:
                     {
-                        Vector2 normal = Complex.Multiply(ref _axis, ref xfA.q);
+                        Vector2 normal = Complex.Multiply(ref _axis, ref xfA.Rotation);
                         Vector2 pointA = Transform.Multiply(ref _localPoint, ref xfA);
 
-                        Vector2 axisB = -Complex.Divide(ref normal, ref xfB.q);
+                        Vector2 axisB = -Complex.Divide(ref normal, ref xfB.Rotation);
 
                         indexA = -1;
                         indexB = _proxyB.GetSupport(axisB);
@@ -202,10 +202,10 @@ namespace tainicom.Aether.Physics2D.Collision
 
                 case SeparationFunctionType.FaceB:
                     {
-                        Vector2 normal = Complex.Multiply(ref _axis, ref xfB.q);
+                        Vector2 normal = Complex.Multiply(ref _axis, ref xfB.Rotation);
                         Vector2 pointB = Transform.Multiply(ref _localPoint, ref xfB);
 
-                        Vector2 axisA = -Complex.Divide(ref normal, ref xfA.q);
+                        Vector2 axisA = -Complex.Divide(ref normal, ref xfA.Rotation);
 
                         indexB = -1;
                         indexA = _proxyA.GetSupport(axisA);
@@ -246,18 +246,18 @@ namespace tainicom.Aether.Physics2D.Collision
                     }
                 case SeparationFunctionType.FaceA:
                     {
-                        Vector2 normal = Complex.Multiply(ref _axis, ref xfA.q);
-                        Vector2 pointA = Transform.Multiply(ref _localPoint, ref xfA);
+                        Vector2 normal = MathUtils.Mul(ref xfA.Rotation, _axis);
+                        Vector2 pointA = MathUtils.Mul(ref xfA, _localPoint);
 
                         Vector2 localPointB = _proxyB.Vertices[indexB];
-                        Vector2 pointB = Transform.Multiply(ref localPointB, ref xfB);
+                        Vector2 pointB = MathUtils.Mul(ref xfB, localPointB);
 
                         float separation = Vector2.Dot(pointB - pointA, normal);
                         return separation;
                     }
                 case SeparationFunctionType.FaceB:
                     {
-                        Vector2 normal = Complex.Multiply(ref _axis, ref xfB.q);
+                        Vector2 normal = Complex.Multiply(ref _axis, ref xfB.Rotation);
                         Vector2 pointB = Transform.Multiply(ref _localPoint, ref xfB);
 
                         Vector2 localPointA = _proxyA.Vertices[indexA];

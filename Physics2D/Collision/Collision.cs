@@ -543,6 +543,49 @@ namespace tainicom.Aether.Physics2D.Collision
             output.Normal = normal;
             return true;
         }
+
+
+        public void Displace(Vector2 d)
+        {
+            if (d.X < 0.0f)
+                LowerBound.X += d.X;
+            else
+                UpperBound.X += d.X;
+            if (d.Y < 0.0f)
+                LowerBound.Y += d.Y;
+            else
+                UpperBound.Y += d.Y;
+        }
+
+        public static void Transform(ref Transform t, ref AABB aabb)
+        {
+            Vector2 p1 = MathUtils.Mul(ref t, aabb.LowerBound);
+            Vector2 p2 = MathUtils.Mul(ref t, new Vector2(aabb.LowerBound.X, aabb.UpperBound.Y));
+            Vector2 p3 = MathUtils.Mul(ref t, new Vector2(aabb.UpperBound.X, aabb.LowerBound.Y));
+            Vector2 p4 = MathUtils.Mul(ref t, aabb.UpperBound);
+
+            aabb.LowerBound = Vector2.Min(
+                Vector2.Min(p1, p2),
+                Vector2.Min(p3, p4));
+            aabb.UpperBound = Vector2.Max(
+                Vector2.Max(p1, p2),
+                Vector2.Max(p3, p4));
+        }
+
+        public static void InvTransform(ref Transform t, ref AABB aabb)
+        {
+            Vector2 p1 = MathUtils.MulT(ref t, aabb.LowerBound);
+            Vector2 p2 = MathUtils.MulT(ref t, new Vector2(aabb.LowerBound.X, aabb.UpperBound.Y));
+            Vector2 p3 = MathUtils.MulT(ref t, new Vector2(aabb.UpperBound.X, aabb.LowerBound.Y));
+            Vector2 p4 = MathUtils.MulT(ref t, aabb.UpperBound);
+
+            aabb.LowerBound = Vector2.Min(
+                Vector2.Min(p1, p2),
+                Vector2.Min(p3, p4));
+            aabb.UpperBound = Vector2.Max(
+                Vector2.Max(p1, p2),
+                Vector2.Max(p3, p4));
+        }
     }
 
     /// <summary>
@@ -897,7 +940,7 @@ namespace tainicom.Aether.Physics2D.Collision
             Vector2 localNormal = new Vector2(localTangent.Y, -localTangent.X);
             Vector2 planePoint = 0.5f * (v11 + v12);
 
-            Vector2 tangent = Complex.Multiply(ref localTangent, ref xf1.q);
+            Vector2 tangent = Complex.Multiply(ref localTangent, ref xf1.Rotation);
 
             float normalx = tangent.Y;
             float normaly = -tangent.X;
@@ -1365,7 +1408,7 @@ namespace tainicom.Aether.Physics2D.Collision
                 for (int i = 0; i < polygonB.Vertices.Count; ++i)
                 {
                     tempPolygonB.Vertices[i] = Transform.Multiply(polygonB.Vertices[i], ref xf);
-                    tempPolygonB.Normals[i] = Complex.Multiply(polygonB.Normals[i], ref xf.q);
+                    tempPolygonB.Normals[i] = Complex.Multiply(polygonB.Normals[i], ref xf.Rotation);
                 }
 
                 radius = 2.0f * Settings.PolygonRadius;
@@ -1704,7 +1747,7 @@ namespace tainicom.Aether.Physics2D.Collision
             Debug.Assert(0 <= edge1 && edge1 < poly1.Vertices.Count);
 
             // Convert normal from poly1's frame into poly2's frame.
-            Vector2 normal1 = Complex.Multiply(normals1[edge1], ref xf1To2.q);
+            Vector2 normal1 = Complex.Multiply(normals1[edge1], ref xf1To2.Rotation);
 
             // Find support vertex on poly2 for -normal.
             int index = 0;
@@ -1830,7 +1873,7 @@ namespace tainicom.Aether.Physics2D.Collision
             Debug.Assert(0 <= edge1 && edge1 < poly1.Vertices.Count);
 
             // Get the normal of the reference edge in poly2's frame.
-            Vector2 normal1 = Complex.Divide(Complex.Multiply(normals1[edge1], ref xf1.q), ref xf2.q);
+            Vector2 normal1 = Complex.Divide(Complex.Multiply(normals1[edge1], ref xf1.Rotation), ref xf2.Rotation);
 
 
             // Find the incident edge on poly2.

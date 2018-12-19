@@ -224,7 +224,7 @@ namespace tainicom.Aether.Physics2D.Collision.Shapes
 
         public override bool TestPoint(ref Transform transform, ref Vector2 point)
         {
-            Vector2 pLocal = Complex.Divide(point - transform.p, ref transform.q);
+            Vector2 pLocal = Complex.Divide(point - transform.Position, ref transform.Rotation);
 
             for (int i = 0; i < Vertices.Count; ++i)
             {
@@ -243,8 +243,8 @@ namespace tainicom.Aether.Physics2D.Collision.Shapes
             output = new RayCastOutput();
 
             // Put the ray into the polygon's frame of reference.
-            Vector2 p1 = Complex.Divide(input.Point1 - transform.p, ref transform.q);
-            Vector2 p2 = Complex.Divide(input.Point2 - transform.p, ref transform.q);
+            Vector2 p1 = Complex.Divide(input.Point1 - transform.Position, ref transform.Rotation);
+            Vector2 p2 = Complex.Divide(input.Point2 - transform.Position, ref transform.Rotation);
             Vector2 d = p2 - p1;
 
             float lower = 0.0f, upper = input.MaxFraction;
@@ -302,7 +302,7 @@ namespace tainicom.Aether.Physics2D.Collision.Shapes
             if (index >= 0)
             {
                 output.Fraction = lower;
-                output.Normal = Complex.Multiply(Normals[index], ref transform.q);
+                output.Normal = Complex.Multiply(Normals[index], ref transform.Rotation);
                 return true;
             }
 
@@ -319,16 +319,16 @@ namespace tainicom.Aether.Physics2D.Collision.Shapes
         {
             // OPT: aabb.LowerBound = Transform.Multiply(Vertices[0], ref transform);
             var vert = Vertices[0];
-            aabb.LowerBound.X = (vert.X * transform.q.Real - vert.Y * transform.q.Imaginary) + transform.p.X;
-            aabb.LowerBound.Y = (vert.Y * transform.q.Real + vert.X * transform.q.Imaginary) + transform.p.Y;
+            aabb.LowerBound.X = (vert.X * transform.Rotation.Real - vert.Y * transform.Rotation.Imaginary) + transform.Position.X;
+            aabb.LowerBound.Y = (vert.Y * transform.Rotation.Real + vert.X * transform.Rotation.Imaginary) + transform.Position.Y;
             aabb.UpperBound = aabb.LowerBound;
 
             for (int i = 1; i < Vertices.Count; ++i)
             {
                 // OPT: Vector2 v = Transform.Multiply(Vertices[i], ref transform);
                 vert = Vertices[i];
-                float vX = (vert.X * transform.q.Real - vert.Y * transform.q.Imaginary) + transform.p.X;
-                float vY = (vert.Y * transform.q.Real + vert.X * transform.q.Imaginary) + transform.p.Y;
+                float vX = (vert.X * transform.Rotation.Real - vert.Y * transform.Rotation.Imaginary) + transform.Position.X;
+                float vY = (vert.Y * transform.Rotation.Real + vert.X * transform.Rotation.Imaginary) + transform.Position.Y;
 
                 // OPT: Vector2.Min(ref aabb.LowerBound, ref v, out aabb.LowerBound);
                 // OPT: Vector2.Max(ref aabb.UpperBound, ref v, out aabb.UpperBound);
@@ -357,8 +357,8 @@ namespace tainicom.Aether.Physics2D.Collision.Shapes
             sc = Vector2.Zero;
 
             //Transform plane into shape co-ordinates
-            Vector2 normalL = Complex.Divide(ref normal, ref xf.q);
-            float offsetL = offset - Vector2.Dot(normal, xf.p);
+            Vector2 normalL = Complex.Divide(ref normal, ref xf.Rotation);
+            float offsetL = offset - Vector2.Dot(normal, xf.Position);
 
             float[] depths = new float[Settings.MaxPolygonVertices];
             int diveCount = 0;
