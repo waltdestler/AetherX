@@ -998,14 +998,15 @@ namespace tainicom.Aether.Physics2D.Dynamics
             body._world = this;
             BodyList.Add(body);
 
-
-            // Update transform
-            body.SetTransformIgnoreContacts(ref body._xf.Position, body.Rotation);
-
             // Create proxies
             if (Enabled)
                 body.CreateProxy();
 
+
+            // Update transform
+            body.SetTransformIgnoreContacts(ref body._xf.Position, body.Rotation);
+
+            
             ContactManager.FindNewContacts();
 
 
@@ -1499,8 +1500,8 @@ namespace tainicom.Aether.Physics2D.Dynamics
                 if (Settings.EnableDiagnostics)
                     ContinuousPhysicsTime = TimeSpan.FromTicks(_watch.ElapsedTicks) - (AddRemoveTime + NewContactsTime + ControllersUpdateTime + ContactsUpdateTime + SolveUpdateTime);
 
-                if (step.dt > 0.0f)
-                    Fluid.Update(dt);
+                //if (step.dt > 0.0f)
+                //    Fluid.Update(dt);
 
                 if (Settings.AutoClearForces)
                     ClearForces();
