@@ -49,7 +49,7 @@ namespace tainicom.Aether.Physics2D.Samples.Testbed.Tests
 
         private float WorldSideSize { get; set; }
         private float WorldRadius { get { return this.WorldSideSize / 2f; } }
-        private BodyStructureType BodyStructureType = BodyStructureType.SingleFixtureBox;
+        private BodyStructureType BodyStructureType = BodyStructureType.TwelveFixtureStructure;
 
         // NOTE: This should always be greater than the biggest test body, otherwise things 
         //       could overlap, which is a huge perf reduction.
@@ -62,11 +62,12 @@ namespace tainicom.Aether.Physics2D.Samples.Testbed.Tests
             this.WorldSideSize = this.WorldSideSizeOptions[Keys.Q];
 
             // set to 100m per body
-            this.MetersPerBody = this.MetersPerBodyOptions[Keys.X];
+            this.MetersPerBody = this.MetersPerBodyOptions[Keys.Z];
         }
 
         public override void Initialize()
         {
+
             //IBroadPhase broadphaseSolver;
 
             //switch (this.currentBroadPhaseName)

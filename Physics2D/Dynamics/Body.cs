@@ -70,6 +70,13 @@ namespace tainicom.Aether.Physics2D.Dynamics
         internal int _lockOrder;
 
         private int _proxyId = -1;
+        public int ProxyId
+        {
+            get
+            {
+                return this._proxyId;
+            }
+        }
 
         public ControllerFilter ControllerFilter = new ControllerFilter(ControllerCategory.All);
 

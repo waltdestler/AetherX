@@ -213,6 +213,9 @@ namespace tainicom.Aether.Physics2D.Diagnostics
 
             if ((Flags & DebugViewFlags.AABB) == DebugViewFlags.AABB)
             {
+                var bodyBroadphase = World.ContactManager.BroadPhase;
+
+                Color bodyAABBcolor = new Color(0.3f, 0.9f, 0.3f);
                 Color fixtureAABBcolor = new Color(0.9f, 0.3f, 0.9f);
                 //IBroadPhase bp = World.ContactManager.BroadPhase;
 
@@ -221,14 +224,19 @@ namespace tainicom.Aether.Physics2D.Diagnostics
                     if (body.Enabled == false)
                         continue;
 
-                    var fixtureTree = body.FixtureTree;
+                    // render body AABBs
+                    AABB aabb;
+                    bodyBroadphase.GetFatAABB(body.ProxyId, out aabb);
+                    DrawAABB(ref aabb, bodyAABBcolor);
 
+                    // render fixture AABBs
+                    var fixtureTree = body.FixtureTree;
                     foreach (Fixture f in body.FixtureList)
                     {
                         for (int t = 0; t < f.ProxyCount; ++t)
                         {
                             FixtureProxy proxy = f.Proxies[t];
-                            AABB aabb;
+                            //AABB aabb;
                             fixtureTree.GetFatAABB(proxy.ProxyId, out aabb);
 
                             DrawAABB(ref aabb, fixtureAABBcolor);
