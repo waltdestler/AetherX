@@ -677,7 +677,10 @@ namespace tainicom.Aether.Physics2D.Dynamics
                 {
                     //IBroadPhase broadPhase = World.ContactManager.BroadPhase;
                     //fixture.CreateProxies(broadPhase, ref _xf);
-                    fixture.CreateProxies(this.FixtureTree, ref _xf);
+                    //fixture.CreateProxies(this.FixtureTree, ref _xf);
+
+                    // (Or perhaps CreateProxies should be refactored to not even take a transform parameter.)
+                    fixture.CreateProxies(this.FixtureTree, ref Transform.Identity);
                 }
 
                 // Let the world know we have a new fixture. This will cause new contacts
