@@ -224,6 +224,8 @@ namespace tainicom.Aether.Physics2D.Diagnostics
                     if (body.Enabled == false)
                         continue;
 
+                    var bodyTransform = body.GetTransform();
+
                     // render body AABBs
                     AABB aabb;
                     bodyBroadphase.GetFatAABB(body.ProxyId, out aabb);
@@ -236,8 +238,11 @@ namespace tainicom.Aether.Physics2D.Diagnostics
                         for (int t = 0; t < f.ProxyCount; ++t)
                         {
                             FixtureProxy proxy = f.Proxies[t];
-                            //AABB aabb;
+                          
                             fixtureTree.GetFatAABB(proxy.ProxyId, out aabb);
+
+                            // move fixture to align with body in world-space
+                            AABB.Transform(ref bodyTransform, ref aabb);
 
                             DrawAABB(ref aabb, fixtureAABBcolor);
                         }

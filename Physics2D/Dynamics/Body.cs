@@ -681,6 +681,9 @@ namespace tainicom.Aether.Physics2D.Dynamics
 
                     // (Or perhaps CreateProxies should be refactored to not even take a transform parameter.)
                     fixture.CreateProxies(this.FixtureTree, ref Transform.Identity);
+
+                    // problem with static bodies. A static body's AABB never gets updated after adding fixtures
+                    this.Synchronize();
                 }
 
                 // Let the world know we have a new fixture. This will cause new contacts
