@@ -126,7 +126,7 @@ namespace tainicom.Aether.Physics2D.Samples.Testbed.Tests
             new TestEntry {Name = "Destructible Terrain Test", CreateTest = DestructibleTerrainTest.Create},
 #endif
             new TestEntry {Name = "Check polygon", CreateTest = CheckPolygonTest.Create},
-            new TestEntry {Name = "Fluids", CreateTest = FluidsTest.Create},
+            //new TestEntry {Name = "Fluids", CreateTest = FluidsTest.Create},
 
             new TestEntry {Name = null, CreateTest = null}
         };
