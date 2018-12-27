@@ -589,7 +589,14 @@ namespace tainicom.Aether.Physics2D.Common
             Identity = new Transform(Vector2.Zero, Complex.One);
         }
 
+        /// <summary>
+        /// formerly called simply "q"
+        /// </summary>
         public Complex Rotation;
+
+        /// <summary>
+        /// formerly called simply "p"
+        /// </summary>
         public Vector2 Position;
 
         /// <summary>

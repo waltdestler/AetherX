@@ -319,14 +319,17 @@ namespace tainicom.Aether.Physics2D.Collision.Shapes
         {
             // OPT: aabb.LowerBound = Transform.Multiply(Vertices[0], ref transform);
             var vert = Vertices[0];
+
             aabb.LowerBound.X = (vert.X * transform.Rotation.Real - vert.Y * transform.Rotation.Imaginary) + transform.Position.X;
             aabb.LowerBound.Y = (vert.Y * transform.Rotation.Real + vert.X * transform.Rotation.Imaginary) + transform.Position.Y;
+
             aabb.UpperBound = aabb.LowerBound;
 
             for (int i = 1; i < Vertices.Count; ++i)
             {
                 // OPT: Vector2 v = Transform.Multiply(Vertices[i], ref transform);
                 vert = Vertices[i];
+
                 float vX = (vert.X * transform.Rotation.Real - vert.Y * transform.Rotation.Imaginary) + transform.Position.X;
                 float vY = (vert.Y * transform.Rotation.Real + vert.X * transform.Rotation.Imaginary) + transform.Position.Y;
 
@@ -347,9 +350,6 @@ namespace tainicom.Aether.Physics2D.Collision.Shapes
             aabb.LowerBound.Y -= Radius;
             aabb.UpperBound.X += Radius;
             aabb.UpperBound.Y += Radius;
-
-
-            
         }
 
         public override float ComputeSubmergedArea(ref Vector2 normal, float offset, ref Transform xf, out Vector2 sc)
