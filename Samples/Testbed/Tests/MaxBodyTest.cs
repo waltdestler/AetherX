@@ -35,9 +35,9 @@ namespace tainicom.Aether.Physics2D.Samples.Testbed.Tests
 
         private Dictionary<Keys, int> MetersPerBodyOptions = new Dictionary<Keys, int>
         {
-            { Keys.Z, 50 },  
-            { Keys.X, 100 },
-            { Keys.C, 200 },
+            { Keys.Z, 25 },  
+            { Keys.X, 50 },
+            { Keys.C, 100 },
             { Keys.V, 300 }, 
         };
 
