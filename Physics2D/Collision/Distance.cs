@@ -726,10 +726,10 @@ namespace tainicom.Aether.Physics2D.Collision
 
                 // Compute a tentative new simplex vertex using support points.
                 SimplexVertex vertex = simplex.V[simplex.Count];
-                vertex.IndexA = input.ProxyA.GetSupport(-Complex.Divide(ref d, ref input.TransformA.q));
+                vertex.IndexA = input.ProxyA.GetSupport(-Complex.Divide(ref d, ref input.TransformA.Rotation));
                 vertex.WA = Transform.Multiply(input.ProxyA.Vertices[vertex.IndexA], ref input.TransformA);
 
-                vertex.IndexB = input.ProxyB.GetSupport( Complex.Divide(ref d, ref input.TransformB.q));
+                vertex.IndexB = input.ProxyB.GetSupport( Complex.Divide(ref d, ref input.TransformB.Rotation));
                 vertex.WB = Transform.Multiply(input.ProxyB.Vertices[vertex.IndexB], ref input.TransformB);
                 vertex.W = vertex.WB - vertex.WA;
                 simplex.V[simplex.Count] = vertex;

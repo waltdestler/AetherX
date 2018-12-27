@@ -47,7 +47,7 @@ namespace tainicom.Aether.Physics2D.Samples.Testbed.Tests
         {
             {
                 _transformA = Transform.Identity;
-                _transformA.p = new Vector2(0.0f, -0.2f);
+                _transformA.Position = new Vector2(0.0f, -0.2f);
                 Vertices vertices = PolygonTools.CreateRectangle(10.0f, 0.2f);
                 _polygonA = new PolygonShape(vertices, 0);
             }

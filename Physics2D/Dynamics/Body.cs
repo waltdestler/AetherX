@@ -69,6 +69,15 @@ namespace tainicom.Aether.Physics2D.Dynamics
         internal int _lock;
         internal int _lockOrder;
 
+        private int _proxyId = -1;
+        public int ProxyId
+        {
+            get
+            {
+                return this._proxyId;
+            }
+        }
+
         public ControllerFilter ControllerFilter = new ControllerFilter(ControllerCategory.All);
 
         public Body()
@@ -78,9 +87,11 @@ namespace tainicom.Aether.Physics2D.Dynamics
             _enabled = true;
             _awake = true;
             _sleepingAllowed = true;
-            _xf.q = Complex.One;
+            _xf.Rotation = Complex.One;
 
             BodyType = BodyType.Static;
+
+            //this.CreateProxy();
         }
 
         public World World { get {return _world; } }
@@ -129,7 +140,8 @@ namespace tainicom.Aether.Physics2D.Dynamics
                     _angularVelocity = 0.0f;
                     _sweep.A0 = _sweep.A;
                     _sweep.C0 = _sweep.C;
-                    SynchronizeFixtures();
+                    //SynchronizeFixtures();
+                    Synchronize();
                 }
 
                 Awake = true;
@@ -150,9 +162,10 @@ namespace tainicom.Aether.Physics2D.Dynamics
                 if (World != null)
                 {
                     // Touch the proxies so that new contacts will be created (when appropriate)
-                    IBroadPhase broadPhase = World.ContactManager.BroadPhase;
-                    foreach (Fixture fixture in FixtureList)
-                        fixture.TouchProxies(broadPhase);
+                    _world.ContactManager.BroadPhase.TouchProxy(_proxyId);
+                    //IBroadPhase broadPhase = World.ContactManager.BroadPhase;
+                    //foreach (Fixture fixture in FixtureList)
+                    //    fixture.TouchProxies(broadPhase);
                 }
             }
         }
@@ -198,6 +211,16 @@ namespace tainicom.Aether.Physics2D.Dynamics
             }
             get { return _angularVelocity; }
         }
+
+        /// <summary>
+        /// Gets the current linear acceleration.
+        /// </summary>
+        public Vector2 LinearAcceleration => _force / Mass;
+
+        /// <summary>
+        /// Gets the current angular acceleration.
+        /// </summary>
+        public float AngularAcceleration => _torque / Inertia;
 
         /// <summary>
         /// Gets or sets the linear damping.
@@ -332,7 +355,7 @@ namespace tainicom.Aether.Physics2D.Dynamics
                 if (Enabled)
                 {
                     if (World != null)
-                        CreateProxies();
+                        this.CreateProxy(); //CreateProxies();
 
                     // Contacts are created the next time step.
                 }
@@ -340,8 +363,8 @@ namespace tainicom.Aether.Physics2D.Dynamics
                 {
                     if (World != null)
                     {
-                        DestroyProxies();
-                        DestroyContacts();
+                        DestroyProxy();
+                        //DestroyContacts();
                     }
                 }
             }
@@ -350,22 +373,22 @@ namespace tainicom.Aether.Physics2D.Dynamics
         /// <summary>
         /// Create all proxies.
         /// </summary>
-        internal void CreateProxies()
-        {   
-            IBroadPhase broadPhase = World.ContactManager.BroadPhase;
-            for (int i = 0; i < FixtureList.Count; i++)
-                FixtureList[i].CreateProxies(broadPhase, ref _xf);
-        }
+        //internal void CreateProxies()
+        //{   
+        //    IBroadPhase broadPhase = World.ContactManager.BroadPhase;
+        //    for (int i = 0; i < FixtureList.Count; i++)
+        //        FixtureList[i].CreateProxies(broadPhase, ref _xf);
+        //}
 
-        /// <summary>
-        /// Destroy all proxies.
-        /// </summary>
-        internal void DestroyProxies()
-        {
-            IBroadPhase broadPhase = World.ContactManager.BroadPhase;
-            for (int i = 0; i < FixtureList.Count; i++)
-                FixtureList[i].DestroyProxies(broadPhase);
-        }
+        ///// <summary>
+        ///// Destroy all proxies.
+        ///// </summary>
+        //internal void DestroyProxies()
+        //{
+        //    IBroadPhase broadPhase = World.ContactManager.BroadPhase;
+        //    for (int i = 0; i < FixtureList.Count; i++)
+        //        FixtureList[i].DestroyProxies(broadPhase);
+        //}
 
         /// <summary>
         /// Destroy the attached contacts.
@@ -409,6 +432,9 @@ namespace tainicom.Aether.Physics2D.Dynamics
         /// <value>The fixture list.</value>
         public readonly List<Fixture> FixtureList;
 
+        public DynamicTree<FixtureProxy> FixtureTree { get; } = new DynamicTree<FixtureProxy>();
+
+
         /// <summary>
         /// Get the list of all joints attached to this body.
         /// </summary>
@@ -429,13 +455,13 @@ namespace tainicom.Aether.Physics2D.Dynamics
         /// <returns>Return the world position of the body's origin.</returns>
         public Vector2 Position
         {
-            get { return _xf.p; }
+            get { return _xf.Position; }
             set
             {
                 Debug.Assert(!float.IsNaN(value.X) && !float.IsNaN(value.Y));
 
                 if (World == null)
-                    _xf.p = value;
+                    _xf.Position = value;
                 else
                     SetTransform(ref value, Rotation);
             }
@@ -455,7 +481,7 @@ namespace tainicom.Aether.Physics2D.Dynamics
                 if (World == null)
                     _sweep.A = value;
                 else
-                    SetTransform(ref _xf.p, value);
+                    SetTransform(ref _xf.Position, value);
             }
         }
 
@@ -594,6 +620,28 @@ namespace tainicom.Aether.Physics2D.Dynamics
             _linearVelocity = Vector2.Zero;
         }
 
+        // These support body activation/deactivation.
+        internal void CreateProxy()
+        {
+            Debug.Assert(_proxyId < 0);
+
+            // Create proxy.
+            BodyProxy proxy;
+            proxy.AABB = FixtureTree.RootAABB;
+            AABB.Transform(ref _xf, ref proxy.AABB);
+            proxy.Body = this;
+            proxy.ProxyId = -1;
+            _proxyId = _world.ContactManager.BroadPhase.AddProxy(ref proxy);
+        }
+
+        internal void DestroyProxy()
+        {
+            Debug.Assert(_proxyId >= 0);
+
+            _world.ContactManager.BroadPhase.RemoveProxy(_proxyId);
+            _proxyId = -1;
+        }
+
         ///<summary>
         /// Warning: This method is locked during callbacks.
         /// </summary>>
@@ -627,8 +675,15 @@ namespace tainicom.Aether.Physics2D.Dynamics
             {
                 if (Enabled)
                 {
-                    IBroadPhase broadPhase = World.ContactManager.BroadPhase;
-                    fixture.CreateProxies(broadPhase, ref _xf);
+                    //IBroadPhase broadPhase = World.ContactManager.BroadPhase;
+                    //fixture.CreateProxies(broadPhase, ref _xf);
+                    //fixture.CreateProxies(this.FixtureTree, ref _xf);
+
+                    // (Or perhaps CreateProxies should be refactored to not even take a transform parameter.)
+                    fixture.CreateProxies(this.FixtureTree, ref Transform.Identity);
+
+                    // problem with static bodies. A static body's AABB never gets updated after adding fixtures
+                    this.Synchronize();
                 }
 
                 // Let the world know we have a new fixture. This will cause new contacts
@@ -677,14 +732,11 @@ namespace tainicom.Aether.Physics2D.Dynamics
                 }
             }
 
-            if (Enabled)
-            {
-                IBroadPhase broadPhase = World.ContactManager.BroadPhase;
-                fixture.DestroyProxies(broadPhase);
-            }
+            fixture.DestroyProxies(FixtureTree);
 
-            fixture.Body = null;
             FixtureList.Remove(fixture);
+            //fixture.Destroy();
+            fixture.Body = null;
 #if DEBUG
             if (fixture.Shape.ShapeType == ShapeType.Polygon)
                 ((PolygonShape)fixture.Shape).Vertices.AttachedToBody = false;
@@ -739,8 +791,8 @@ namespace tainicom.Aether.Physics2D.Dynamics
             if (World.IsLocked)
                 throw new InvalidOperationException("The World is locked.");
 
-            _xf.q.Phase = angle;
-            _xf.p = position;
+            _xf.Rotation.Phase = angle;
+            _xf.Position = position;
 
             _sweep.C = Transform.Multiply(ref _sweep.LocalCenter, ref _xf);
             _sweep.A = angle;
@@ -748,9 +800,10 @@ namespace tainicom.Aether.Physics2D.Dynamics
             _sweep.C0 = _sweep.C;
             _sweep.A0 = angle;
 
-            IBroadPhase broadPhase = World.ContactManager.BroadPhase;
-            for (int i = 0; i < FixtureList.Count; i++)
-                FixtureList[i].Synchronize(broadPhase, ref _xf, ref _xf);
+            Synchronize(ref _xf, ref _xf);
+            //IBroadPhase broadPhase = World.ContactManager.BroadPhase;
+            //for (int i = 0; i < FixtureList.Count; i++)
+            //    FixtureList[i].Synchronize(broadPhase, ref _xf, ref _xf);
         }
 
         /// <summary>
@@ -789,7 +842,7 @@ namespace tainicom.Aether.Physics2D.Dynamics
         /// <param name="force">The force.</param>
         public void ApplyForce(ref Vector2 force)
         {
-            ApplyForce(ref force, ref _xf.p);
+            ApplyForce(ref force, ref _xf.Position);
         }
 
         /// <summary>
@@ -798,7 +851,7 @@ namespace tainicom.Aether.Physics2D.Dynamics
         /// <param name="force">The force.</param>
         public void ApplyForce(Vector2 force)
         {
-            ApplyForce(ref force, ref _xf.p);
+            ApplyForce(ref force, ref _xf.Position);
         }
 
         /// <summary>
@@ -941,8 +994,8 @@ namespace tainicom.Aether.Physics2D.Dynamics
             // Kinematic bodies have zero mass.
             if (BodyType == BodyType.Kinematic)
             {
-                _sweep.C0 = _xf.p;
-                _sweep.C = _xf.p;
+                _sweep.C0 = _xf.Position;
+                _sweep.C = _xf.Position;
                 _sweep.A0 = _sweep.A;
                 return;
             }
@@ -967,7 +1020,7 @@ namespace tainicom.Aether.Physics2D.Dynamics
             //FPE: Static bodies only have mass, they don't have other properties. A little hacky tho...
             if (BodyType == BodyType.Static)
             {
-                _sweep.C0 = _sweep.C = _xf.p;
+                _sweep.C0 = _sweep.C = _xf.Position;
                 return;
             }
 
@@ -1036,7 +1089,7 @@ namespace tainicom.Aether.Physics2D.Dynamics
         /// <returns>The same vector expressed in world coordinates.</returns>
         public Vector2 GetWorldVector(ref Vector2 localVector)
         {
-            return Complex.Multiply(ref localVector, ref _xf.q);
+            return Complex.Multiply(ref localVector, ref _xf.Rotation);
         }
 
         /// <summary>
@@ -1078,7 +1131,7 @@ namespace tainicom.Aether.Physics2D.Dynamics
         /// <returns>The corresponding local vector.</returns>
         public Vector2 GetLocalVector(ref Vector2 worldVector)
         {
-            return Complex.Divide(ref worldVector, ref _xf.q);
+            return Complex.Divide(ref worldVector, ref _xf.Rotation);
         }
 
         /// <summary>
@@ -1134,22 +1187,38 @@ namespace tainicom.Aether.Physics2D.Dynamics
             return GetLinearVelocityFromWorldPoint(GetWorldPoint(ref localPoint));
         }
 
-        internal void SynchronizeFixtures()
+        internal void Synchronize()
         {
             Transform xf1 = new Transform(Vector2.Zero, _sweep.A0);
-            xf1.p = _sweep.C0 - Complex.Multiply(ref _sweep.LocalCenter, ref xf1.q);
+            xf1.Position = _sweep.C0 - Complex.Multiply(ref _sweep.LocalCenter, ref xf1.Rotation);
 
-            IBroadPhase broadPhase = World.ContactManager.BroadPhase;
-            for (int i = 0; i < FixtureList.Count; i++)
-            {
-                FixtureList[i].Synchronize(broadPhase, ref xf1, ref _xf);
-            }
+            Synchronize(ref xf1, ref _xf);
+            //IBroadPhase broadPhase = World.ContactManager.BroadPhase;
+            //for (int i = 0; i < FixtureList.Count; i++)
+            //{
+            //    FixtureList[i].Synchronize(broadPhase, ref xf1, ref _xf);
+            //}
+        }
+
+        internal Vector2 _displacement;
+        private void Synchronize(ref Transform transform1, ref Transform transform2)
+        {
+            // Compute an AABB that covers the swept area.
+            AABB aabb1 = FixtureTree.RootAABB;
+            AABB aabb2 = aabb1;
+            AABB.Transform(ref transform1, ref aabb1);
+            AABB.Transform(ref transform2, ref aabb2);
+            aabb1.Combine(ref aabb2);
+
+            _displacement = transform2.Position - transform1.Position;
+
+            _world.ContactManager.BroadPhase.MoveProxy(_proxyId, ref aabb1, _displacement);
         }
 
         internal void SynchronizeTransform()
         {
-            _xf.q.Phase = _sweep.A;
-            _xf.p = _sweep.C - Complex.Multiply(ref _sweep.LocalCenter, ref _xf.q);
+            _xf.Rotation.Phase = _sweep.A;
+            _xf.Position = _sweep.C - Complex.Multiply(ref _sweep.LocalCenter, ref _xf.Rotation);
         }
 
         /// <summary>
@@ -1187,8 +1256,8 @@ namespace tainicom.Aether.Physics2D.Dynamics
             _sweep.Advance(alpha);
             _sweep.C = _sweep.C0;
             _sweep.A = _sweep.A0;
-            _xf.q.Phase = _sweep.A;
-            _xf.p = _sweep.C - Complex.Multiply(ref _sweep.LocalCenter, ref _xf.q);
+            _xf.Rotation.Phase = _sweep.A;
+            _xf.Position = _sweep.C - Complex.Multiply(ref _sweep.LocalCenter, ref _xf.Rotation);
         }
 
         internal OnCollisionEventHandler onCollisionEventHandler;

@@ -370,3 +370,6 @@ Samples/Testbed/obj/Release/Testbed.WINDOWS.MG.csproj.CoreCompileInputs.cache
 Samples/Testbed/obj/Release/Testbed.WINDOWS.MG.csproj.FileListAbsolute.txt
 Samples/Testbed/obj/Release/Testbed.WINDOWS.MG.csprojAssemblyReference.cache
 Samples/Testbed/Testbed.WINDOWS.MG.csproj.user
+Physics2D/obj/Debug/Aether.Physics2D.WINDOWS.MG.csprojAssemblyReference.cache
+Samples/Samples/obj/Debug/build.force
+Samples/HelloWorld/obj/Debug/build.force

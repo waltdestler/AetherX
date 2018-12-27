@@ -104,19 +104,19 @@ namespace tainicom.Aether.Physics2D.Samples.Testbed.Tests
         public override void Update(GameSettings settings, GameTime gameTime)
         {
             // Drive the kinematic body.
-            if (_platform.BodyType == BodyType.Kinematic)
-            {
-                Transform tf = _platform.GetTransform();
-                Vector2 p = tf.p;
-                Vector2 v = _platform.LinearVelocity;
+            //if (_platform.BodyType == BodyType.Kinematic)
+            //{
+            //    Transform tf = _platform.GetTransform();
+            //    Vector2 p = tf.p;
+            //    Vector2 v = _platform.LinearVelocity;
 
-                if ((p.X < -10.0f && v.X < 0.0f) ||
-                    (p.X > 10.0f && v.X > 0.0f))
-                {
-                    v.X = -v.X;
-                    _platform.LinearVelocity = v;
-                }
-            }
+            //    if ((p.X < -10.0f && v.X < 0.0f) ||
+            //        (p.X > 10.0f && v.X > 0.0f))
+            //    {
+            //        v.X = -v.X;
+            //        _platform.LinearVelocity = v;
+            //    }
+            //}
 
             base.Update(settings, gameTime);
             DrawString("Keys: (d) dynamic, (s) static, (k) kinematic");

@@ -39,11 +39,13 @@ namespace tainicom.Aether.Physics2D.Dynamics
     /// <summary>
     /// This proxy is used internally to connect fixtures to the broad-phase.
     /// </summary>
-    public struct FixtureProxy
+    public struct FixtureProxy : IProxy
     {
         public AABB AABB;
         public int ChildIndex;
         public Fixture Fixture;
         public int ProxyId;
+
+        AABB IProxy.AABB => AABB;
     }
 }

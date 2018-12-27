@@ -60,9 +60,9 @@ namespace tainicom.Aether.Physics2D.Samples.Testbed.Tests
 
                 Actor actor = _actors[i];
                 GetRandomAABB(out actor.AABB);
-                int proxyId = _tree.AddProxy(ref actor.AABB);
-                actor.ProxyId = proxyId;
-                _tree.SetUserData(proxyId, actor);
+                //int proxyId = _tree.AddProxy(ref actor.AABB);
+                //actor.ProxyId = proxyId;
+                //_tree.SetUserData(proxyId, actor);
             }
 
             float h = _worldExtent;
@@ -224,19 +224,19 @@ namespace tainicom.Aether.Physics2D.Samples.Testbed.Tests
 
         private void CreateProxy()
         {
-            for (int i = 0; i < ActorCount; ++i)
-            {
-                int j = Rand.Random.Next() % ActorCount;
-                Actor actor = _actors[j];
-                if (actor.ProxyId == -1)
-                {
-                    GetRandomAABB(out actor.AABB);
-                    int proxyId = _tree.AddProxy(ref actor.AABB);
-                    actor.ProxyId = proxyId;
-                    _tree.SetUserData(proxyId, actor);
-                    return;
-                }
-            }
+            //for (int i = 0; i < ActorCount; ++i)
+            //{
+            //    int j = Rand.Random.Next() % ActorCount;
+            //    Actor actor = _actors[j];
+            //    if (actor.ProxyId == -1)
+            //    {
+            //        GetRandomAABB(out actor.AABB);
+            //        int proxyId = _tree.AddProxy(ref actor.AABB);
+            //        actor.ProxyId = proxyId;
+            //        _tree.SetUserData(proxyId, actor);
+            //        return;
+            //    }
+            //}
         }
 
         private void DestroyProxy()
@@ -295,53 +295,53 @@ namespace tainicom.Aether.Physics2D.Samples.Testbed.Tests
 
         private void Query()
         {
-            _tree.Query(QueryCallback, ref _queryAABB);
+            //_tree.Query(QueryCallback, ref _queryAABB);
 
-            for (int i = 0; i < ActorCount; ++i)
-            {
-                if (_actors[i].ProxyId == -1)
-                {
-                    continue;
-                }
+            //for (int i = 0; i < ActorCount; ++i)
+            //{
+            //    if (_actors[i].ProxyId == -1)
+            //    {
+            //        continue;
+            //    }
 
-                bool overlap = AABB.TestOverlap(ref _queryAABB, ref _actors[i].AABB);
-                Debug.Assert(overlap == _actors[i].Overlap);
-            }
+            //    bool overlap = AABB.TestOverlap(ref _queryAABB, ref _actors[i].AABB);
+            //    Debug.Assert(overlap == _actors[i].Overlap);
+            //}
         }
 
         private void RayCast()
         {
-            _rayActor = null;
+            //_rayActor = null;
 
-            RayCastInput input = _rayCastInput;
+            //RayCastInput input = _rayCastInput;
 
-            // Ray cast against the dynamic tree.
-            _tree.RayCast(RayCastCallback, ref input);
+            //// Ray cast against the dynamic tree.
+            //_tree.RayCast(RayCastCallback, ref input);
 
-            // Brute force ray cast.
-            Actor bruteActor = null;
-            RayCastOutput bruteOutput = new RayCastOutput();
-            for (int i = 0; i < ActorCount; ++i)
-            {
-                if (_actors[i].ProxyId == -1)
-                {
-                    continue;
-                }
+            //// Brute force ray cast.
+            //Actor bruteActor = null;
+            //RayCastOutput bruteOutput = new RayCastOutput();
+            //for (int i = 0; i < ActorCount; ++i)
+            //{
+            //    if (_actors[i].ProxyId == -1)
+            //    {
+            //        continue;
+            //    }
 
-                RayCastOutput output;
-                bool hit = _actors[i].AABB.RayCast(out output, ref input);
-                if (hit)
-                {
-                    bruteActor = _actors[i];
-                    bruteOutput = output;
-                    input.MaxFraction = output.Fraction;
-                }
-            }
+            //    RayCastOutput output;
+            //    bool hit = _actors[i].AABB.RayCast(out output, ref input);
+            //    if (hit)
+            //    {
+            //        bruteActor = _actors[i];
+            //        bruteOutput = output;
+            //        input.MaxFraction = output.Fraction;
+            //    }
+            //}
 
-            if (bruteActor != null)
-            {
-                Debug.Assert(bruteOutput.Fraction == _rayCastOutput.Fraction);
-            }
+            //if (bruteActor != null)
+            //{
+            //    Debug.Assert(bruteOutput.Fraction == _rayCastOutput.Fraction);
+            //}
         }
 
         #region Nested type: Actor

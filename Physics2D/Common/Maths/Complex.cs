@@ -5,12 +5,22 @@ using Microsoft.Xna.Framework;
 
 namespace tainicom.Aether.Physics2D.Common.Maths
 {
+    /// <summary>
+    /// Known as "Rot" in Farseer
+    /// </summary>
     public struct Complex
     {
         private static readonly Complex _one = new Complex(1, 0);
         private static readonly Complex _imaginaryOne = new Complex(0, 1);
-
+        
+        /// <summary>
+        /// "c" in Farseer
+        /// </summary>
         public float Real;
+
+        /// <summary>
+        /// "s" in Farseer
+        /// </summary>
         public float Imaginary;
 
         public static Complex One { get { return _one; } }

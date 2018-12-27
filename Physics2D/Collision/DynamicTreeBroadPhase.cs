@@ -67,7 +67,8 @@ namespace tainicom.Aether.Physics2D.Collision
     /// This broad-phase does not persist pairs. Instead, this reports potentially new pairs.
     /// It is up to the client to consume the new pairs and to track subsequent overlap.
     /// </summary>
-    public class DynamicTreeBroadPhase : IBroadPhase
+    public class DynamicTreeBroadPhase<TProxy> : IBroadPhase<TProxy>
+        where TProxy : IProxy
     {
         private const int NullProxy = -1;
         private int[] _moveBuffer;
@@ -78,9 +79,9 @@ namespace tainicom.Aether.Physics2D.Collision
         private int _pairCapacity;
         private int _pairCount;
         private int _proxyCount;
-        private Func<int, bool> _queryCallback;
+        private Func<AABB, int, object, bool> _queryCallback;
         private int _queryProxyId;
-        private DynamicTree<FixtureProxy> _tree = new DynamicTree<FixtureProxy>();
+        private DynamicTree<TProxy> _tree = new DynamicTree<TProxy>();
 
         /// <summary>
         /// Constructs a new broad phase based on the dynamic tree implementation
@@ -114,11 +115,25 @@ namespace tainicom.Aether.Physics2D.Collision
         /// </summary>
         /// <param name="proxy">The user data.</param>
         /// <returns></returns>
-        public int AddProxy(ref AABB aabb)
+        //public int AddProxy(ref AABB aabb)
+        //{
+        //    int proxyId = _tree.AddProxy(ref aabb);
+        //    ++_proxyCount;
+        //    BufferMove(proxyId);
+
+            
+
+        //    return proxyId;
+        //}
+
+        public int AddProxy(ref TProxy proxy)
         {
-            int proxyId = _tree.AddProxy(ref aabb);
+            AABB aabb = proxy.AABB;
+            int proxyId = _tree.AddProxy(ref aabb, proxy);
             ++_proxyCount;
             BufferMove(proxyId);
+
+            //this.SetProxy(proxyId, ref proxy);
 
             return proxyId;
         }
@@ -137,7 +152,7 @@ namespace tainicom.Aether.Physics2D.Collision
         public void MoveProxy(int proxyId, ref AABB aabb, Vector2 displacement)
         {
             bool buffer = _tree.MoveProxy(proxyId, ref aabb, displacement);
-            if (buffer)
+            //if (buffer) // Always want to buffer moves because the underlying fixtures might have moved.
             {
                 BufferMove(proxyId);
             }
@@ -178,7 +193,7 @@ namespace tainicom.Aether.Physics2D.Collision
         /// </summary>
         /// <param name="proxyId"></param>
         /// <returns></returns>
-        private bool QueryCallback(int proxyId)
+        private bool QueryCallback(AABB aabb, int proxyId, object userData)
         {
             // A proxy cannot form a pair with itself.
             if (proxyId == _queryProxyId)
@@ -212,17 +227,17 @@ namespace tainicom.Aether.Physics2D.Collision
             _tree.GetFatAABB(proxyId, out aabb);
         }
 
-        public void SetProxy(int proxyId, ref FixtureProxy proxy)
-        {
-            _tree.SetUserData(proxyId, proxy);
-        }
+        //public void SetProxy(int proxyId, ref FixtureProxy proxy)
+        //{
+        //    _tree.SetUserData(proxyId, proxy);
+        //}
 
         /// <summary>
         /// Get user data from a proxy. Returns null if the id is invalid.
         /// </summary>
         /// <param name="proxyId">The proxy id.</param>
         /// <returns></returns>
-        public FixtureProxy GetProxy(int proxyId)
+        public TProxy GetProxy(int proxyId)
         {
             return _tree.GetUserData(proxyId);
         }
@@ -242,7 +257,7 @@ namespace tainicom.Aether.Physics2D.Collision
         /// Update the pairs. This results in pair callbacks. This can only add pairs.
         /// </summary>
         /// <param name="callback">The callback.</param>
-        public void UpdatePairs(BroadphaseDelegate callback)
+        public void UpdatePairs(BroadphaseDelegate<TProxy> callback)
         {
             // Reset pair buffer
             _pairCount = 0;
@@ -261,7 +276,7 @@ namespace tainicom.Aether.Physics2D.Collision
                 AABB fatAABB = _tree.GetFatAABB(_queryProxyId);
 
                 // Query tree, create pairs and add them pair buffer.
-                _tree.Query(_queryCallback, ref fatAABB);
+                _tree.Query(_queryCallback, ref fatAABB, out _, null);
             }
 
             // Reset move buffer
@@ -275,8 +290,10 @@ namespace tainicom.Aether.Physics2D.Collision
             while (i < _pairCount)
             {
                 Pair primaryPair = _pairBuffer[i];
+                TProxy userDataA = _tree.GetUserData(primaryPair.ProxyIdA);
+                TProxy userDataB = _tree.GetUserData(primaryPair.ProxyIdB);
 
-                callback(primaryPair.ProxyIdA, primaryPair.ProxyIdB);
+                callback(ref userDataA, ref userDataB);
                 ++i;
 
                 // Skip any duplicate pairs.
@@ -301,9 +318,9 @@ namespace tainicom.Aether.Physics2D.Collision
         /// </summary>
         /// <param name="callback">The callback.</param>
         /// <param name="aabb">The aabb.</param>
-        public void Query(Func<int, bool> callback, ref AABB aabb)
+        public void Query(Func<AABB, int, object, bool> callback, ref AABB aabb, out bool proceeded, object userData)
         {
-            _tree.Query(callback, ref aabb);
+            _tree.Query(callback, ref aabb, out proceeded, userData);
         }
 
         /// <summary>
@@ -315,9 +332,9 @@ namespace tainicom.Aether.Physics2D.Collision
         /// </summary>
         /// <param name="callback">A callback class that is called for each proxy that is hit by the ray.</param>
         /// <param name="input">The ray-cast input data. The ray extends from p1 to p1 + maxFraction * (p2 - p1).</param>
-        public void RayCast(Func<RayCastInput, int, float> callback, ref RayCastInput input)
+        public void RayCast(Func<RayCastInput, int, object, float> callback, ref RayCastInput input, out float maxFraction, object userData)
         {
-            _tree.RayCast(callback, ref input);
+            _tree.RayCast(callback, ref input, out maxFraction, userData);
         }
 
         public void ShiftOrigin(Vector2 newOrigin)

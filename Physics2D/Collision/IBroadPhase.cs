@@ -9,30 +9,29 @@ using Microsoft.Xna.Framework;
 
 namespace tainicom.Aether.Physics2D.Collision
 {
-    public interface IBroadPhase
+    public interface IBroadPhase<TProxy>
     {
         int ProxyCount { get; }
-        void UpdatePairs(BroadphaseDelegate callback);
+
+        void UpdatePairs(BroadphaseDelegate<TProxy> callback);
 
         bool TestOverlap(int proxyIdA, int proxyIdB);
 
-        int AddProxy(ref AABB aabb);
+        int AddProxy(ref TProxy proxy);
 
         void RemoveProxy(int proxyId);
 
         void MoveProxy(int proxyId, ref AABB aabb, Vector2 displacement);
 
-        void SetProxy(int proxyId, ref FixtureProxy proxy);
-
-        FixtureProxy GetProxy(int proxyId);
+        TProxy GetProxy(int proxyId);
 
         void TouchProxy(int proxyId);
 
         void GetFatAABB(int proxyId, out AABB aabb);
 
-        void Query(Func<int, bool> callback, ref AABB aabb);
+        void Query(Func<AABB, int, object, bool> callback, ref AABB aabb, out bool proceeded, object userData);
 
-        void RayCast(Func<RayCastInput, int, float> callback, ref RayCastInput input);
+        void RayCast(Func<RayCastInput, int, object, float> callback, ref RayCastInput input, out float maxFraction, object userData);
 
         void ShiftOrigin(Vector2 newOrigin);
     }

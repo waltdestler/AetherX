@@ -35,9 +35,9 @@ namespace tainicom.Aether.Physics2D.Samples.Testbed.Tests
 
         private Dictionary<Keys, int> MetersPerBodyOptions = new Dictionary<Keys, int>
         {
-            { Keys.Z, 50 },  
-            { Keys.X, 100 },
-            { Keys.C, 200 },
+            { Keys.Z, 25 },  
+            { Keys.X, 50 },
+            { Keys.C, 100 },
             { Keys.V, 300 }, 
         };
 
@@ -49,7 +49,7 @@ namespace tainicom.Aether.Physics2D.Samples.Testbed.Tests
 
         private float WorldSideSize { get; set; }
         private float WorldRadius { get { return this.WorldSideSize / 2f; } }
-        private BodyStructureType BodyStructureType = BodyStructureType.SingleFixtureBox;
+        private BodyStructureType BodyStructureType = BodyStructureType.TwelveFixtureStructure;
 
         // NOTE: This should always be greater than the biggest test body, otherwise things 
         //       could overlap, which is a huge perf reduction.
@@ -62,32 +62,33 @@ namespace tainicom.Aether.Physics2D.Samples.Testbed.Tests
             this.WorldSideSize = this.WorldSideSizeOptions[Keys.Q];
 
             // set to 100m per body
-            this.MetersPerBody = this.MetersPerBodyOptions[Keys.X];
+            this.MetersPerBody = this.MetersPerBodyOptions[Keys.Z];
         }
 
         public override void Initialize()
         {
-            IBroadPhase broadphaseSolver;
 
-            switch (this.currentBroadPhaseName)
-            {
-                case DYNAMICTREE_BROADPHASE_NAME:
-                    broadphaseSolver = new DynamicTreeBroadPhase();
-                    break;
+            //IBroadPhase broadphaseSolver;
 
-                case QUADTREE_BROADPHASE_NAME:
-                    broadphaseSolver = new QuadTreeBroadPhase(new AABB(Vector2.Zero, WorldSideSize, WorldSideSize));
-                    break;
+            //switch (this.currentBroadPhaseName)
+            //{
+            //    case DYNAMICTREE_BROADPHASE_NAME:
+            //        broadphaseSolver = new DynamicTreeBroadPhase();
+            //        break;
 
-                case BODY_DYNAMICTREE_BROADPHASE_NAME:
-                    throw new NotImplementedException();
-                    break;
+            //    case QUADTREE_BROADPHASE_NAME:
+            //        broadphaseSolver = new QuadTreeBroadPhase(new AABB(Vector2.Zero, WorldSideSize, WorldSideSize));
+            //        break;
 
-                default:
-                    throw new ArgumentOutOfRangeException();
-            }
+            //    case BODY_DYNAMICTREE_BROADPHASE_NAME:
+            //        throw new NotImplementedException();
+            //        break;
 
-            this.World = new World(broadphaseSolver);
+            //    default:
+            //        throw new ArgumentOutOfRangeException();
+            //}
+
+            this.World = new World();
 
             // enable multithreading
             this.World.ContactManager.VelocityConstraintsMultithreadThreshold = 256;

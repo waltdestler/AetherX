@@ -38,6 +38,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Threading;
 using Microsoft.Xna.Framework;
 using tainicom.Aether.Physics2D.Collision;
 using tainicom.Aether.Physics2D.Common;
@@ -66,20 +67,22 @@ namespace tainicom.Aether.Physics2D.Dynamics
 
         private float _invDt0;
         private Body[] _stack = new Body[64];
-        private HashSet<Body> _bodyAddList = new HashSet<Body>();
-        private HashSet<Body> _bodyRemoveList = new HashSet<Body>();
-        private HashSet<Joint> _jointAddList = new HashSet<Joint>();
-        private HashSet<Joint> _jointRemoveList = new HashSet<Joint>();
-        private Func<Fixture, bool> _queryAABBCallback;
-        private Func<int, bool> _queryAABBCallbackWrapper;
+        private List<Body> _bodyAddList = new List<Body>();
+        private List<Body> _bodyRemoveList = new List<Body>();
+        private List<Joint> _jointAddList = new List<Joint>();
+        private List<Joint> _jointRemoveList = new List<Joint>();
+        private readonly ThreadLocal<Func<Fixture, bool>> _queryAABBCallback = new ThreadLocal<Func<Fixture, bool>>();
+        private Func<AABB, int, object, bool> _queryAABBCallbackBroadPhaseWrapper;
+        private Func<AABB, int, object, bool> _queryAABBCallbackFixturePhaseWrapper;
         private TOIInput _input = new TOIInput();
         private Fixture _myFixture;
         private Vector2 _point1;
         private Vector2 _point2;
         private List<Fixture> _testPointAllFixtures;
         private Stopwatch _watch = new Stopwatch();
-        private Func<Fixture, Vector2, Vector2, float, float> _rayCastCallback;
-        private Func<RayCastInput, int, float> _rayCastCallbackWrapper;
+        private readonly ThreadLocal<Func<Fixture, Vector2, Vector2, float, float>> _rayCastCallback = new ThreadLocal<Func<Fixture, Vector2, Vector2, float, float>>();
+        private Func<RayCastInput, int, object, float> _rayCastCallbackBroadPhaseWrapper;
+        private Func<RayCastInput, int, object, float> _rayCastCallbackFixturePhaseWrapper;
 
         internal bool _worldHasNewFixture;
 
@@ -134,7 +137,7 @@ namespace tainicom.Aether.Physics2D.Dynamics
         /// <summary>
         /// Initializes a new instance of the <see cref="World"/> class.
         /// </summary>
-        public World(IBroadPhase broadphaseSolver = null)
+        public World()
         {
             Island = new Island();
             Enabled = true;
@@ -153,17 +156,12 @@ namespace tainicom.Aether.Physics2D.Dynamics
             TOISet = new HashSet<Body>();
 #endif
 
-            _queryAABBCallbackWrapper = QueryAABBCallbackWrapper;
-            _rayCastCallbackWrapper = RayCastCallbackWrapper;
+            _queryAABBCallbackBroadPhaseWrapper = QueryAABBCallbackBroadPhaseWrapper;
+            _queryAABBCallbackFixturePhaseWrapper = QueryAABBCallbackFixturePhaseWrapper;
+            _rayCastCallbackBroadPhaseWrapper = RayCastCallbackBroadPhaseWrapper;
+            _rayCastCallbackFixturePhaseWrapper = RayCastCallbackFixturePhaseWrapper;
 
-            Fluid = new FluidSystem2(new Vector2(0, -1), 5000, 150, 150);
-
-            if( broadphaseSolver == null)
-            {
-                // use default
-                broadphaseSolver = new DynamicTreeBroadPhase();
-            }
-            ContactManager = new ContactManager(broadphaseSolver);
+            ContactManager = new ContactManager(new DynamicTreeBroadPhase<BodyProxy>());
             Gravity = new Vector2(0f, -9.80665f);
         }
 
@@ -179,34 +177,83 @@ namespace tainicom.Aether.Physics2D.Dynamics
         /// <summary>
         /// Initializes a new instance of the <see cref="World"/> class.
         /// </summary>
-        public World(AABB span) : this()
-        {            
-            ContactManager = new ContactManager(new QuadTreeBroadPhase(span));
+        //public World(AABB span) : this()
+        //{            
+        //    ContactManager = new ContactManager(new QuadTreeBroadPhase(span));
+        //}
+
+        private bool QueryAABBCallbackBroadPhaseWrapper(AABB aabb, int proxyId, object userData)
+        {
+            BodyProxy proxy = ContactManager.BroadPhase.GetProxy(proxyId);
+            Body body = proxy.Body;
+
+            AABB.InvTransform(ref body._xf, ref aabb);
+            body.FixtureTree.Query(_queryAABBCallbackFixturePhaseWrapper, ref aabb, out bool proceeded, body);
+            return proceeded;
         }
 
-        private bool QueryAABBCallbackWrapper(int proxyId)
+        private bool QueryAABBCallbackFixturePhaseWrapper(AABB aabb, int proxyId, object userData)
         {
-            FixtureProxy proxy = ContactManager.BroadPhase.GetProxy(proxyId);
-            return _queryAABBCallback(proxy.Fixture);
+            Body body = (Body)userData;
+            FixtureProxy proxy = body.FixtureTree.GetUserData(proxyId);
+            return _queryAABBCallback.Value(proxy.Fixture);
         }
 
-        private float RayCastCallbackWrapper(RayCastInput rayCastInput, int proxyId)
+        private float RayCastCallbackBroadPhaseWrapper(RayCastInput rayCastInput, int proxyId, object userData)
         {
-            FixtureProxy proxy = ContactManager.BroadPhase.GetProxy(proxyId);
+            BodyProxy proxy = ContactManager.BroadPhase.GetProxy(proxyId);
+            Body body = proxy.Body;
+
+            rayCastInput.Point1 = MathUtils.MulT(ref body._xf, ref rayCastInput.Point1);
+            rayCastInput.Point2 = MathUtils.MulT(ref body._xf, ref rayCastInput.Point2);
+            body.FixtureTree.RayCast(_rayCastCallbackFixturePhaseWrapper, ref rayCastInput, out float maxFraction, body);
+            return maxFraction;
+        }
+
+        private float RayCastCallbackFixturePhaseWrapper(RayCastInput rayCastInput, int proxyId, object userData)
+        {
+            Body body = (Body)userData;
+            FixtureProxy proxy = body.FixtureTree.GetUserData(proxyId);
             Fixture fixture = proxy.Fixture;
             int index = proxy.ChildIndex;
             RayCastOutput output;
-            bool hit = fixture.RayCast(out output, ref rayCastInput, index);
+            bool hit = fixture.Shape.RayCast(out output, ref rayCastInput, ref Transform.Identity, index);
 
             if (hit)
             {
                 float fraction = output.Fraction;
                 Vector2 point = (1.0f - fraction) * rayCastInput.Point1 + fraction * rayCastInput.Point2;
-                return _rayCastCallback(fixture, point, output.Normal, fraction);
+                point = MathUtils.Mul(ref body._xf, ref point);
+                Vector2 normal = MathUtils.Mul(ref body._xf.Rotation, output.Normal);
+                return _rayCastCallback.Value(fixture, point, normal, fraction);
             }
 
             return rayCastInput.MaxFraction;
         }
+
+        //private bool QueryAABBCallbackWrapper(int proxyId)
+        //{
+        //    FixtureProxy proxy = ContactManager.BroadPhase.GetProxy(proxyId);
+        //    return _queryAABBCallback(proxy.Fixture);
+        //}
+
+        //private float RayCastCallbackWrapper(RayCastInput rayCastInput, int proxyId)
+        //{
+        //    FixtureProxy proxy = ContactManager.BroadPhase.GetProxy(proxyId);
+        //    Fixture fixture = proxy.Fixture;
+        //    int index = proxy.ChildIndex;
+        //    RayCastOutput output;
+        //    bool hit = fixture.RayCast(out output, ref rayCastInput, index);
+
+        //    if (hit)
+        //    {
+        //        float fraction = output.Fraction;
+        //        Vector2 point = (1.0f - fraction) * rayCastInput.Point1 + fraction * rayCastInput.Point2;
+        //        return _rayCastCallback(fixture, point, output.Normal, fraction);
+        //    }
+
+        //    return rayCastInput.MaxFraction;
+        //}
 
         private void Solve(ref TimeStep step)
         {
@@ -435,7 +482,7 @@ namespace tainicom.Aether.Physics2D.Dynamics
 #endif
 
                 // Update fixtures (for broad-phase).
-                b.SynchronizeFixtures();
+                b.Synchronize();
             }
 #if OPTIMIZE_TOI
             foreach (var b in IslandSet)
@@ -797,7 +844,7 @@ namespace tainicom.Aether.Physics2D.Dynamics
                         continue;
                     }
 
-                    body.SynchronizeFixtures();
+                    body.Synchronize();
 
                     // Invalidate all contact TOIs on this displaced body.
                     for (ContactEdge ce = body.ContactList; ce != null; ce = ce.Next)
@@ -951,14 +998,15 @@ namespace tainicom.Aether.Physics2D.Dynamics
             body._world = this;
             BodyList.Add(body);
 
-
-            // Update transform
-            body.SetTransformIgnoreContacts(ref body._xf.p, body.Rotation);
-
             // Create proxies
             if (Enabled)
-                body.CreateProxies();
+                body.CreateProxy();
 
+
+            // Update transform
+            body.SetTransformIgnoreContacts(ref body._xf.Position, body.Rotation);
+
+            
             ContactManager.FindNewContacts();
 
 
@@ -1018,9 +1066,12 @@ namespace tainicom.Aether.Physics2D.Dynamics
             body.onSeparationEventHandler = null;
 
             // Delete the attached fixtures. This destroys broad-phase proxies.
-            body.DestroyProxies();
+            body.DestroyProxy();
             for (int i = 0; i < body.FixtureList.Count; i++)
             {
+                body.FixtureList[i].DestroyProxies(body.FixtureTree);
+                //body.FixtureList[i].Destroy();
+
                 if (FixtureRemoved != null)
                     FixtureRemoved(this, body, body.FixtureList[i]);
             }
@@ -1449,8 +1500,8 @@ namespace tainicom.Aether.Physics2D.Dynamics
                 if (Settings.EnableDiagnostics)
                     ContinuousPhysicsTime = TimeSpan.FromTicks(_watch.ElapsedTicks) - (AddRemoveTime + NewContactsTime + ControllersUpdateTime + ContactsUpdateTime + SolveUpdateTime);
 
-                if (step.dt > 0.0f)
-                    Fluid.Update(dt);
+                //if (step.dt > 0.0f)
+                //    Fluid.Update(dt);
 
                 if (Settings.AutoClearForces)
                     ClearForces();
@@ -1497,9 +1548,9 @@ namespace tainicom.Aether.Physics2D.Dynamics
         /// <param name="aabb">The aabb query box.</param>
         public void QueryAABB(Func<Fixture, bool> callback, ref AABB aabb)
         {
-            _queryAABBCallback = callback;
-            ContactManager.BroadPhase.Query(_queryAABBCallbackWrapper, ref aabb);
-            _queryAABBCallback = null;
+            _queryAABBCallback.Value = callback;
+            ContactManager.BroadPhase.Query(_queryAABBCallbackBroadPhaseWrapper, ref aabb, out _, null);
+            _queryAABBCallback.Value = null;
         }
 
         /// <summary>
@@ -1542,9 +1593,9 @@ namespace tainicom.Aether.Physics2D.Dynamics
             input.Point1 = point1;
             input.Point2 = point2;
 
-            _rayCastCallback = callback;
-            ContactManager.BroadPhase.RayCast(_rayCastCallbackWrapper, ref input);
-            _rayCastCallback = null;
+            _rayCastCallback.Value = callback;
+            ContactManager.BroadPhase.RayCast(_rayCastCallbackBroadPhaseWrapper, ref input, out _, null);
+            _rayCastCallback.Value = null;
         }
 
         public List<Fixture> RayCast(Vector2 point1, Vector2 point2)
@@ -1670,7 +1721,7 @@ namespace tainicom.Aether.Physics2D.Dynamics
         {
             foreach (Body b in BodyList)
             {
-                b._xf.p -= newOrigin;
+                b._xf.Position -= newOrigin;
                 b._sweep.C0 -= newOrigin;
                 b._sweep.C -= newOrigin;
             }

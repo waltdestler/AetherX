@@ -107,14 +107,14 @@ namespace tainicom.Aether.Physics2D.Samples.Testbed.Tests
         public override void Update(GameSettings settings, GameTime gameTime)
         {
             ContactManager cm = World.ContactManager;
-            DynamicTreeBroadPhase dt = (DynamicTreeBroadPhase)cm.BroadPhase;
+            //DynamicTreeBroadPhase dt = (DynamicTreeBroadPhase)cm.BroadPhase;
 
-            int height = dt.TreeHeight;
-            int leafCount = dt.ProxyCount;
-            float minimumNodeCount = 2 * leafCount - 1;
-            float minimumHeight = (float)Math.Ceiling(Math.Log(minimumNodeCount) / Math.Log(2.0f));
-            DrawString(string.Format("dynamic tree height = {0}, min = {1}", height, (int)minimumHeight));
-            DrawString(string.Format("create time = {0} ms, fixture count = {1}", _createTime, _fixtureCount));
+            //int height = dt.TreeHeight;
+            //int leafCount = dt.ProxyCount;
+            //float minimumNodeCount = 2 * leafCount - 1;
+            //float minimumHeight = (float)Math.Ceiling(Math.Log(minimumNodeCount) / Math.Log(2.0f));
+            //DrawString(string.Format("dynamic tree height = {0}, min = {1}", height, (int)minimumHeight));
+            //DrawString(string.Format("create time = {0} ms, fixture count = {1}", _createTime, _fixtureCount));
 
             base.Update(settings, gameTime);
         }

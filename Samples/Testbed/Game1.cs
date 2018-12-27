@@ -197,25 +197,25 @@ namespace tainicom.Aether.Physics2D.Samples.Testbed
                 Restart();
             else if (_keyboardManager.IsNewKeyPress(Keys.P) || newGamePad.IsButtonDown(Buttons.Start) && _oldGamePad.IsButtonUp(Buttons.Start)) // Press I to prev test.
                 _settings.Pause = !_settings.Pause;
-            else if (_keyboardManager.IsNewKeyPress(Keys.I) || newGamePad.IsButtonDown(Buttons.LeftShoulder) && _oldGamePad.IsButtonUp(Buttons.LeftShoulder))
+            else if (_keyboardManager.IsNewKeyPress(Keys.Left) || newGamePad.IsButtonDown(Buttons.LeftShoulder) && _oldGamePad.IsButtonUp(Buttons.LeftShoulder))
             {
                 --_testSelection;
                 if (_testSelection < 0)
                     _testSelection = _testCount - 1;
             }
-            else if (_keyboardManager.IsNewKeyPress(Keys.O) || newGamePad.IsButtonDown(Buttons.RightShoulder) && _oldGamePad.IsButtonUp(Buttons.RightShoulder)) // Press O to next test.
+            else if (_keyboardManager.IsNewKeyPress(Keys.Right) || newGamePad.IsButtonDown(Buttons.RightShoulder) && _oldGamePad.IsButtonUp(Buttons.RightShoulder)) // Press O to next test.
             {
                 ++_testSelection;
                 if (_testSelection == _testCount)
                     _testSelection = 0;
             }
-            if (_keyboardManager.IsKeyDown(Keys.Left)) // Press left to pan left.
+            if (_keyboardManager.IsKeyDown(Keys.NumPad4)) // Press left to pan left.
                 ViewCenter = new Vector2(ViewCenter.X - 0.5f, ViewCenter.Y);
-            else if (_keyboardManager.IsKeyDown(Keys.Right)) // Press right to pan right.
+            else if (_keyboardManager.IsKeyDown(Keys.NumPad6)) // Press right to pan right.
                 ViewCenter = new Vector2(ViewCenter.X + 0.5f, ViewCenter.Y);
-            if (_keyboardManager.IsKeyDown(Keys.Down)) // Press down to pan down.
+            if (_keyboardManager.IsKeyDown(Keys.NumPad2)) // Press down to pan down.
                 ViewCenter = new Vector2(ViewCenter.X, ViewCenter.Y - 0.5f);
-            else if (_keyboardManager.IsKeyDown(Keys.Up)) // Press up to pan up.
+            else if (_keyboardManager.IsKeyDown(Keys.NumPad8)) // Press up to pan up.
                 ViewCenter = new Vector2(ViewCenter.X, ViewCenter.Y + 0.5f);
             if (_keyboardManager.IsNewKeyPress(Keys.Home)) // Press home to reset the view.
                 ResetCamera();

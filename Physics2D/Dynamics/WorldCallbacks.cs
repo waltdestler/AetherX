@@ -58,7 +58,8 @@ namespace tainicom.Aether.Physics2D.Dynamics
 
     public delegate bool CollisionFilterDelegate(Fixture fixtureA, Fixture fixtureB);
 
-    public delegate void BroadphaseDelegate(int proxyIdA, int proxyIdB);
+    //public delegate void BroadphaseDelegate(int proxyIdA, int proxyIdB);
+    public delegate void BroadphaseDelegate<TProxy>(ref TProxy proxyA, ref TProxy proxyB);
 
     public delegate bool BeforeCollisionEventHandler(Fixture sender, Fixture other);
 

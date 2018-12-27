@@ -254,19 +254,20 @@ namespace tainicom.Aether.Physics2D.Dynamics
                 return;
 
             // Touch each proxy so that new pairs may be created
-            IBroadPhase broadPhase = world.ContactManager.BroadPhase;
-            TouchProxies(broadPhase);
+            // WALT: commented this out... I'm leaving it for now.
+            //IBroadPhase broadPhase = world.ContactManager.BroadPhase;
+            //TouchProxies(broadPhase);
         }
 
         /// <summary>
         /// Touch each proxy so that new pairs may be created
         /// </summary>
         /// <param name="broadPhase"></param>
-        internal void TouchProxies(IBroadPhase broadPhase)
-        {
-            for (int i = 0; i < ProxyCount; ++i)
-                broadPhase.TouchProxy(Proxies[i].ProxyId);
-        }
+        //internal void TouchProxies(IBroadPhase broadPhase)
+        //{
+        //    for (int i = 0; i < ProxyCount; ++i)
+        //        broadPhase.TouchProxy(Proxies[i].ProxyId);
+        //}
 
         /// <summary>
         /// Test a point for containment in this fixture.
@@ -304,7 +305,7 @@ namespace tainicom.Aether.Physics2D.Dynamics
         }
 
         // These support body activation/deactivation.
-        internal void CreateProxies(IBroadPhase broadPhase, ref Transform xf)
+        internal void CreateProxies(DynamicTree<FixtureProxy> fixtureTree, ref Transform xf)
         {
             if (ProxyCount != 0)
                 throw new InvalidOperationException("Proxies allready created for this Fixture.");
@@ -318,43 +319,45 @@ namespace tainicom.Aether.Physics2D.Dynamics
                 proxy.Fixture = this;
                 proxy.ChildIndex = i;
                 Shape.ComputeAABB(out proxy.AABB, ref xf, i);
-                proxy.ProxyId = broadPhase.AddProxy(ref proxy.AABB);
-                broadPhase.SetProxy(proxy.ProxyId, ref proxy);
+
+                //FPE note: This line needs to be after the previous two because FixtureProxy is a struct
+                proxy.ProxyId = fixtureTree.AddProxy(ref proxy.AABB, proxy);
+                //broadPhase.SetProxy(proxy.ProxyId, ref proxy);
 
                 Proxies[i] = proxy;
             }
         }
 
-        internal void DestroyProxies(IBroadPhase broadPhase)
+        internal void DestroyProxies(DynamicTree<FixtureProxy> fixtureTree)
         {
             // Destroy proxies in the broad-phase.
             for (int i = 0; i < ProxyCount; ++i)
             {
-                broadPhase.RemoveProxy(Proxies[i].ProxyId);
+                fixtureTree.RemoveProxy(Proxies[i].ProxyId);
                 Proxies[i].ProxyId = -1;
             }
 
             ProxyCount = 0;
         }
 
-        internal void Synchronize(IBroadPhase broadPhase, ref Transform transform1, ref Transform transform2)
-        {
-            for (int i = 0; i < ProxyCount; ++i)
-            {
-                FixtureProxy proxy = Proxies[i];
+        //internal void Synchronize(IBroadPhase broadPhase, ref Transform transform1, ref Transform transform2)
+        //{
+        //    for (int i = 0; i < ProxyCount; ++i)
+        //    {
+        //        FixtureProxy proxy = Proxies[i];
 
-                // Compute an AABB that covers the swept Shape (may miss some rotation effect).
-                AABB aabb1, aabb2;
-                Shape.ComputeAABB(out aabb1, ref transform1, proxy.ChildIndex);
-                Shape.ComputeAABB(out aabb2, ref transform2, proxy.ChildIndex);
+        //        // Compute an AABB that covers the swept Shape (may miss some rotation effect).
+        //        AABB aabb1, aabb2;
+        //        Shape.ComputeAABB(out aabb1, ref transform1, proxy.ChildIndex);
+        //        Shape.ComputeAABB(out aabb2, ref transform2, proxy.ChildIndex);
 
-                proxy.AABB.Combine(ref aabb1, ref aabb2);
+        //        proxy.AABB.Combine(ref aabb1, ref aabb2);
 
-                Vector2 displacement = transform2.p - transform1.p;
+        //        Vector2 displacement = transform2.p - transform1.p;
 
-                broadPhase.MoveProxy(proxy.ProxyId, ref proxy.AABB, displacement);
-            }
-        }
+        //        broadPhase.MoveProxy(proxy.ProxyId, ref proxy.AABB, displacement);
+        //    }
+        //}
 
         /// <summary>
         /// Clones the fixture onto the specified body.
