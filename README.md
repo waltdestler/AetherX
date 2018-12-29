@@ -5,7 +5,7 @@ Box2D is the foundational physics engine, which was then ported to C# as Farseer
 
 # Added Features
 
-**Preliminary Per-Body Broadphase AABB Prior to Fixture AABB Test**
+**Per-Body Broadphase AABB Prior to Fixture AABB Test**
 * Greatly reduces collision detection time for bodies containing more than one fixture.
 * PR: https://github.com/alundgren04/AetherX/pull/4
 
