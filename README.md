@@ -52,3 +52,5 @@ The below items are all inherited from the original repo at: https://github.com/
 * If a body only has one fixture, then don't calc/store fixture AABBs and if the body AABB collides, count it as that single fixture colliding.
 
 * Offload bodies which haven't collided recently and which aren't near an "interest area" to a shadow World object, where they may be "hibernated"  until needed. More to come on this.
+
+* Rename the project to aid discoverability. Search combinations of "Aether" and "Physics" yields a massive amount of search results which are unrelated. Perhaps revert back to a name closer to a term users may be searching for, such as "Box2D" or "Farseer." Perhaps "Farseer 2" or "Sharp Box2D." 
