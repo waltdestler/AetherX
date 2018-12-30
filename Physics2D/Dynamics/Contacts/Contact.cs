@@ -321,25 +321,25 @@ namespace tainicom.Aether.Physics2D.Dynamics.Contacts
 
                     // Report the collision to both participants. Track which ones returned true so we can
                     // later call OnSeparation if the contact is disabled for a different reason.
-                    if (FixtureA.OnCollision != null)
-                        foreach (OnCollisionEventHandler handler in FixtureA.OnCollision.GetInvocationList())
+                    if (FixtureA.OnBeginContact != null)
+                        foreach (OnBeginContactEventHandler handler in FixtureA.OnBeginContact.GetInvocationList())
                             enabledA = handler(FixtureA, FixtureB, this) && enabledA;
 
                     // Reverse the order of the reported fixtures. The first fixture is always the one that the
                     // user subscribed to.
-                    if (FixtureB.OnCollision != null)
-                        foreach (OnCollisionEventHandler handler in FixtureB.OnCollision.GetInvocationList())
+                    if (FixtureB.OnBeginContact != null)
+                        foreach (OnBeginContactEventHandler handler in FixtureB.OnBeginContact.GetInvocationList())
                             enabledB = handler(FixtureB, FixtureA, this) && enabledB;
 
                     // Report the collision to both bodies:
-                    if (FixtureA.Body != null && FixtureA.Body.onCollisionEventHandler != null)
-                        foreach (OnCollisionEventHandler handler in FixtureA.Body.onCollisionEventHandler.GetInvocationList())
+                    if (FixtureA.Body != null && FixtureA.Body.onBeginContactEventHandler != null)
+                        foreach (OnBeginContactEventHandler handler in FixtureA.Body.onBeginContactEventHandler.GetInvocationList())
                             enabledA = handler(FixtureA, FixtureB, this) && enabledA;
 
                     // Reverse the order of the reported fixtures. The first fixture is always the one that the
                     // user subscribed to.
-                    if (FixtureB.Body != null && FixtureB.Body.onCollisionEventHandler != null)
-                        foreach (OnCollisionEventHandler handler in FixtureB.Body.onCollisionEventHandler.GetInvocationList())
+                    if (FixtureB.Body != null && FixtureB.Body.onBeginContactEventHandler != null)
+                        foreach (OnBeginContactEventHandler handler in FixtureB.Body.onBeginContactEventHandler.GetInvocationList())
                             enabledB = handler(FixtureB, FixtureA, this) && enabledB;
 
 
@@ -361,22 +361,22 @@ namespace tainicom.Aether.Physics2D.Dynamics.Contacts
                 if (touching == false)
                 {
                     //Report the separation to both participants:
-                    if (FixtureA != null && FixtureA.OnSeparation != null)
-                        FixtureA.OnSeparation(FixtureA, FixtureB, this);
+                    if (FixtureA != null && FixtureA.OnEndContact != null)
+                        FixtureA.OnEndContact(FixtureA, FixtureB, this);
 
                     //Reverse the order of the reported fixtures. The first fixture is always the one that the
                     //user subscribed to.
-                    if (FixtureB != null && FixtureB.OnSeparation != null)
-                        FixtureB.OnSeparation(FixtureB, FixtureA, this);
+                    if (FixtureB != null && FixtureB.OnEndContact != null)
+                        FixtureB.OnEndContact(FixtureB, FixtureA, this);
                     
                     //Report the separation to both bodies:
-                    if (FixtureA != null && FixtureA.Body != null && FixtureA.Body.onSeparationEventHandler != null)
-                        FixtureA.Body.onSeparationEventHandler(FixtureA, FixtureB, this);
+                    if (FixtureA != null && FixtureA.Body != null && FixtureA.Body.onEndContactEventHandler != null)
+                        FixtureA.Body.onEndContactEventHandler(FixtureA, FixtureB, this);
 
                     //Reverse the order of the reported fixtures. The first fixture is always the one that the
                     //user subscribed to.
-                    if (FixtureB != null && FixtureB.Body != null && FixtureB.Body.onSeparationEventHandler != null)
-                        FixtureB.Body.onSeparationEventHandler(FixtureB, FixtureA, this);
+                    if (FixtureB != null && FixtureB.Body != null && FixtureB.Body.onEndContactEventHandler != null)
+                        FixtureB.Body.onEndContactEventHandler(FixtureB, FixtureA, this);
 
 
                     if (contactManager.EndContact != null)

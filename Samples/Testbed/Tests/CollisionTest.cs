@@ -67,8 +67,8 @@ namespace tainicom.Aether.Physics2D.Samples.Testbed.Tests
             ball.FixedRotation = true;
             ball.IsBullet = true;
 
-            ball.OnCollision += ball_OnCollision;
-            ball.OnSeparation += ball_OnSeparation;
+            ball.OnBeginContact += ball_OnCollision;
+            ball.OnEndContact += ball_OnSeparation;
 
             Distance.GJKCalls = 0; Distance.GJKIters = 0; Distance.GJKMaxIters = 0;
             TimeOfImpact.TOICalls = 0; TimeOfImpact.TOIIters = 0;

@@ -1062,8 +1062,8 @@ namespace tainicom.Aether.Physics2D.Dynamics
             body.ContactList = null;
 
             // remove the attached contact callbacks
-            body.onCollisionEventHandler = null;
-            body.onSeparationEventHandler = null;
+            body.onBeginContactEventHandler = null;
+            body.onEndContactEventHandler = null;
 
             // Delete the attached fixtures. This destroys broad-phase proxies.
             body.DestroyProxy();

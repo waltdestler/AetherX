@@ -106,8 +106,8 @@ namespace tainicom.Aether.Physics2D.Samples.Testbed.Tests
             squareCharacter.FixedRotation = true;
             squareCharacter.SleepingAllowed = false;
 
-            squareCharacter.OnCollision += CharacterOnCollision;
-            squareCharacter.OnSeparation += CharacterOnSeparation;
+            squareCharacter.OnBeginContact += CharacterOnCollision;
+            squareCharacter.OnEndContact += CharacterOnSeparation;
 
             // Square character 2
             Body squareCharacter2 = World.CreateRectangle(0.5f, 0.5f, 20, new Vector2(-5.0f, 5.0f));

@@ -193,7 +193,7 @@ namespace tainicom.Aether.Physics2D.Samples.Testbed.Tests
                     body.Position = new Vector2(5.9f + 2.0f * radius * i, 2.4f);
 
                     Fixture fix = body.CreateFixture(shape);
-                    fix.OnCollision += BallCollision;
+                    fix.OnBeginContact += BallCollision;
                 }
             }
         }

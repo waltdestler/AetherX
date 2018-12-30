@@ -1260,21 +1260,25 @@ namespace tainicom.Aether.Physics2D.Dynamics
             _xf.Position = _sweep.C - Complex.Multiply(ref _sweep.LocalCenter, ref _xf.Rotation);
         }
 
-        internal OnCollisionEventHandler onCollisionEventHandler;
-        public event OnCollisionEventHandler OnCollision
+        internal OnBeginContactEventHandler onBeginContactEventHandler;
+        public event OnBeginContactEventHandler OnBeginContact
         {
-            add { onCollisionEventHandler += value; }
-            remove { onCollisionEventHandler -= value; }
+            add { onBeginContactEventHandler += value; }
+            remove { onBeginContactEventHandler -= value; }
         }
 
-        internal OnSeparationEventHandler onSeparationEventHandler;
-        public event OnSeparationEventHandler OnSeparation
+        internal OnEndContactEventHandler onEndContactEventHandler;
+        public event OnEndContactEventHandler OnEndContact
         {
-            add { onSeparationEventHandler += value; }
-            remove { onSeparationEventHandler -= value; }
+            add { onEndContactEventHandler += value; }
+            remove { onEndContactEventHandler -= value; }
         }
-        
-        
+
+        /// <summary>
+        /// Fires after two shapes has collided and are solved. This gives you a chance to get the impact force.
+        /// </summary>
+        public CollisionPostSolveEventHandler CollisionPostSolve;
+
         /// <summary>
         /// Set restitution on all fixtures.
         /// Warning: This method applies the value on existing Fixtures. It's not a property of Body.

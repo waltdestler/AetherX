@@ -62,7 +62,7 @@ namespace tainicom.Aether.Physics2D.Samples.Testbed.Tests
             body1.Position = new Vector2(Rand.RandomFloat(xLo, xHi), Rand.RandomFloat(yLo, yHi));
 
             Fixture fixture = body1.CreateFixture(polygon);
-            fixture.OnCollision += OnCollision;
+            fixture.OnBeginContact += OnCollision;
 
             // Large triangle (recycle definitions)
             vertices[0] *= 2.0f;
@@ -74,7 +74,7 @@ namespace tainicom.Aether.Physics2D.Samples.Testbed.Tests
             body2.BodyType = BodyType.Dynamic;
             body2.Position = new Vector2(Rand.RandomFloat(xLo, xHi), Rand.RandomFloat(yLo, yHi));
             fixture = body2.CreateFixture(polygon);
-            fixture.OnCollision += OnCollision;
+            fixture.OnBeginContact += OnCollision;
 
             // Small box
             Vertices smallBox = PolygonTools.CreateRectangle(1.0f, 0.5f);
@@ -84,7 +84,7 @@ namespace tainicom.Aether.Physics2D.Samples.Testbed.Tests
             body3.BodyType = BodyType.Dynamic;
             body3.Position = new Vector2(Rand.RandomFloat(xLo, xHi), Rand.RandomFloat(yLo, yHi));
             fixture = body3.CreateFixture(polygon);
-            fixture.OnCollision += OnCollision;
+            fixture.OnBeginContact += OnCollision;
 
             // Large box (recycle definitions)
             Vertices largeBox = PolygonTools.CreateRectangle(2.0f, 1.0f);
@@ -94,7 +94,7 @@ namespace tainicom.Aether.Physics2D.Samples.Testbed.Tests
             body4.BodyType = BodyType.Dynamic;
             body4.Position = new Vector2(Rand.RandomFloat(xLo, xHi), Rand.RandomFloat(yLo, yHi));
             fixture = body4.CreateFixture(polygon);
-            fixture.OnCollision += OnCollision;
+            fixture.OnBeginContact += OnCollision;
 
             // Small circle
             CircleShape circle = new CircleShape(1.0f, 1);
@@ -103,7 +103,7 @@ namespace tainicom.Aether.Physics2D.Samples.Testbed.Tests
             body5.BodyType = BodyType.Dynamic;
             body5.Position = new Vector2(Rand.RandomFloat(xLo, xHi), Rand.RandomFloat(yLo, yHi));
             fixture = body5.CreateFixture(circle);
-            fixture.OnCollision += OnCollision;
+            fixture.OnBeginContact += OnCollision;
 
             // Large circle
             circle.Radius *= 2.0f;
@@ -112,7 +112,7 @@ namespace tainicom.Aether.Physics2D.Samples.Testbed.Tests
             body6.BodyType = BodyType.Dynamic;
             body6.Position = new Vector2(Rand.RandomFloat(xLo, xHi), Rand.RandomFloat(yLo, yHi));
             fixture = body6.CreateFixture(circle);
-            fixture.OnCollision += OnCollision;
+            fixture.OnBeginContact += OnCollision;
         }
 
         private bool OnCollision(Fixture fixtureA, Fixture fixtureB, Contact contact)

@@ -283,22 +283,22 @@ namespace tainicom.Aether.Physics2D.Dynamics
             if (contact.IsTouching)
             {
                 //Report the separation to both participants:
-                if (fixtureA != null && fixtureA.OnSeparation != null)
-                    fixtureA.OnSeparation(fixtureA, fixtureB, contact);
+                if (fixtureA != null && fixtureA.OnEndContact != null)
+                    fixtureA.OnEndContact(fixtureA, fixtureB, contact);
 
                 //Reverse the order of the reported fixtures. The first fixture is always the one that the
                 //user subscribed to.
-                if (fixtureB != null && fixtureB.OnSeparation != null)
-                    fixtureB.OnSeparation(fixtureB, fixtureA, contact);
+                if (fixtureB != null && fixtureB.OnEndContact != null)
+                    fixtureB.OnEndContact(fixtureB, fixtureA, contact);
 
                 //Report the separation to both bodies:
-                if (fixtureA != null && fixtureA.Body != null && fixtureA.Body.onSeparationEventHandler != null)
-                    fixtureA.Body.onSeparationEventHandler(fixtureA, fixtureB, contact);
+                if (fixtureA != null && fixtureA.Body != null && fixtureA.Body.onEndContactEventHandler != null)
+                    fixtureA.Body.onEndContactEventHandler(fixtureA, fixtureB, contact);
 
                 //Reverse the order of the reported fixtures. The first fixture is always the one that the
                 //user subscribed to.
-                if (fixtureB != null && fixtureB.Body != null && fixtureB.Body.onSeparationEventHandler != null)
-                    fixtureB.Body.onSeparationEventHandler(fixtureB, fixtureA, contact);
+                if (fixtureB != null && fixtureB.Body != null && fixtureB.Body.onEndContactEventHandler != null)
+                    fixtureB.Body.onEndContactEventHandler(fixtureB, fixtureA, contact);
 
                 if (EndContact != null)
                     EndContact(contact);

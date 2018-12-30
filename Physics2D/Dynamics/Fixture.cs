@@ -61,7 +61,7 @@ namespace tainicom.Aether.Physics2D.Dynamics
         /// <summary>
         /// Fires after two shapes has collided and are solved. This gives you a chance to get the impact force.
         /// </summary>
-        public AfterCollisionEventHandler AfterCollision;
+        public CollisionPostSolveEventHandler CollisionPostSolve;
 
         /// <summary>
         /// Fires when two fixtures are close to each other.
@@ -73,14 +73,14 @@ namespace tainicom.Aether.Physics2D.Dynamics
         /// Fires when two shapes collide and a contact is created between them.
         /// Note that the first fixture argument is always the fixture that the delegate is subscribed to.
         /// </summary>
-        public OnCollisionEventHandler OnCollision;
+        public OnBeginContactEventHandler OnBeginContact;
 
         /// <summary>
         /// Fires when two shapes separate and a contact is removed between them.
         /// Note: This can in some cases be called multiple times, as a fixture can have multiple contacts.
         /// Note The first fixture argument is always the fixture that the delegate is subscribed to.
         /// </summary>
-        public OnSeparationEventHandler OnSeparation;
+        public OnEndContactEventHandler OnEndContact;
 
         internal Fixture() // Note: This is internal because it's used by Deserialization.
         {   

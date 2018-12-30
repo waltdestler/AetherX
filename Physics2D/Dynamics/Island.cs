@@ -447,12 +447,20 @@ namespace tainicom.Aether.Physics2D.Dynamics
 
                 //FPE optimization: We don't store the impulses and send it to the delegate. We just send the whole contact.
                 //FPE feature: added after collision
-                if (c.FixtureA.AfterCollision != null)
-                    c.FixtureA.AfterCollision(c.FixtureA, c.FixtureB, c, constraints[i]);
+                if (c.FixtureA.CollisionPostSolve != null)
+                    c.FixtureA.CollisionPostSolve(c.FixtureA, c.FixtureB, c, constraints[i]);
 
-                if (c.FixtureB.AfterCollision != null)
-                    c.FixtureB.AfterCollision(c.FixtureB, c.FixtureA, c, constraints[i]);
+                if (c.FixtureB.CollisionPostSolve != null)
+                    c.FixtureB.CollisionPostSolve(c.FixtureB, c.FixtureA, c, constraints[i]);
 
+                // AetherX feature: added post solve events to body as well.
+                if (c.FixtureA.Body.CollisionPostSolve != null)
+                    c.FixtureA.Body.CollisionPostSolve(c.FixtureA, c.FixtureB, c, constraints[i]);
+
+                if (c.FixtureB.Body.CollisionPostSolve != null)
+                    c.FixtureB.Body.CollisionPostSolve(c.FixtureB, c.FixtureA, c, constraints[i]);
+
+                // Call general event, if it is subscribed.
                 if (_contactManager.PostSolve != null)
                 {
                     _contactManager.PostSolve(c, constraints[i]);

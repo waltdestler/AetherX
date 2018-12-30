@@ -63,9 +63,9 @@ namespace tainicom.Aether.Physics2D.Dynamics
 
     public delegate bool BeforeCollisionEventHandler(Fixture sender, Fixture other);
 
-    public delegate bool OnCollisionEventHandler(Fixture sender, Fixture other, Contact contact);
+    public delegate bool OnBeginContactEventHandler(Fixture sender, Fixture other, Contact contact);
 
-    public delegate void AfterCollisionEventHandler(Fixture sender, Fixture other, Contact contact, ContactVelocityConstraint impulse);
+    public delegate void CollisionPostSolveEventHandler(Fixture sender, Fixture other, Contact contact, ContactVelocityConstraint impulse);
 
-    public delegate void OnSeparationEventHandler(Fixture sender, Fixture other, Contact contact);
+    public delegate void OnEndContactEventHandler(Fixture sender, Fixture other, Contact contact);
 }

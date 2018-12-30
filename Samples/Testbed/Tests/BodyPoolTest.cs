@@ -21,8 +21,8 @@ namespace tainicom.Aether.Physics2D.Samples.Testbed.Tests
         {
             //Ground body
             Body ground = World.CreateEdge(new Vector2(-40.0f, 0.0f), new Vector2(40.0f, 0.0f));
-            ground.OnCollision += OnCollision;
-            ground.OnSeparation += OnSeparation;
+            ground.OnBeginContact += OnCollision;
+            ground.OnEndContact += OnSeparation;
         }
 
         private bool OnCollision(Fixture sender, Fixture other, Contact contact)
