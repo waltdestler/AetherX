@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using tainicom.Aether.Physics2D.Collision;
 using tainicom.Aether.Physics2D.Collision.Shapes;
 using tainicom.Aether.Physics2D.Dynamics;
+using tainicom.Aether.Physics2D.Dynamics.Hibernation;
 using tainicom.Aether.Physics2D.Loaders.RUBE;
 using tainicom.Aether.Physics2D.Samples.Testbed.Framework;
 using tainicom.Aether.Physics2D.Utilities;
@@ -43,9 +44,11 @@ namespace tainicom.Aether.Physics2D.Samples.Testbed.Tests
 
         private Dictionary<Keys, BodyStructureType> BodyStructureTypeOptions = new Dictionary<Keys, BodyStructureType>
         {
-            { Keys.G, BodyStructureType.SingleFixtureBox },
-            { Keys.H, BodyStructureType.TwelveFixtureStructure }
+            { Keys.J, BodyStructureType.SingleFixtureBox },
+            { Keys.K, BodyStructureType.TwelveFixtureStructure }
         };
+
+        private ViewActiveArea ViewActiveArea { get; set; }
 
         private float WorldSideSize { get; set; }
         private float WorldRadius { get { return this.WorldSideSize / 2f; } }
@@ -101,8 +104,8 @@ namespace tainicom.Aether.Physics2D.Samples.Testbed.Tests
             RubeLoader.Load("data/testbodies.json", tempWorld);
 
             // settings
-            const float MAX_LINEAR_VELOCITY = 10.0f;
-            const float MAX_ANGULAR_VELOCITY = 1.0F;
+            const float MAX_LINEAR_VELOCITY = 20.0f;
+            const float MAX_ANGULAR_VELOCITY = 1.5F;
 
             // add the specific body
             //const int COMPLEX_BODY_INDEX = 2;
@@ -231,6 +234,35 @@ namespace tainicom.Aether.Physics2D.Samples.Testbed.Tests
             DrawString("Current body structure type: " + this.BodyStructureType.ToString());
             DrawString(string.Format("Press one of these keys to change it: ({0})", bodyStructureTypeOptions));
 
+            // Hibernation toggling 
+            TextLine += 15;
+            DrawString("Hibernation enabled: " + this.World.HibernationEnabled.ToString().ToUpper() + ". Press 'h' to toggle. Right-click to create/position an 'active area.'");
+
+            
+        }
+
+        public override void Mouse(MouseState state, MouseState oldState)
+        {
+            Vector2 position = GameInstance.ConvertScreenToWorld(state.X, state.Y);
+
+            if (state.RightButton == ButtonState.Pressed)
+            {
+                // set view active area, if hibernation is enabled
+                if (this.World.HibernationEnabled)
+                {
+                    if (this.ViewActiveArea == null)
+                    {
+                        // init and add
+                        this.ViewActiveArea = new ViewActiveArea();
+                        this.World.HibernationManager.ActiveAreas.Add(this.ViewActiveArea);
+                    }
+
+                    // set it to match current view
+                    this.ViewActiveArea.SetPosition(position);
+                    this.ViewActiveArea.SetRadius(20f);
+                }
+
+            }
         }
 
         const string DYNAMICTREE_BROADPHASE_NAME = "DynamicTree";
@@ -247,6 +279,16 @@ namespace tainicom.Aether.Physics2D.Samples.Testbed.Tests
             this.DebugView.DrawSegment(Vector2.Zero, new Vector2(1, 0), Color.Green);
             this.DebugView.DrawSegment(Vector2.Zero, new Vector2(0, 1), Color.Red);
             this.DebugView.EndCustomDraw();
+
+            if (this.World.HibernationEnabled) {
+                // render active areas
+                Color activeAreaAABBcolor = new Color(0.9f, 0.3f, 0.3f);
+                this.DebugView.BeginCustomDraw(projection, view);
+                foreach (var activeArea in this.World.HibernationManager.ActiveAreas) {
+                    this.DebugView.DrawAABB(ref activeArea.AABB, activeAreaAABBcolor);
+                }
+                this.DebugView.EndCustomDraw();
+            }
         }
 
         public override void Keyboard(KeyboardManager keyboardManager)
@@ -285,23 +327,6 @@ namespace tainicom.Aether.Physics2D.Samples.Testbed.Tests
                 cMgr.PositionConstraintsMultithreadThreshold = cMgr.VelocityConstraintsMultithreadThreshold;
                 cMgr.CollideMultithreadThreshold = cMgr.VelocityConstraintsMultithreadThreshold;
 
-            }
-            
-            // Broadphase switching
-            string newBroadPhaseName = this.currentBroadPhaseName; 
-            if (keyboardManager.IsNewKeyPress(Keys.J))
-                newBroadPhaseName = DYNAMICTREE_BROADPHASE_NAME;
-            if (keyboardManager.IsNewKeyPress(Keys.K))
-                newBroadPhaseName = QUADTREE_BROADPHASE_NAME;
-            //if (keyboardManager.IsNewKeyPress(Keys.L))
-            //    newBroadPhaseName = BODY_DYNAMICTREE_BROADPHASE_NAME;
-            if(newBroadPhaseName != this.currentBroadPhaseName)
-            {
-                // store it
-                this.currentBroadPhaseName = newBroadPhaseName;
-
-                // restart sim so it may be applied.
-                this.Initialize();
             }
             
             // World side size.
@@ -354,6 +379,17 @@ namespace tainicom.Aether.Physics2D.Samples.Testbed.Tests
                 this.DebugView.Enabled = !this.DebugView.Enabled;
             }
 
+            if (keyboardManager.IsNewKeyPress(Keys.H))
+            {
+                if (this.World.HibernationEnabled)
+                {
+                    // it is enabled, and wer'e about to disable it, so clear the view active area
+                    this.ViewActiveArea = null;
+                }
+
+                // toggle hibernation
+                this.World.HibernationEnabled = !this.World.HibernationEnabled;
+            }
         }
 
         public static Test Create()

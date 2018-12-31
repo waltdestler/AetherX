@@ -45,6 +45,7 @@ using tainicom.Aether.Physics2D.Common;
 using tainicom.Aether.Physics2D.Controllers;
 using tainicom.Aether.Physics2D.Diagnostics;
 using tainicom.Aether.Physics2D.Dynamics.Contacts;
+using tainicom.Aether.Physics2D.Dynamics.Hibernation;
 using tainicom.Aether.Physics2D.Dynamics.Joints;
 using tainicom.Aether.Physics2D.Fluids;
 
@@ -61,6 +62,39 @@ namespace tainicom.Aether.Physics2D.Dynamics
         private const bool _warmStarting = true;
         /// <summary>This is only for debugging the solver</summary>
         private const bool _subStepping = false;
+        #endregion
+
+        #region Hibernation
+
+        public HibernationManager HibernationManager { get; set; }
+        public bool HibernationEnabled
+        {
+            get
+            {
+                return this.HibernationManager != null;
+            }
+            set
+            {
+                // abort if the value isn't changing.
+                if (this.HibernationEnabled == value)
+                    return;
+
+                if( value )
+                {
+                    // instantiate the hibernation manager!
+                    this.HibernationManager = new HibernationManager(this);
+                } 
+                else
+                {
+                    // unhibernate everything
+                    // TODO
+
+                    // dispose the hibernation manager
+                    this.HibernationManager = null;
+                }
+            }
+        }
+
         #endregion
 
         private bool _stepComplete = true;
@@ -876,6 +910,7 @@ namespace tainicom.Aether.Physics2D.Dynamics
         public TimeSpan UpdateTime { get; private set; }
         public TimeSpan ContinuousPhysicsTime { get; private set; }
         public TimeSpan ControllersUpdateTime { get; private set; }
+        public TimeSpan HibernateTime { get; private set; }
         public TimeSpan AddRemoveTime { get; private set; }
         public TimeSpan NewContactsTime { get; private set; }
         public TimeSpan ContactsUpdateTime { get; private set; }
@@ -1446,9 +1481,17 @@ namespace tainicom.Aether.Physics2D.Dynamics
             if (Settings.EnableDiagnostics)
                 _watch.Start();
 
+            #region Process pending changes (e.g. removing or removing bodies).
+
             ProcessChanges();
+
+            // Record time taken to complete for diagnostics.
             if (Settings.EnableDiagnostics)
                 AddRemoveTime = TimeSpan.FromTicks(_watch.ElapsedTicks);
+
+            #endregion
+
+            #region Initialize contacts for newly added fixtures.
 
             // If new fixtures were added, we need to find the new contacts.
             if (_worldHasNewFixture)
@@ -1456,8 +1499,25 @@ namespace tainicom.Aether.Physics2D.Dynamics
                 ContactManager.FindNewContacts();
                 _worldHasNewFixture = false;
             }
+
+            // Record time taken to complete for diagnostics.
             if (Settings.EnableDiagnostics)
                 NewContactsTime = TimeSpan.FromTicks(_watch.ElapsedTicks) - AddRemoveTime;
+
+            #endregion
+
+            #region Process hibernation.
+            
+            if( this.HibernationEnabled )
+            {
+                this.HibernationManager.Update();
+            }
+
+            // track time taken to complete for diagnostics
+            if (Settings.EnableDiagnostics)
+                HibernateTime = TimeSpan.FromTicks(_watch.ElapsedTicks) - ( AddRemoveTime + NewContactsTime );
+
+            #endregion
 
             //FPE only: moved position and velocity iterations into Settings.cs
             TimeStep step;
@@ -1477,12 +1537,12 @@ namespace tainicom.Aether.Physics2D.Dynamics
                     ControllerList[i].Update(dt);
                 }
                 if (Settings.EnableDiagnostics)
-                    ControllersUpdateTime = TimeSpan.FromTicks(_watch.ElapsedTicks) - (AddRemoveTime + NewContactsTime);
+                    ControllersUpdateTime = TimeSpan.FromTicks(_watch.ElapsedTicks) - (AddRemoveTime + NewContactsTime + HibernateTime);
 
                 // Update contacts. This is where some contacts are destroyed.
                 ContactManager.Collide();
                 if (Settings.EnableDiagnostics)
-                    ContactsUpdateTime = TimeSpan.FromTicks(_watch.ElapsedTicks) - (AddRemoveTime + NewContactsTime + ControllersUpdateTime);
+                    ContactsUpdateTime = TimeSpan.FromTicks(_watch.ElapsedTicks) - (AddRemoveTime + NewContactsTime + HibernateTime + ControllersUpdateTime);
 
                 // Integrate velocities, solve velocity constraints, and integrate positions.
                 if (_stepComplete && step.dt > 0.0f)
@@ -1490,7 +1550,7 @@ namespace tainicom.Aether.Physics2D.Dynamics
                     Solve(ref step);
                 }
                 if (Settings.EnableDiagnostics)
-                    SolveUpdateTime = TimeSpan.FromTicks(_watch.ElapsedTicks) - (AddRemoveTime + NewContactsTime + ControllersUpdateTime + ContactsUpdateTime);
+                    SolveUpdateTime = TimeSpan.FromTicks(_watch.ElapsedTicks) - (AddRemoveTime + NewContactsTime + HibernateTime + ControllersUpdateTime + ContactsUpdateTime);
 
                 // Handle TOI events.
                 if (Settings.ContinuousPhysics && step.dt > 0.0f)
@@ -1498,7 +1558,7 @@ namespace tainicom.Aether.Physics2D.Dynamics
                     SolveTOI(ref step, ref iterations);
                 }
                 if (Settings.EnableDiagnostics)
-                    ContinuousPhysicsTime = TimeSpan.FromTicks(_watch.ElapsedTicks) - (AddRemoveTime + NewContactsTime + ControllersUpdateTime + ContactsUpdateTime + SolveUpdateTime);
+                    ContinuousPhysicsTime = TimeSpan.FromTicks(_watch.ElapsedTicks) - (AddRemoveTime + NewContactsTime + HibernateTime + ControllersUpdateTime + ContactsUpdateTime + SolveUpdateTime);
 
                 //if (step.dt > 0.0f)
                 //    Fluid.Update(dt);
@@ -1570,6 +1630,33 @@ namespace tainicom.Aether.Physics2D.Dynamics
                 }, ref aabb);
 
             return affected;
+        }
+
+        /// <summary>
+        /// Query the world for all bodies that potentially overlap the provided AABB.
+        /// </summary>
+        /// <param name="aabb">The aabb query box.</param>
+        /// <returns>A list of bodies that were in the affected area.</returns>
+        public List<Body> FindBodiesInAABB(ref AABB aabb)
+        {
+            var matches = new List<Body>();
+
+            ContactManager.BroadPhase.Query( 
+                ( bodyAabb, proxyId, userData) =>
+                {
+                    // get the body matching this proxy
+                    BodyProxy proxy = ContactManager.BroadPhase.GetProxy(proxyId);
+                    Body body = proxy.Body;
+
+                    // add to matches
+                    matches.Add(body);
+
+                    // continue the search
+                    return true;
+                },
+                ref aabb, out _, null);
+
+            return matches;
         }
 
         /// <summary>

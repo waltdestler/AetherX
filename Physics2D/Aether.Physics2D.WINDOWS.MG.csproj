@@ -145,6 +145,10 @@
     <Compile Include="Dynamics\Contacts\ContactSolver.cs" />
     <Compile Include="Dynamics\Fixture.cs" />
     <Compile Include="Dynamics\FixtureProxy.cs" />
+    <Compile Include="Dynamics\Hibernation\BaseActiveArea.cs" />
+    <Compile Include="Dynamics\Hibernation\BodyActiveArea.cs" />
+    <Compile Include="Dynamics\Hibernation\HibernationManager.cs" />
+    <Compile Include="Dynamics\Hibernation\ViewActiveArea.cs" />
     <Compile Include="Dynamics\IProxy.cs" />
     <Compile Include="Dynamics\Island.cs" />
     <Compile Include="Dynamics\Joints\AngleJoint.cs" />
