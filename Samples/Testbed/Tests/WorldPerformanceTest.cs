@@ -13,7 +13,7 @@ using tainicom.Aether.Physics2D.Utilities;
 
 namespace tainicom.Aether.Physics2D.Samples.Testbed.Tests
 {
-    public class MaxBodyTest : Test
+    public class WorldPerformanceTest : Test
     {
         private Dictionary<Keys, int> WorldSideSizeOptions = new Dictionary<Keys, int>
         {
@@ -56,7 +56,7 @@ namespace tainicom.Aether.Physics2D.Samples.Testbed.Tests
         //       Square this to get the square-meters-per-body.
         private float MetersPerBody;
 
-        private MaxBodyTest()
+        private WorldPerformanceTest()
         {
             // default to smallest world size
             this.WorldSideSize = this.WorldSideSizeOptions[Keys.Q];
@@ -67,27 +67,6 @@ namespace tainicom.Aether.Physics2D.Samples.Testbed.Tests
 
         public override void Initialize()
         {
-
-            //IBroadPhase broadphaseSolver;
-
-            //switch (this.currentBroadPhaseName)
-            //{
-            //    case DYNAMICTREE_BROADPHASE_NAME:
-            //        broadphaseSolver = new DynamicTreeBroadPhase();
-            //        break;
-
-            //    case QUADTREE_BROADPHASE_NAME:
-            //        broadphaseSolver = new QuadTreeBroadPhase(new AABB(Vector2.Zero, WorldSideSize, WorldSideSize));
-            //        break;
-
-            //    case BODY_DYNAMICTREE_BROADPHASE_NAME:
-            //        throw new NotImplementedException();
-            //        break;
-
-            //    default:
-            //        throw new ArgumentOutOfRangeException();
-            //}
-
             this.World = new World();
 
             // enable multithreading
@@ -379,7 +358,7 @@ namespace tainicom.Aether.Physics2D.Samples.Testbed.Tests
 
         public static Test Create()
         {
-            return new MaxBodyTest();
+            return new WorldPerformanceTest();
         }
     }
 
