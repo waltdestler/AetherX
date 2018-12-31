@@ -34,9 +34,10 @@ namespace tainicom.Aether.Physics2D.Samples.Testbed.Tests
         public static TestEntry[] TestList =
         {
             // New Tests
+            new TestEntry {Name = "Hibernation Test", CreateTest = HibernationTest.Create},
             new TestEntry {Name = "Max Body Test", CreateTest = MaxBodyTest.Create},
-            new TestEntry {Name = "Interst Area Test", CreateTest = InterstAreaTest.Create},
             new TestEntry {Name = "R.U.B.E. Loader Test", CreateTest = RubeLoaderTest.Create},
+            // TODO: new TestEntry {Name = "Rag Doll Test", CreateTest = RagDollTest.Create},
 
             //Original tests
             new TestEntry {Name = "Continuous Test", CreateTest = ContinuousTest.Create},

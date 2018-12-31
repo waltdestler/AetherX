@@ -112,7 +112,7 @@
     <Compile Include="Tests\RevoluteTest.cs" />
     <Compile Include="Tests\RopeTest.cs" />
     <Compile Include="Tests\RoundedRectangle.cs" />
-    <Compile Include="Tests\InterestAreaTest.cs" />
+    <Compile Include="Tests\HibernationTest.cs" />
     <Compile Include="Tests\SensorTest.cs" />
     <Compile Include="Tests\SerializationTest.cs" />
     <Compile Include="Tests\ShapeEditingTest.cs" />
