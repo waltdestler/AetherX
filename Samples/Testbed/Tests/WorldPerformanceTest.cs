@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using tainicom.Aether.Physics2D.Collision;
 using tainicom.Aether.Physics2D.Collision.Shapes;
+using tainicom.Aether.Physics2D.Diagnostics;
 using tainicom.Aether.Physics2D.Dynamics;
 using tainicom.Aether.Physics2D.Dynamics.Hibernation;
 using tainicom.Aether.Physics2D.Loaders.RUBE;
@@ -49,6 +50,7 @@ namespace tainicom.Aether.Physics2D.Samples.Testbed.Tests
         };
 
         private IndependentActiveArea ViewActiveArea { get; set; }
+        DebugView HibernatedWorldDebugView { get; set; }
 
         private float WorldSideSize { get; set; }
         private float WorldRadius { get { return this.WorldSideSize / 2f; } }
@@ -90,7 +92,6 @@ namespace tainicom.Aether.Physics2D.Samples.Testbed.Tests
             this.DebugView.AppendFlags(Diagnostics.DebugViewFlags.PerformanceGraph);
             this.DebugView.AppendFlags(Diagnostics.DebugViewFlags.DebugPanel);
             this.DebugView.AppendFlags(Diagnostics.DebugViewFlags.AABB);
-           
             this.DebugView.Enabled = true;
 
             // set zoom to show a meaningful part of the world
@@ -291,6 +292,11 @@ namespace tainicom.Aether.Physics2D.Samples.Testbed.Tests
                 }
                 this.DebugView.EndCustomDraw();
             }
+
+            if (this.HibernatedWorldDebugView != null)
+            {
+                this.HibernatedWorldDebugView.RenderDebugData(ref projection, ref view);
+            }
         }
 
         public override void Keyboard(KeyboardManager keyboardManager)
@@ -387,10 +393,21 @@ namespace tainicom.Aether.Physics2D.Samples.Testbed.Tests
                 {
                     // it is enabled, and wer'e about to disable it, so clear the view active area
                     this.ViewActiveArea = null;
-                }
+
+                    // also, destroy the debug view
+                    this.HibernatedWorldDebugView.Dispose();
+                    this.HibernatedWorldDebugView = null;
+                } 
 
                 // toggle hibernation
                 this.World.HibernationEnabled = !this.World.HibernationEnabled;
+
+                if( this.World.HibernationEnabled)
+                {
+                    // add second debug view for hibernated world
+                    this.HibernatedWorldDebugView = new DebugView(this.World.HibernationManager.HibernatedWorld);
+                    this.HibernatedWorldDebugView.LoadContent(GameInstance.GraphicsDevice, GameInstance.Content);
+                }
             }
         }
 

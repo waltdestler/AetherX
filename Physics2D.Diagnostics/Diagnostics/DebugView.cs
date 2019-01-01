@@ -5,6 +5,9 @@
  * Microsoft Permissive License (Ms-PL) v1.1
  */
 
+using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Content;
+using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -17,9 +20,6 @@ using tainicom.Aether.Physics2D.Controllers;
 using tainicom.Aether.Physics2D.Dynamics;
 using tainicom.Aether.Physics2D.Dynamics.Contacts;
 using tainicom.Aether.Physics2D.Dynamics.Joints;
-using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Content;
-using Microsoft.Xna.Framework.Graphics;
 
 namespace tainicom.Aether.Physics2D.Diagnostics
 {
@@ -216,6 +216,7 @@ namespace tainicom.Aether.Physics2D.Diagnostics
                 var bodyBroadphase = World.ContactManager.BroadPhase;
 
                 Color bodyAABBcolor = new Color(0.3f, 0.9f, 0.3f);
+                var bodyBoundingRadiusColor = new Color(0.1f, 0.3f, 0.1f);
                 Color fixtureAABBcolor = new Color(0.9f, 0.3f, 0.9f);
                 //IBroadPhase bp = World.ContactManager.BroadPhase;
 
@@ -230,6 +231,9 @@ namespace tainicom.Aether.Physics2D.Diagnostics
                     AABB aabb;
                     bodyBroadphase.GetFatAABB(body.ProxyId, out aabb);
                     DrawAABB(ref aabb, bodyAABBcolor);
+
+                    // also draw the bounding radius, as it is used for "active areas" if hibernation is enabled.
+                    this.DrawCircle(aabb.Center, aabb.Extents.Length(), bodyBoundingRadiusColor);
 
                     // render fixture AABBs
                     var fixtureTree = body.FixtureTree;
@@ -247,6 +251,8 @@ namespace tainicom.Aether.Physics2D.Diagnostics
                             DrawAABB(ref aabb, fixtureAABBcolor);
                         }
                     }
+
+
                 }
             }
 

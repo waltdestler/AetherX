@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.Xna.Framework;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -8,7 +9,7 @@ namespace tainicom.Aether.Physics2D.Dynamics.Hibernation
     public class HibernationManager
     {
         private World ActiveWorld { get; set; }
-        private World HibernatedWorld { get; set; }
+        public World HibernatedWorld { get; private set; }
         public List<BaseActiveArea> ActiveAreas = new List<BaseActiveArea>();
         private List<Body> BodiesToHibernate = new List<Body>();
         private List<Body> BodiesToWake = new List<Body>();
@@ -72,13 +73,23 @@ namespace tainicom.Aether.Physics2D.Dynamics.Hibernation
                 var hibernatedBodiesInActiveArea = this.HibernatedWorld.FindBodiesInAABB(ref activeArea.AABB);
 
                 // wake them
-                foreach( var hibernatedBody in hibernatedBodiesInActiveArea)
+                foreach( var hibernatedBodyResult in hibernatedBodiesInActiveArea)
                 {
+                    // AABB is a box, but active areas are actually circles, so we do a radius check.
+                    var bodyDistance = Vector2.Distance(hibernatedBodyResult.BodyAabb.Center, activeArea.AABB.Center);
+                    var bodyInActiveAreaCircle = bodyDistance < (hibernatedBodyResult.BodyAabb.Radius + activeArea.AABB.Radius); 
+
+                    if( !bodyInActiveAreaCircle)
+                    {
+                        // didn't quite make it. it's in the AABB, but not within the active area's circle. skip it.
+                        continue;
+                    }
+
                     // clone into the active world
-                    hibernatedBody.DeepClone(this.ActiveWorld);
+                    hibernatedBodyResult.Body.DeepClone(this.ActiveWorld);
 
                     // remove from the hibernated world
-                    this.HibernatedWorld.Remove(hibernatedBody);
+                    this.HibernatedWorld.Remove(hibernatedBodyResult.Body);
                 }
 
                 // NOTE: in this case, we don't actually store the bodies in the ActiveArea. anything which 

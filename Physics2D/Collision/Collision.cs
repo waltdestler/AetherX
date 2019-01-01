@@ -308,6 +308,11 @@ namespace tainicom.Aether.Physics2D.Collision
             get { return 0.5f * (UpperBound - LowerBound); }
         }
 
+        public float Radius
+        {
+            get { return this.Extents.Length();  }
+        }
+
         /// <summary>
         /// Get the perimeter length
         /// </summary>
