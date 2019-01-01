@@ -9,10 +9,11 @@ namespace tainicom.Aether.Physics2D.Dynamics.Hibernation
     {
         private Body TrackedBody { get; set; }
 
-        internal BodyActiveArea(Body trackedBody)
+        internal BodyActiveArea(Body trackedBody) : base()
         {
             // store the body to track
             this.TrackedBody = trackedBody;
+            this.AreaType = ActiveAreaType.BodyTracking;
         }
 
         internal override void UpdateAABB()

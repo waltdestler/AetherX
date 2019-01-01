@@ -48,7 +48,7 @@ namespace tainicom.Aether.Physics2D.Samples.Testbed.Tests
             { Keys.K, BodyStructureType.TwelveFixtureStructure }
         };
 
-        private ViewActiveArea ViewActiveArea { get; set; }
+        private IndependentActiveArea ViewActiveArea { get; set; }
 
         private float WorldSideSize { get; set; }
         private float WorldRadius { get { return this.WorldSideSize / 2f; } }
@@ -253,7 +253,7 @@ namespace tainicom.Aether.Physics2D.Samples.Testbed.Tests
                     if (this.ViewActiveArea == null)
                     {
                         // init and add
-                        this.ViewActiveArea = new ViewActiveArea();
+                        this.ViewActiveArea = new IndependentActiveArea();
                         this.World.HibernationManager.ActiveAreas.Add(this.ViewActiveArea);
                     }
 
@@ -283,9 +283,11 @@ namespace tainicom.Aether.Physics2D.Samples.Testbed.Tests
             if (this.World.HibernationEnabled) {
                 // render active areas
                 Color activeAreaAABBcolor = new Color(0.9f, 0.3f, 0.3f);
+                Color activeAreaCircleColor = new Color(0.9f, 0.3f, 0.3f, 0.25f);
                 this.DebugView.BeginCustomDraw(projection, view);
                 foreach (var activeArea in this.World.HibernationManager.ActiveAreas) {
                     this.DebugView.DrawAABB(ref activeArea.AABB, activeAreaAABBcolor);
+                    this.DebugView.DrawSolidCircle(activeArea.Position, activeArea.Radius, Vector2.Zero, activeAreaCircleColor);
                 }
                 this.DebugView.EndCustomDraw();
             }

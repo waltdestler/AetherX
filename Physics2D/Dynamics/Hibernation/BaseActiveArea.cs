@@ -10,9 +10,15 @@ namespace tainicom.Aether.Physics2D.Dynamics.Hibernation
     public abstract class BaseActiveArea
     {
         public AABB AABB;
-
         public Vector2 Position { get; protected set; }
         public float Radius { get; protected set; }
+        public ActiveAreaType AreaType { get; protected set; }
+        public List<AreaBody> Bodies { get; protected set; }
+
+        public BaseActiveArea()
+        {
+            this.Bodies = new List<AreaBody>();
+        }
 
         internal virtual void UpdateAABB()
         {

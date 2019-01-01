@@ -6,8 +6,13 @@ using System.Text;
 
 namespace tainicom.Aether.Physics2D.Dynamics.Hibernation
 {
-    public class ViewActiveArea : BaseActiveArea
+    public class IndependentActiveArea : BaseActiveArea
     {
+        public IndependentActiveArea() : base()
+        {
+            this.AreaType = ActiveAreaType.Independent;
+        }
+
         public void SetPosition(Vector2 position)
         {
             this.Position = position;

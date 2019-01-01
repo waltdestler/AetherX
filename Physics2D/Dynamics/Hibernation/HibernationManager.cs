@@ -81,6 +81,9 @@ namespace tainicom.Aether.Physics2D.Dynamics.Hibernation
                     this.HibernatedWorld.Remove(hibernatedBody);
                 }
 
+                // NOTE: in this case, we don't actually store the bodies in the ActiveArea. anything which 
+                //       collides is instantly woken, and there's no need to store a history.
+
                 #endregion
             }
 
@@ -89,6 +92,12 @@ namespace tainicom.Aether.Physics2D.Dynamics.Hibernation
             {
                 // get current active area
                 var activeArea = this.ActiveAreas[i];
+
+                // get all active bodies in its aabb
+               // var bodiesInActiveArea = this.ActiveWorld.FindBodiesInAABB(ref activeArea.AABB);
+
+                // any bodies which are in the active area's list of bodies, but weren't fonud in the AABB query should be marked as 
+                // "totally outside" and any which are new should be added to the collection.
 
                 // TODO: create AA for bodies only partilly within a AA
                 // TODO: remove AA for bodies fully within this AA
