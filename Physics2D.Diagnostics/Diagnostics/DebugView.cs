@@ -48,6 +48,12 @@ namespace tainicom.Aether.Physics2D.Diagnostics
         public Color SleepingShapeColor = new Color(0.6f, 0.6f, 0.6f);
         public Color StaticShapeColor = new Color(0.5f, 0.9f, 0.5f);
         public Color TextColor = Color.White;
+        public Color PolygonVertexColor = Color.Red;
+        public Color BodyAabbColor = new Color(0.3f, 0.9f, 0.3f);
+        public Color BodyAabbRadiusColor = new Color(0.1f, 0.3f, 0.1f);
+        public Color FixtureAabbColor = new Color(0.9f, 0.3f, 0.9f);
+        public Color JointSegmentColor = new Color(0.5f, 0.8f, 0.8f);
+
 
         //Contacts
         private int _pointCount;
@@ -196,7 +202,7 @@ namespace tainicom.Aether.Physics2D.Diagnostics
                             for (int i = 0; i < polygon.Vertices.Count; i++)
                             {
                                 Vector2 tmp = Transform.Multiply(polygon.Vertices[i], ref xf);
-                                DrawPoint(tmp, 0.1f, Color.Red);
+                                DrawPoint(tmp, 0.1f, PolygonVertexColor);
                             }
                         }
                     }
@@ -215,11 +221,6 @@ namespace tainicom.Aether.Physics2D.Diagnostics
             {
                 var bodyBroadphase = World.ContactManager.BroadPhase;
 
-                Color bodyAABBcolor = new Color(0.3f, 0.9f, 0.3f);
-                var bodyBoundingRadiusColor = new Color(0.1f, 0.3f, 0.1f);
-                Color fixtureAABBcolor = new Color(0.9f, 0.3f, 0.9f);
-                //IBroadPhase bp = World.ContactManager.BroadPhase;
-
                 foreach (Body body in World.BodyList)
                 {
                     if (body.Enabled == false)
@@ -230,10 +231,10 @@ namespace tainicom.Aether.Physics2D.Diagnostics
                     // render body AABBs
                     AABB aabb;
                     bodyBroadphase.GetFatAABB(body.ProxyId, out aabb);
-                    DrawAABB(ref aabb, bodyAABBcolor);
+                    DrawAABB(ref aabb, BodyAabbColor);
 
                     // also draw the bounding radius, as it is used for "active areas" if hibernation is enabled.
-                    this.DrawCircle(aabb.Center, aabb.Extents.Length(), bodyBoundingRadiusColor);
+                    this.DrawCircle(aabb.Center, aabb.Extents.Length(), BodyAabbRadiusColor);
 
                     // render fixture AABBs
                     var fixtureTree = body.FixtureTree;
@@ -248,7 +249,7 @@ namespace tainicom.Aether.Physics2D.Diagnostics
                             // move fixture to align with body in world-space
                             AABB.Transform(ref bodyTransform, ref aabb);
 
-                            DrawAABB(ref aabb, fixtureAABBcolor);
+                            DrawAABB(ref aabb, FixtureAabbColor);
                         }
                     }
 
@@ -414,7 +415,7 @@ namespace tainicom.Aether.Physics2D.Diagnostics
             Vector2 p2 = joint.WorldAnchorB;
             Vector2 x1 = xf1.Position;
 
-            Color color = new Color(0.5f, 0.8f, 0.8f);
+            Color color = JointSegmentColor;
 
             switch (joint.JointType)
             {

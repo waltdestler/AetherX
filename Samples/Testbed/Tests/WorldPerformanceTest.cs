@@ -407,6 +407,20 @@ namespace tainicom.Aether.Physics2D.Samples.Testbed.Tests
                     // add second debug view for hibernated world
                     this.HibernatedWorldDebugView = new DebugView(this.World.HibernationManager.HibernatedWorld);
                     this.HibernatedWorldDebugView.LoadContent(GameInstance.GraphicsDevice, GameInstance.Content);
+
+                    // draw everything in the hibernated world as grey
+                    this.HibernatedWorldDebugView.AppendFlags(Diagnostics.DebugViewFlags.AABB);
+                    this.HibernatedWorldDebugView.BodyAabbColor
+                        = this.HibernatedWorldDebugView.BodyAabbRadiusColor
+                        = this.HibernatedWorldDebugView.FixtureAabbColor
+                        = this.HibernatedWorldDebugView.DefaultShapeColor 
+                        = this.HibernatedWorldDebugView.InactiveShapeColor
+                        = this.HibernatedWorldDebugView.KinematicShapeColor
+                        = this.HibernatedWorldDebugView.SleepingShapeColor
+                        = this.HibernatedWorldDebugView.StaticShapeColor
+                        = this.HibernatedWorldDebugView.PolygonVertexColor
+                        = this.HibernatedWorldDebugView.JointSegmentColor
+                        = new Color(0.10f, 0.10f, 0.10f, 0.25f );
                 }
             }
         }
