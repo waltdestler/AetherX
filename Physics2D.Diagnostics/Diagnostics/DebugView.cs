@@ -234,7 +234,7 @@ namespace tainicom.Aether.Physics2D.Diagnostics
                     DrawAABB(ref aabb, BodyAabbColor);
 
                     // also draw the bounding radius, as it is used for "active areas" if hibernation is enabled.
-                    this.DrawCircle(aabb.Center, aabb.Extents.Length(), BodyAabbRadiusColor);
+                    //this.DrawCircle(aabb.Center, aabb.Extents.Length(), BodyAabbRadiusColor);
 
                     // render fixture AABBs
                     var fixtureTree = body.FixtureTree;

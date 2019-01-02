@@ -1637,9 +1637,9 @@ namespace tainicom.Aether.Physics2D.Dynamics
         /// </summary>
         /// <param name="aabb">The aabb query box.</param>
         /// <returns>A list of bodies that were in the affected area.</returns>
-        public List<BodyQueryResult> FindBodiesInAABB(ref AABB aabb)
+        public List<Body> FindBodiesInAABB(ref AABB aabb)
         {
-            var matches = new List<BodyQueryResult>();
+            var matches = new List<Body>();
 
             ContactManager.BroadPhase.Query( 
                 ( bodyAabb, proxyId, userData) =>
@@ -1649,7 +1649,7 @@ namespace tainicom.Aether.Physics2D.Dynamics
                     Body body = proxy.Body;
 
                     // add to matches
-                    matches.Add( new BodyQueryResult( body, proxy.AABB ));
+                    matches.Add(body);
 
                     // continue the search
                     return true;

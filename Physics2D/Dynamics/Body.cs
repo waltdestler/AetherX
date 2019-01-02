@@ -630,7 +630,7 @@ namespace tainicom.Aether.Physics2D.Dynamics
             proxy.AABB = FixtureTree.RootAABB;
             AABB.Transform(ref _xf, ref proxy.AABB);
             proxy.Body = this;
-            proxy.ProxyId = -1;
+            proxy.ProxyId = -1; // NOTE: We set to -1 only initially. It will be set to actual ID within AddProxy.
             _proxyId = _world.ContactManager.BroadPhase.AddProxy(ref proxy);
         }
 

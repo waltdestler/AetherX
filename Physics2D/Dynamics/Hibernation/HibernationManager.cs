@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using tainicom.Aether.Physics2D.Collision;
 
 namespace tainicom.Aether.Physics2D.Dynamics.Hibernation
 {
@@ -73,23 +74,13 @@ namespace tainicom.Aether.Physics2D.Dynamics.Hibernation
                 var hibernatedBodiesInActiveArea = this.HibernatedWorld.FindBodiesInAABB(ref activeArea.AABB);
 
                 // wake them
-                foreach( var hibernatedBodyResult in hibernatedBodiesInActiveArea)
+                foreach( var hibernatedBody in hibernatedBodiesInActiveArea)
                 {
-                    // AABB is a box, but active areas are actually circles, so we do a radius check.
-                    var bodyDistance = Vector2.Distance(hibernatedBodyResult.BodyAabb.Center, activeArea.AABB.Center);
-                    var bodyInActiveAreaCircle = bodyDistance < (hibernatedBodyResult.BodyAabb.Radius + activeArea.AABB.Radius); 
-
-                    if( !bodyInActiveAreaCircle)
-                    {
-                        // didn't quite make it. it's in the AABB, but not within the active area's circle. skip it.
-                        continue;
-                    }
-
                     // clone into the active world
-                    hibernatedBodyResult.Body.DeepClone(this.ActiveWorld);
+                    hibernatedBody.DeepClone(this.ActiveWorld);
 
                     // remove from the hibernated world
-                    this.HibernatedWorld.Remove(hibernatedBodyResult.Body);
+                    this.HibernatedWorld.Remove(hibernatedBody);
                 }
 
                 // NOTE: in this case, we don't actually store the bodies in the ActiveArea. anything which 
@@ -98,22 +89,145 @@ namespace tainicom.Aether.Physics2D.Dynamics.Hibernation
                 #endregion
             }
 
+            #region Add new bodies and update position statuses for all bodies in active area.
+
             // process all active areas
             for (var i = 0; i < this.ActiveAreas.Count; i++)
             {
                 // get current active area
                 var activeArea = this.ActiveAreas[i];
 
-                // get all active bodies in its aabb
-               // var bodiesInActiveArea = this.ActiveWorld.FindBodiesInAABB(ref activeArea.AABB);
+                // Find all bodies which collide with active area AABB.
+                var bodiesInActiveArea = this.ActiveWorld.FindBodiesInAABB(ref activeArea.AABB);
 
-                // any bodies which are in the active area's list of bodies, but weren't fonud in the AABB query should be marked as 
-                // "totally outside" and any which are new should be added to the collection.
+                // add all bodies which weren't already in AA
+                var activeAreaBodies = activeArea.Bodies.Select(b => b.Body).ToList();
+                for (var biaaIndex = bodiesInActiveArea.Count - 1; biaaIndex >= 0; biaaIndex--)
+                {
+                    // get body
+                    var body = bodiesInActiveArea[biaaIndex];
 
-                // TODO: create AA for bodies only partilly within a AA
-                // TODO: remove AA for bodies fully within this AA
-                // TODO: hibernate bodies which are outside of AA and haven't collided...
+                    // determine if this body is already in the AA
+                    var isAlreadyInActiveArea = activeAreaBodies.Contains(body);
+
+                    if (!isAlreadyInActiveArea)
+                    {
+                        // didn't find it. add it.
+                        activeArea.Bodies.Add(new AreaBody(body));
+                    }
+                }
+
+                // Loop over current ActiveArea bodies to update their statuses.
+                for (var areaBodyIndex = activeArea.Bodies.Count - 1; areaBodyIndex >= 0; areaBodyIndex--)
+                {
+                    // get the body
+                    var areaBody = activeArea.Bodies[areaBodyIndex];
+                    var body = areaBody.Body;
+
+                    // store the old status
+                    areaBody.PriorStatus = areaBody.PositionStatus;
+
+                    // determine whether this body is still touching the AA's AABB
+                    var isTouchingActiveAreaAABB = bodiesInActiveArea.Contains(body);
+
+                    if (!isTouchingActiveAreaAABB)
+                    {
+                        // it's not touching the AABB at all, so it's totally out.
+                        areaBody.PositionStatus = AreaBodyStatus.TotallyOut;
+                    }
+                    else
+                    {
+                        // get body AABB
+                        var bodyTransform = body.GetTransform();
+                        AABB bodyAabb;
+                        this.HibernatedWorld.ContactManager.BroadPhase.GetFatAABB(body.ProxyId, out bodyAabb);
+
+                        // at this point, we know it's touching. so it's just a matter of whether it's totally inside or partially inside.
+                        // contains() returns 'true' only if the AABB is entirely within
+                        var isTotallyWithinActiveArea = activeArea.AABB.Contains(ref bodyAabb);
+
+                        if (isTotallyWithinActiveArea)
+                        {
+                            // it's totally inside the ActiveArea AABB.
+                            areaBody.PositionStatus = AreaBodyStatus.TotallyIn;
+                        }
+                        else
+                        {
+                            // at this point, we know it must be partially within.
+                            areaBody.PositionStatus = AreaBodyStatus.TotallyIn;
+                        }
+                    }
+                }
             }
+
+            #endregion
+
+
+            #region Add new bodies and update position statuses for all bodies in active area.
+
+            // process all active areas
+            for (var i = 0; i < this.ActiveAreas.Count; i++)
+            {
+                // get current active area
+                var activeArea = this.ActiveAreas[i];
+
+                // Loop over current ActiveArea bodies to update their statuses.
+                for (var areaBodyIndex = activeArea.Bodies.Count - 1; areaBodyIndex >= 0; areaBodyIndex--)
+                {
+                    // get the body
+                    var areaBody = activeArea.Bodies[areaBodyIndex];
+                    var body = areaBody.Body;
+
+                    if( areaBody.PositionStatus == AreaBodyStatus.Invalid )
+                    {
+                        throw new InvalidProgramException("All active area bodies should have their position status set by this point.");
+                    }
+
+                    var statusHasChanged = areaBody.PriorStatus != areaBody.PositionStatus;
+                    if( statusHasChanged )
+                    {
+                        switch( areaBody.PositionStatus )
+                        {
+                            case AreaBodyStatus.TotallyOut:
+                                // TODO: make sure no other AA has this within it... 
+                                // TODO: usually create an AA for it...
+                                // temp: just hibernate the body. 
+                                activeArea.Bodies.Remove(areaBody);
+                                this.BodiesToHibernate.Add(body);
+                                break;
+                        }
+                    }
+                }
+            }
+
+            #endregion
+            //if match found in collide bodies, remove from collide bodies (basically ignore). update status to 'in' or 'partially in' depending on "contains" call. include ramification.
+
+            // any bodies which are in the active area's list of bodies, but weren't fonud in the AABB query should be marked as 
+            // "totally outside" and any which are new should be added to the collection.
+
+            //var body = hibernatedBodyResult.Body;
+
+            //// get body AABB
+            //var bodyTransform = body.GetTransform();
+            //AABB bodyAabb;
+            //this.HibernatedWorld.ContactManager.BroadPhase.GetFatAABB(body.ProxyId, out bodyAabb);
+
+            //// AABB is a box, but active areas are actually circles, so we do a radius check.
+            //// NOTE: we use the active area's position and radius for the check rather than active area's aabb
+            //var bodyDistance = Vector2.Distance(bodyAabb.Center, activeArea.Position);
+            //var bodyInActiveAreaCircle = bodyDistance < (bodyAabb.Radius + activeArea.Radius); 
+
+            //if( !bodyInActiveAreaCircle)
+            //{
+            //    // didn't quite make it. it's in the AABB, but not within the active area's circle. skip it.
+            //    continue;
+            //}
+
+            // TODO: create AA for bodies only partilly within a AA
+            // TODO: remove AA for bodies fully within this AA
+            // TODO: hibernate bodies which are outside of AA and haven't collided...
+
         }
     }
 }

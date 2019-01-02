@@ -8,6 +8,12 @@ namespace tainicom.Aether.Physics2D.Dynamics.Hibernation
     public class AreaBody
     {
         public Body Body { get; set; }
-        public AreaBodyStatus Status { get; set; }
+        public AreaBodyStatus PositionStatus { get; set; }
+        public AreaBodyStatus PriorStatus { get; set; }
+
+        public AreaBody(Body body)
+        {
+            this.Body = body;
+        }
     }
 }
