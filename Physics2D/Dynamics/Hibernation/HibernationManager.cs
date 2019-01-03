@@ -45,30 +45,25 @@ namespace tainicom.Aether.Physics2D.Dynamics.Hibernation
             if (this.HibernatedWorld.IsLocked)
                 throw new InvalidOperationException("The hibernated World is locked.");
 
-            #region Hibernate all flagged bodies. TODO: move to last part of update? want to avoid any world step() between flagging and removing.
+            #region update all ActiveArea AABBs 
 
-            // hibernate all flagged bodies.
-            foreach( var body in this.BodiesToHibernate )
+            // process all active areas
+            foreach (var activeArea in this.ActiveAreas)
             {
-                // clone into the hibernated world
-                body.DeepClone(this.HibernatedWorld);
-
-                // remove from the active world
-                this.ActiveWorld.Remove(body);
+                // update its bounding box
+                activeArea.UpdateAABB();
             }
-
-            // clear the list
-            this.BodiesToHibernate.Clear();
 
             #endregion
 
+            #region un-hibernate bodies ("wake")
+
             // process all active areas
-            foreach( var activeArea in this.ActiveAreas)
+            foreach ( var activeArea in this.ActiveAreas)
             {
                 // update its bounding box
                 activeArea.UpdateAABB();
 
-                #region un-hibernate bodies ("wake")
 
                 // get all hibernated bodies in its aabb
                 var hibernatedBodiesInActiveArea = this.HibernatedWorld.FindBodiesInAABB(ref activeArea.AABB);
@@ -85,9 +80,9 @@ namespace tainicom.Aether.Physics2D.Dynamics.Hibernation
 
                 // NOTE: in this case, we don't actually store the bodies in the ActiveArea. anything which 
                 //       collides is instantly woken, and there's no need to store a history.
-
-                #endregion
             }
+
+            #endregion
 
             #region Add new bodies and update position statuses for all bodies in active area.
 
@@ -162,8 +157,7 @@ namespace tainicom.Aether.Physics2D.Dynamics.Hibernation
 
             #endregion
 
-
-            #region Add new bodies and update position statuses for all bodies in active area.
+            #region Enact ramifications of status changes.
 
             // process all active areas
             for (var i = 0; i < this.ActiveAreas.Count; i++)
@@ -188,19 +182,92 @@ namespace tainicom.Aether.Physics2D.Dynamics.Hibernation
                     {
                         switch( areaBody.PositionStatus )
                         {
+                            case AreaBodyStatus.TotallyIn:
+                                // if there is a "BodyAA" for this body, then remove it, as that would be redundant.
+                                // OPTIMIZATION IDEA: give all bodies a unique ID (will be needed for network anyhow) and store them in a hashlist for faster look-up.
+                                // OPTIMIZATION IDEA2: give body a ref to its own tracking AA. if !null when set, throw. super-easy look-up.
+                                var bodyAAs = this.ActiveAreas.Where(aa => aa.AreaType == ActiveAreaType.BodyTracking && aa.Bodies.Select(aab => aab.Body).Contains(body));
+
+                                switch (bodyAAs.Count())
+                                {
+                                    case 0:
+                                        // no problem. move on.
+                                        break;
+
+                                    case 1:
+                                        // destroy it! it is redundant.
+                                        this.ActiveAreas.Remove(bodyAAs.First());
+                                        break;
+
+                                    default:
+                                        // this really shouldn't happen. it means there is more than one bodyAA for this body.
+                                        throw new InvalidProgramException("There is more than one ActiveArea for this body. This should never happen. There is a bug elsewhere.");
+                                }
+
+                                break;
+
+                            case AreaBodyStatus.PartiallyIn:
                             case AreaBodyStatus.TotallyOut:
-                                // TODO: make sure no other AA has this within it... 
-                                // TODO: usually create an AA for it...
-                                // temp: just hibernate the body. 
-                                activeArea.Bodies.Remove(areaBody);
-                                this.BodiesToHibernate.Add(body);
+
+                                // determine if needs to create own AA
+
+                                // abort, if none needed
+
+                                // determine if has own AA
+
+                                // abort, if so
+
+                                // create body AA
+
+                               
                                 break;
                         }
+
+                        if (areaBody.PositionStatus == AreaBodyStatus.TotallyOut)
+                        {
+                            if( activeArea.AreaType == ActiveAreaType.BodyTracking && areaBody.Body == (activeArea as BodyActiveArea).TrackedBody)
+                            {
+                                // this AA is tracking that body, then remove the entire AA.
+                                this.ActiveAreas.Remove(activeArea);
+                            }
+                            else
+                            {
+                                // it's out of this AA, so we remove it from this AA.
+                                activeArea.Bodies.Remove(areaBody);
+                            }
+
+                            // if it's not in any other AA at this point, hibernate it.
+                            var activeAreasContainingBody = this.ActiveAreas.Where(aa => aa.Bodies.Select(aab => aab.Body).Contains(body));
+                            if(activeAreasContainingBody.Count() == 0)
+                            {
+                                this.BodiesToHibernate.Add(body);
+                            }
+                        }
                     }
+
+
                 }
             }
 
             #endregion
+
+            #region Hibernate all flagged bodies. 
+
+            // hibernate all flagged bodies.
+            foreach (var body in this.BodiesToHibernate)
+            {
+                // clone into the hibernated world
+                body.DeepClone(this.HibernatedWorld);
+
+                // remove from the active world
+                this.ActiveWorld.Remove(body);
+            }
+
+            // clear the list
+            this.BodiesToHibernate.Clear();
+
+            #endregion
+
             //if match found in collide bodies, remove from collide bodies (basically ignore). update status to 'in' or 'partially in' depending on "contains" call. include ramification.
 
             // any bodies which are in the active area's list of bodies, but weren't fonud in the AABB query should be marked as 

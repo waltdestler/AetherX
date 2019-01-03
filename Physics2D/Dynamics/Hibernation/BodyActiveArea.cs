@@ -7,7 +7,7 @@ namespace tainicom.Aether.Physics2D.Dynamics.Hibernation
 {
     internal class BodyActiveArea : BaseActiveArea
     {
-        private Body TrackedBody { get; set; }
+        internal Body TrackedBody { get; set; }
 
         internal BodyActiveArea(Body trackedBody) : base()
         {
