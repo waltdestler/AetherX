@@ -29,7 +29,7 @@ namespace tainicom.Aether.Physics2D.Dynamics.Hibernation
             this.TrackedBody.World.ContactManager.BroadPhase.GetFatAABB(this.TrackedBody.ProxyId, out this.AABB);
 
             // add a little margin 
-            const float AABB_MARGIN = 20f;
+            const float AABB_MARGIN = 2f;
             this.AABB = new AABB(this.AABB.Center, this.AABB.Width + AABB_MARGIN, this.AABB.Height + AABB_MARGIN);
 
             //base.UpdateAABB();
