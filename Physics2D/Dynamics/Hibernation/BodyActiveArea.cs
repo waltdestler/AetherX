@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using tainicom.Aether.Physics2D.Collision;
 
 namespace tainicom.Aether.Physics2D.Dynamics.Hibernation
 {
@@ -24,7 +25,14 @@ namespace tainicom.Aether.Physics2D.Dynamics.Hibernation
                 this.Position = this.TrackedBody.Position;
             }
 
-            base.UpdateAABB();
+            // update AABB to body's AABB
+            this.TrackedBody.World.ContactManager.BroadPhase.GetFatAABB(this.TrackedBody.ProxyId, out this.AABB);
+
+            // add a little margin 
+            const float AABB_MARGIN = 20f;
+            this.AABB = new AABB(this.AABB.Center, this.AABB.Width + AABB_MARGIN, this.AABB.Height + AABB_MARGIN);
+
+            //base.UpdateAABB();
         }
     }
 }

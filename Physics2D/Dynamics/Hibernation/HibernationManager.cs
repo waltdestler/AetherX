@@ -61,10 +61,6 @@ namespace tainicom.Aether.Physics2D.Dynamics.Hibernation
             // process all active areas
             foreach ( var activeArea in this.ActiveAreas)
             {
-                // update its bounding box
-                activeArea.UpdateAABB();
-
-
                 // get all hibernated bodies in its aabb
                 var hibernatedBodiesInActiveArea = this.HibernatedWorld.FindBodiesInAABB(ref activeArea.AABB);
 
@@ -139,6 +135,7 @@ namespace tainicom.Aether.Physics2D.Dynamics.Hibernation
 
                         // at this point, we know it's touching. so it's just a matter of whether it's totally inside or partially inside.
                         // contains() returns 'true' only if the AABB is entirely within
+                        // BUG HERE!!!
                         var isTotallyWithinActiveArea = activeArea.AABB.Contains(ref bodyAabb);
 
                         if (isTotallyWithinActiveArea)
@@ -149,7 +146,7 @@ namespace tainicom.Aether.Physics2D.Dynamics.Hibernation
                         else
                         {
                             // at this point, we know it must be partially within.
-                            areaBody.PositionStatus = AreaBodyStatus.TotallyIn;
+                            areaBody.PositionStatus = AreaBodyStatus.PartiallyIn;
                         }
                     }
                 }
@@ -180,13 +177,19 @@ namespace tainicom.Aether.Physics2D.Dynamics.Hibernation
                     var statusHasChanged = areaBody.PriorStatus != areaBody.PositionStatus;
                     if( statusHasChanged )
                     {
-                        switch( areaBody.PositionStatus )
+                        switch (areaBody.PositionStatus)
                         {
                             case AreaBodyStatus.TotallyIn:
+                                // we have to ensure that this isn't its own body active area, so it doesn't remove itself...
+
                                 // if there is a "BodyAA" for this body, then remove it, as that would be redundant.
                                 // OPTIMIZATION IDEA: give all bodies a unique ID (will be needed for network anyhow) and store them in a hashlist for faster look-up.
                                 // OPTIMIZATION IDEA2: give body a ref to its own tracking AA. if !null when set, throw. super-easy look-up.
-                                var bodyAAs = this.ActiveAreas.Where(aa => aa.AreaType == ActiveAreaType.BodyTracking && aa.Bodies.Select(aab => aab.Body).Contains(body));
+                                var bodyAAs = this.ActiveAreas.Where(aa =>
+                                    aa.AreaType == ActiveAreaType.BodyTracking
+                                    && aa != activeArea
+                                    && (aa as BodyActiveArea).TrackedBody == body
+                                    && aa.Bodies.Select( aab => aab.Body ).Any( b => b == body ) );
 
                                 switch (bodyAAs.Count())
                                 {
@@ -203,22 +206,27 @@ namespace tainicom.Aether.Physics2D.Dynamics.Hibernation
                                         // this really shouldn't happen. it means there is more than one bodyAA for this body.
                                         throw new InvalidProgramException("There is more than one ActiveArea for this body. This should never happen. There is a bug elsewhere.");
                                 }
+                                
 
                                 break;
 
                             case AreaBodyStatus.PartiallyIn:
                             case AreaBodyStatus.TotallyOut:
 
-                                // determine if needs to create own AA
+                                // determine if needs to create own AA. (non-zero linear or angular velocity)
+                                var warrantsBodyActiveArea = body.AngularVelocity != 0 || body.LinearVelocity.Length() > 0;
 
-                                // abort, if none needed
+                                if (warrantsBodyActiveArea) {
 
-                                // determine if has own AA
+                                    // determine if has own AA
+                                    var hasBodyActiveArea = this.ActiveAreas.Any(aa => aa.AreaType == ActiveAreaType.BodyTracking && (aa as BodyActiveArea).TrackedBody == body);
 
-                                // abort, if so
-
-                                // create body AA
-
+                                    if (!hasBodyActiveArea)
+                                    {
+                                        // create body AA
+                                        this.ActiveAreas.Add(new BodyActiveArea(body)); 
+                                    }
+                                }
                                
                                 break;
                         }
@@ -237,8 +245,12 @@ namespace tainicom.Aether.Physics2D.Dynamics.Hibernation
                             }
 
                             // if it's not in any other AA at this point, hibernate it.
-                            var activeAreasContainingBody = this.ActiveAreas.Where(aa => aa.Bodies.Select(aab => aab.Body).Contains(body));
-                            if(activeAreasContainingBody.Count() == 0)
+                            var activeAreasContainingBody = this.ActiveAreas.Where(aa => 
+                                aa.Bodies.Select(aab => aab.Body).Contains(body) 
+                                || (aa.AreaType == ActiveAreaType.BodyTracking && (aa as BodyActiveArea).TrackedBody == body ) )
+                                .ToList();
+                                
+                            if (activeAreasContainingBody.Count == 0)
                             {
                                 this.BodiesToHibernate.Add(body);
                             }
