@@ -51,7 +51,7 @@ namespace tainicom.Aether.Physics2D.Dynamics.Hibernation
             foreach (var activeArea in this.ActiveAreas)
             {
                 // update its bounding box
-                activeArea.UpdateAABB();
+                activeArea.Update();
             }
 
             #endregion
@@ -118,35 +118,43 @@ namespace tainicom.Aether.Physics2D.Dynamics.Hibernation
                     // store the old status
                     areaBody.PriorStatus = areaBody.PositionStatus;
 
-                    // determine whether this body is still touching the AA's AABB
-                    var isTouchingActiveAreaAABB = bodiesInActiveArea.Contains(body);
-
-                    if (!isTouchingActiveAreaAABB)
+                    if (activeArea.AreaType == ActiveAreaType.BodyTracking && (activeArea as BodyActiveArea).IsExpired)
                     {
-                        // it's not touching the AABB at all, so it's totally out.
+                        // because the active area is expired, we consider all bodies totlly outside of it, as it is about to disappear.
                         areaBody.PositionStatus = AreaBodyStatus.TotallyOut;
                     }
                     else
                     {
-                        // get body AABB
-                        var bodyTransform = body.GetTransform();
-                        AABB bodyAabb;
-                        this.HibernatedWorld.ContactManager.BroadPhase.GetFatAABB(body.ProxyId, out bodyAabb);
+                        // determine whether this body is still touching the AA's AABB
+                        var isTouchingActiveAreaAABB = bodiesInActiveArea.Contains(body);
 
-                        // at this point, we know it's touching. so it's just a matter of whether it's totally inside or partially inside.
-                        // contains() returns 'true' only if the AABB is entirely within
-                        // BUG HERE!!!
-                        var isTotallyWithinActiveArea = activeArea.AABB.Contains(ref bodyAabb);
-
-                        if (isTotallyWithinActiveArea)
+                        if (!isTouchingActiveAreaAABB)
                         {
-                            // it's totally inside the ActiveArea AABB.
-                            areaBody.PositionStatus = AreaBodyStatus.TotallyIn;
+                            // it's not touching the AABB at all, so it's totally out.
+                            areaBody.PositionStatus = AreaBodyStatus.TotallyOut;
                         }
                         else
                         {
-                            // at this point, we know it must be partially within.
-                            areaBody.PositionStatus = AreaBodyStatus.PartiallyIn;
+                            // get body AABB
+                            var bodyTransform = body.GetTransform();
+                            AABB bodyAabb;
+                            this.ActiveWorld.ContactManager.BroadPhase.GetFatAABB(body.ProxyId, out bodyAabb);
+
+                            // at this point, we know it's touching. so it's just a matter of whether it's totally inside or partially inside.
+                            // contains() returns 'true' only if the AABB is entirely within
+                            // BUG HERE!!!
+                            var isTotallyWithinActiveArea = activeArea.AABB.Contains(ref bodyAabb);
+
+                            if (isTotallyWithinActiveArea)
+                            {
+                                // it's totally inside the ActiveArea AABB.
+                                areaBody.PositionStatus = AreaBodyStatus.TotallyIn;
+                            }
+                            else
+                            {
+                                // at this point, we know it must be partially within.
+                                areaBody.PositionStatus = AreaBodyStatus.PartiallyIn;
+                            }
                         }
                     }
                 }
@@ -206,7 +214,6 @@ namespace tainicom.Aether.Physics2D.Dynamics.Hibernation
                                         // this really shouldn't happen. it means there is more than one bodyAA for this body.
                                         throw new InvalidProgramException("There is more than one ActiveArea for this body. This should never happen. There is a bug elsewhere.");
                                 }
-                                
 
                                 break;
 
@@ -233,21 +240,23 @@ namespace tainicom.Aether.Physics2D.Dynamics.Hibernation
 
                         if (areaBody.PositionStatus == AreaBodyStatus.TotallyOut)
                         {
-                            if( activeArea.AreaType == ActiveAreaType.BodyTracking && areaBody.Body == (activeArea as BodyActiveArea).TrackedBody)
-                            {
-                                // this AA is tracking that body, then remove the entire AA.
-                                this.ActiveAreas.Remove(activeArea);
-                            }
-                            else
-                            {
+                            //if( activeArea.AreaType == ActiveAreaType.BodyTracking && areaBody.Body == (activeArea as BodyActiveArea).TrackedBody)
+                            //{
+                            //    // this AA is tracking that body, then remove the entire AA.
+                            //    // NOTE: I doubt this ever happens... when would a body leave its own body-tracking area?
+                            //    this.ActiveAreas.Remove(activeArea);
+                            //}
+                            //else
+                            //{
                                 // it's out of this AA, so we remove it from this AA.
                                 activeArea.Bodies.Remove(areaBody);
-                            }
+                            //}
 
                             // if it's not in any other AA at this point, hibernate it.
                             var activeAreasContainingBody = this.ActiveAreas.Where(aa => 
                                 aa.Bodies.Select(aab => aab.Body).Contains(body) 
-                                || (aa.AreaType == ActiveAreaType.BodyTracking && (aa as BodyActiveArea).TrackedBody == body ) )
+                                //|| (aa.AreaType == ActiveAreaType.BodyTracking && (aa as BodyActiveArea).TrackedBody == body ) 
+                                )
                                 .ToList();
                                 
                             if (activeAreasContainingBody.Count == 0)
@@ -280,6 +289,27 @@ namespace tainicom.Aether.Physics2D.Dynamics.Hibernation
 
             #endregion
 
+            #region Remove expired active areas
+
+            // get expired active areas
+            var expiredActiveAreas = this.ActiveAreas.Where(aa => aa.AreaType == ActiveAreaType.BodyTracking && (aa as BodyActiveArea).IsExpired).ToList();
+
+            for (var i = expiredActiveAreas.Count - 1; i >= 0; i--)
+            {
+                var expiredActiveArea = expiredActiveAreas[i];
+                if (expiredActiveArea.Bodies.Any())
+                {
+                    throw new InvalidProgramException("An expired active area still had bodies within it at time of deletion. This is an exception. They should be removed prior to this step.");
+                }
+
+                // just to be safe, we clear this ref too.
+                (expiredActiveArea as BodyActiveArea).TrackedBody = null;
+
+                // remove expired active area
+                this.ActiveAreas.Remove(expiredActiveArea);
+            }
+
+            #endregion
             //if match found in collide bodies, remove from collide bodies (basically ignore). update status to 'in' or 'partially in' depending on "contains" call. include ramification.
 
             // any bodies which are in the active area's list of bodies, but weren't fonud in the AABB query should be marked as 

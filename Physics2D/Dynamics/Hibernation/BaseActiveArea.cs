@@ -15,15 +15,17 @@ namespace tainicom.Aether.Physics2D.Dynamics.Hibernation
         public ActiveAreaType AreaType { get; protected set; }
         public List<AreaBody> Bodies { get; protected set; }
 
+
+
         public BaseActiveArea()
         {
             this.Bodies = new List<AreaBody>();
+
         }
 
-        internal virtual void UpdateAABB()
+        internal virtual void Update()
         {
-            var diameter = this.Radius * 2.0f;
-            this.AABB = new AABB(this.Position, diameter, diameter);
+            throw new NotImplementedException("Update method must be overridden in child class of BaseActiveArea.");
         }
     }
 }

@@ -9,15 +9,31 @@ namespace tainicom.Aether.Physics2D.Dynamics.Hibernation
     internal class BodyActiveArea : BaseActiveArea
     {
         internal Body TrackedBody { get; set; }
+        internal bool IsExpired { get; private set; }
+
+        /// <summary>
+        /// Creation time in UTC and ticks.
+        /// </summary>
+        private long CreationUtcTime { get; set; }
+
+        public float SecondsAgoCreated
+        {
+            get
+            {
+                var ts = new TimeSpan(DateTime.UtcNow.Ticks - this.CreationUtcTime);
+                return (float)ts.TotalSeconds;
+            }
+        }
 
         internal BodyActiveArea(Body trackedBody) : base()
         {
             // store the body to track
             this.TrackedBody = trackedBody;
             this.AreaType = ActiveAreaType.BodyTracking;
+            this.CreationUtcTime = DateTime.UtcNow.Ticks;
         }
 
-        internal override void UpdateAABB()
+        internal override void Update()
         {
             if (this.TrackedBody != null)
             {
@@ -32,7 +48,9 @@ namespace tainicom.Aether.Physics2D.Dynamics.Hibernation
             const float AABB_MARGIN = 2f;
             this.AABB = new AABB(this.AABB.Center, this.AABB.Width + AABB_MARGIN, this.AABB.Height + AABB_MARGIN);
 
-            //base.UpdateAABB();
+            // update whether is expired
+            const float SECONDS_UNTIL_EXPIRE = 3.0f;
+            this.IsExpired = this.SecondsAgoCreated >= SECONDS_UNTIL_EXPIRE;
         }
     }
 }

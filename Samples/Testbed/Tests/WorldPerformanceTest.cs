@@ -52,6 +52,8 @@ namespace tainicom.Aether.Physics2D.Samples.Testbed.Tests
         private IndependentActiveArea ViewActiveArea { get; set; }
         DebugView HibernatedWorldDebugView { get; set; }
 
+        private bool EnableCoordinateRendering { get; set; }
+
         private float WorldSideSize { get; set; }
         private float WorldRadius { get { return this.WorldSideSize / 2f; } }
         private BodyStructureType BodyStructureType = BodyStructureType.TwelveFixtureStructure;
@@ -198,8 +200,10 @@ namespace tainicom.Aether.Physics2D.Samples.Testbed.Tests
             DrawString("Zoom = " + Math.Round(this.GameInstance.ViewZoom, 2) + ", World Radius (m) = " + WorldRadius + ", Meters per Body: " + MetersPerBody);
 
             TextLine += 15;
-            DrawString("Press Left Alt to toggle debug rendering of game world.");
-            DrawString("Debug rendering enabled: " + this.DebugView.Enabled);
+            DrawString("Press Left Control to toggle debug rendering of game world: " + this.DebugView.Enabled);
+
+            TextLine += 15;
+            DrawString("Press Left Alt to toggle coordinate rendering: " + this.EnableCoordinateRendering);
 
             TextLine += 15;
             DrawString("Press to set broadphase algorithm. (J = "+ DYNAMICTREE_BROADPHASE_NAME + ", K = "+ QUADTREE_BROADPHASE_NAME + ", L = "+ BODY_DYNAMICTREE_BROADPHASE_NAME + ")");
@@ -242,9 +246,13 @@ namespace tainicom.Aether.Physics2D.Samples.Testbed.Tests
             
         }
 
+        private Vector2 CurrentMouseScreenPosition = Vector2.Zero;
+        private Vector2 CurrentMouseWorldPosition = Vector2.Zero;
         public override void Mouse(MouseState state, MouseState oldState)
         {
+            this.CurrentMouseScreenPosition = new Vector2(state.X, state.Y);
             Vector2 position = GameInstance.ConvertScreenToWorld(state.X, state.Y);
+            this.CurrentMouseWorldPosition = position;
 
             if (state.RightButton == ButtonState.Pressed)
             {
@@ -275,19 +283,47 @@ namespace tainicom.Aether.Physics2D.Samples.Testbed.Tests
         {
             base.DrawDebugView(gameTime, ref projection, ref view);
 
-            // render game center
-            this.DebugView.BeginCustomDraw(projection, view);
-            this.DebugView.DrawSegment(Vector2.Zero, new Vector2(1, 0), Color.Green);
-            this.DebugView.DrawSegment(Vector2.Zero, new Vector2(0, 1), Color.Red);
-            this.DebugView.EndCustomDraw();
+            #region render game center and axii
+
+            if (this.EnableCoordinateRendering)
+            {
+                this.DebugView.BeginCustomDraw(projection, view);
+                
+                // draw X
+                var xAxisMark = new Vector2(1, 0);
+                this.DebugView.DrawSegment(Vector2.Zero, xAxisMark, Color.Green);
+                var xAxisMarkLabel = GameInstance.ConvertWorldToScreen(xAxisMark);
+                this.DebugView.DrawString((int)xAxisMarkLabel.X, (int)xAxisMarkLabel.Y, "x = 1");
+
+                // draw Y
+                var yAxisMark = new Vector2(0, 1);
+                this.DebugView.DrawSegment(Vector2.Zero, yAxisMark, Color.Red);
+                var yAxisMarkLabel = GameInstance.ConvertWorldToScreen(yAxisMark);
+                this.DebugView.DrawString((int)yAxisMarkLabel.X, (int)yAxisMarkLabel.Y, "y = 1");
+
+                // mouse poso
+                this.DebugView.DrawString((int)this.CurrentMouseScreenPosition.X, (int)this.CurrentMouseScreenPosition.Y - 15, string.Format( "{0}x {1}y", Math.Round( this.CurrentMouseWorldPosition.X, 0), Math.Round( this.CurrentMouseWorldPosition.Y, 0)));
+
+                this.DebugView.EndCustomDraw();
+            }
+            #endregion
 
             if (this.World.HibernationEnabled) {
                 // render active areas
-                Color activeAreaAABBcolor = new Color(0.9f, 0.3f, 0.3f);
-                Color activeAreaCircleColor = new Color(0.9f, 0.3f, 0.3f, 0.25f);
+                Color independentActiveAreaColor = new Color(0.9f, 0.3f, 0.3f);
+                Color bodyActiveAreaColor = new Color(0.7f, 0.5f, 0.3f);
                 this.DebugView.BeginCustomDraw(projection, view);
                 foreach (var activeArea in this.World.HibernationManager.ActiveAreas) {
-                    this.DebugView.DrawAABB(ref activeArea.AABB, activeAreaAABBcolor);
+
+                    if (activeArea.AreaType == ActiveAreaType.Independent)
+                    {
+                        this.DebugView.DrawAABB(ref activeArea.AABB, independentActiveAreaColor);
+                    }
+                    else
+                    {
+                        this.DebugView.DrawAABB(ref activeArea.AABB, bodyActiveAreaColor);
+                    }
+
                     //this.DebugView.DrawSolidCircle(activeArea.Position, activeArea.Radius, Vector2.Zero, activeAreaCircleColor);
                     //this.DebugView.DrawCircle(activeArea.AABB.Center, activeArea.AABB.Extents.Length(), Color.Gray);
 
@@ -309,7 +345,7 @@ namespace tainicom.Aether.Physics2D.Samples.Testbed.Tests
         {
             base.Keyboard(keyboardManager);
 
-            var cMgr = World.ContactManager;         
+            var cMgr = World.ContactManager;        
 
             if (keyboardManager.IsNewKeyPress(Keys.D1))
                 cMgr.VelocityConstraintsMultithreadThreshold = 0;
@@ -389,6 +425,11 @@ namespace tainicom.Aether.Physics2D.Samples.Testbed.Tests
             }
 
             if( keyboardManager.IsNewKeyPress(Keys.LeftAlt))
+            {
+                this.EnableCoordinateRendering = !this.EnableCoordinateRendering;
+            }
+
+            if (keyboardManager.IsNewKeyPress(Keys.LeftControl))
             {
                 this.DebugView.Enabled = !this.DebugView.Enabled;
             }

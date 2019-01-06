@@ -209,14 +209,16 @@ namespace tainicom.Aether.Physics2D.Samples.Testbed
                 if (_testSelection == _testCount)
                     _testSelection = 0;
             }
+
+            var viewCenterMoveVelocityMultiplier = 1.0f / this.ViewZoom;
             if (_keyboardManager.IsKeyDown(Keys.NumPad4)) // Press left to pan left.
-                ViewCenter = new Vector2(ViewCenter.X - 0.5f, ViewCenter.Y);
+                ViewCenter = new Vector2(ViewCenter.X - 0.5f * viewCenterMoveVelocityMultiplier, ViewCenter.Y);
             else if (_keyboardManager.IsKeyDown(Keys.NumPad6)) // Press right to pan right.
-                ViewCenter = new Vector2(ViewCenter.X + 0.5f, ViewCenter.Y);
+                ViewCenter = new Vector2(ViewCenter.X + 0.5f * viewCenterMoveVelocityMultiplier, ViewCenter.Y);
             if (_keyboardManager.IsKeyDown(Keys.NumPad2)) // Press down to pan down.
-                ViewCenter = new Vector2(ViewCenter.X, ViewCenter.Y - 0.5f);
+                ViewCenter = new Vector2(ViewCenter.X, ViewCenter.Y - 0.5f * viewCenterMoveVelocityMultiplier);
             else if (_keyboardManager.IsKeyDown(Keys.NumPad8)) // Press up to pan up.
-                ViewCenter = new Vector2(ViewCenter.X, ViewCenter.Y + 0.5f);
+                ViewCenter = new Vector2(ViewCenter.X, ViewCenter.Y + 0.5f * viewCenterMoveVelocityMultiplier);
             if (_keyboardManager.IsNewKeyPress(Keys.Home)) // Press home to reset the view.
                 ResetCamera();
             else if (_keyboardManager.IsNewKeyPress(Keys.F1))
