@@ -205,39 +205,40 @@ namespace tainicom.Aether.Physics2D.Dynamics.Hibernation
                         throw new InvalidProgramException("All active area bodies should have their position status set by this point.");
                     }
 
+                    if( areaBody.PositionStatus == AreaBodyStatus.TotallyIn) { 
+
+                        // this body is totally within this AA, so if there's a separate AA tracking this one specifically, 
+                        // it's not needed, as that would be redundant.
+                        // OPTIMIZATION IDEA: give body a ref to its own tracking AA. if !null when set, throw. super-easy look-up.
+                        var bodyAAs = this.ActiveAreas.Where(aa =>
+                            aa != activeArea // other AA is not this AA
+                            && aa.AreaType == ActiveAreaType.BodyTracking // other AA is a body tracking AA...
+                            && (aa as BodyActiveArea).TrackedBody == body // ...and it's tracking this body specifically
+                            ); //&& aa.Bodies.Select( aab => aab.Body ).Any( b => b == body ) ); // 
+
+                        switch (bodyAAs.Count())
+                        {
+                            case 0:
+                                // no problem. no bodyAA to care about.
+                                break;
+
+                            case 1:
+                                // destroy it! it is redundant.
+                                this.ActiveAreas.Remove(bodyAAs.First());
+                                break;
+
+                            default:
+                                // this really shouldn't happen. it means there is more than one bodyAA for this body.
+                                throw new InvalidProgramException("There is more than one ActiveArea for this body. This should never happen. There is a bug elsewhere.");
+                        } 
+                    }
+
                     var statusHasChanged = areaBody.PriorStatus != areaBody.PositionStatus;
                     if( statusHasChanged )
                     {
                         switch (areaBody.PositionStatus)
                         {
-                            case AreaBodyStatus.TotallyIn:
-
-                                // this body is totally within this AA, so if there's a separate AA tracking this one specifically, 
-                                // it's not needed, as that would be redundant.
-                                // OPTIMIZATION IDEA: give body a ref to its own tracking AA. if !null when set, throw. super-easy look-up.
-                                //var bodyAAs = this.ActiveAreas.Where(aa =>
-                                //    aa != activeArea // other AA is not this AA
-                                //    && aa.AreaType == ActiveAreaType.BodyTracking // other AA is a body tracking AA...
-                                //    && (aa as BodyActiveArea).TrackedBody == body // ...and it's tracking this body specifically
-                                //    ); //&& aa.Bodies.Select( aab => aab.Body ).Any( b => b == body ) ); // 
-
-                                //switch (bodyAAs.Count())
-                                //{
-                                //    case 0:
-                                //        // no problem. move on.
-                                //        break;
-
-                                //    case 1:
-                                //        // destroy it! it is redundant.
-                                //        this.ActiveAreas.Remove(bodyAAs.First());
-                                //        break;
-
-                                //    default:
-                                //        // this really shouldn't happen. it means there is more than one bodyAA for this body.
-                                //        throw new InvalidProgramException("There is more than one ActiveArea for this body. This should never happen. There is a bug elsewhere.");
-                                //}
-
-                                break;
+                        
 
                             case AreaBodyStatus.PartiallyIn:
                             case AreaBodyStatus.TotallyOut:
@@ -300,6 +301,10 @@ namespace tainicom.Aether.Physics2D.Dynamics.Hibernation
             // solution... when removing a body from an AA... reset its position status in all other AA as... invalid... so it's processed again... that should work, but it's kind of inelegant.
             //             the other AA will just recreate the bodyAA for this body anew. 
             // solution2... when a bodyAA expires, check if the body is within any other AA. if it is extend expiration by... 2 sec... more elegant. doesn't even destroy the bodyAA.
+
+            // bug2:
+            // when body leaves bodyA, even when both are within an IndependentAA, the body has a bodyAA created. it should be removed instantly... since it's in the IAA, but since
+            // the IAA position status didn't change, it doesn't 
 
             #region Hibernate all flagged bodies. 
 
