@@ -39,7 +39,7 @@ namespace tainicom.Aether.Physics2D.Dynamics.Hibernation
             this.AreaType = ActiveAreaType.BodyTracking;
 
             // store creation time
-            this.CreationUtcTime = DateTime.UtcNow.Ticks;
+            this.Renew();
         }
 
         internal override void Update()
@@ -60,6 +60,15 @@ namespace tainicom.Aether.Physics2D.Dynamics.Hibernation
             // update whether is expired
             const float SECONDS_UNTIL_EXPIRE = 3.0f;
             this.IsExpired = this.SecondsAgoCreated >= SECONDS_UNTIL_EXPIRE;
+        }
+
+        internal void Renew()
+        {
+            // snapshot this time. it could be creation or renewal.
+            this.CreationUtcTime = DateTime.UtcNow.Ticks;
+
+            // reset expiration.
+            this.IsExpired = false;
         }
     }
 }

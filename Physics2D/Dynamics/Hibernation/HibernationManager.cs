@@ -56,6 +56,25 @@ namespace tainicom.Aether.Physics2D.Dynamics.Hibernation
             {
                 // update its bounding box
                 activeArea.Update();
+
+                if (activeArea.AreaType == ActiveAreaType.BodyTracking) 
+                {
+                    var bodyActiveArea = activeArea as BodyActiveArea;
+
+                    if (bodyActiveArea.IsExpired)
+                    {
+                        var isAnotherActiveAreaContainingBody = this.ActiveAreas.Any(aa => 
+                            aa != activeArea // ...a different active area
+                            && aa.Bodies.Select(aab => aab.Body).Contains(bodyActiveArea.TrackedBody)); // contains this body active area's tracked body
+
+                        if (isAnotherActiveAreaContainingBody)
+                        {
+                            // renew the expiration, as it's clear it's still kicking around someone who cares about it.
+                            // NOTE: if it's entirely within another AA then this body AA will be removed elsewhere. this condition really just ensures "partially in"
+                            bodyActiveArea.Renew();
+                        }
+                    }
+                }
             }
 
             #endregion
@@ -256,11 +275,16 @@ namespace tainicom.Aether.Physics2D.Dynamics.Hibernation
                             //}
 
                             // if it's not in any other AA at this point, hibernate it.
-                            var isAnyActiveAreasContainingBody = this.ActiveAreas.Any(aa => aa.Bodies.Select(aab => aab.Body).Contains(body));
-                            if (!isAnyActiveAreasContainingBody)
+                            var activeAreasContainingBody = this.ActiveAreas.Where(aa => aa.Bodies.Select(aab => aab.Body).Contains(body));
+                            if (!activeAreasContainingBody.Any())
                             {
+                                // no other active area has this body in it, so go ahead and hibernate the body
                                 this.BodiesToHibernate.Add(body);
                             }
+                            //else
+                            //{
+                            //    // other AA have this body in it, so we should have them double-check that no additional AA is needed by resetting the 
+                            //}
                         }
                     }
 
@@ -273,7 +297,9 @@ namespace tainicom.Aether.Physics2D.Dynamics.Hibernation
             // notes:
             // it's the order of events. can be "in" other body's AA, but have its own body AA. then its AA rolls around and removes the body... now the body's status changed event has been processed... 
             // and it has no Body AA and it's within another AA. 
-            // solution...
+            // solution... when removing a body from an AA... reset its position status in all other AA as... invalid... so it's processed again... that should work, but it's kind of inelegant.
+            //             the other AA will just recreate the bodyAA for this body anew. 
+            // solution2... when a bodyAA expires, check if the body is within any other AA. if it is extend expiration by... 2 sec... more elegant. doesn't even destroy the bodyAA.
 
             #region Hibernate all flagged bodies. 
 
