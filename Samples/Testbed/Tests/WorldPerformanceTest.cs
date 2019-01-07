@@ -75,6 +75,7 @@ namespace tainicom.Aether.Physics2D.Samples.Testbed.Tests
         public override void Initialize()
         {
             this.World = new World();
+            //this.World.HibernationEnabled = true;
 
             // enable multithreading
             this.World.ContactManager.VelocityConstraintsMultithreadThreshold = 256;
@@ -457,6 +458,7 @@ namespace tainicom.Aether.Physics2D.Samples.Testbed.Tests
 
                     // draw everything in the hibernated world as grey
                     this.HibernatedWorldDebugView.AppendFlags(Diagnostics.DebugViewFlags.AABB);
+                    this.HibernatedWorldDebugView.RemoveFlags(Diagnostics.DebugViewFlags.Shape);
                     this.HibernatedWorldDebugView.BodyAabbColor
                         = this.HibernatedWorldDebugView.BodyAabbRadiusColor
                         = this.HibernatedWorldDebugView.FixtureAabbColor
