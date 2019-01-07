@@ -47,6 +47,9 @@ namespace tainicom.Aether.Physics2D.Dynamics.Hibernation
 
             #region update all ActiveArea AABBs 
 
+            // remove all body tracking AA with no bodies...
+            this.ActiveAreas.RemoveAll(aa => aa.AreaType == ActiveAreaType.BodyTracking && aa.Bodies.Count == 0 && (aa as BodyActiveArea).SecondsAgoCreated > 3.0f);
+
             // process all active areas
             foreach (var activeArea in this.ActiveAreas)
             {
@@ -303,7 +306,7 @@ namespace tainicom.Aether.Physics2D.Dynamics.Hibernation
                 }
 
                 // just to be safe, we clear this ref too.
-                (expiredActiveArea as BodyActiveArea).TrackedBody = null;
+                //(expiredActiveArea as BodyActiveArea).TrackedBody = null;
 
                 // remove expired active area
                 this.ActiveAreas.Remove(expiredActiveArea);

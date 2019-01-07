@@ -29,7 +29,16 @@ namespace tainicom.Aether.Physics2D.Dynamics.Hibernation
         {
             // store the body to track
             this.TrackedBody = trackedBody;
+
+            // automatically add it to the list of bodies as "totally in"
+            var areaBody = new AreaBody(trackedBody);
+            areaBody.PositionStatus = AreaBodyStatus.TotallyIn;
+            this.Bodies.Add(areaBody);
+            
+            // set type
             this.AreaType = ActiveAreaType.BodyTracking;
+
+            // store creation time
             this.CreationUtcTime = DateTime.UtcNow.Ticks;
         }
 
