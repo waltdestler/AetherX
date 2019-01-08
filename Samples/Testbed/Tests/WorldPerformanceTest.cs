@@ -67,10 +67,12 @@ namespace tainicom.Aether.Physics2D.Samples.Testbed.Tests
         private WorldPerformanceTest()
         {
             // default to smallest world size
-            this.WorldSideSize = this.WorldSideSizeOptions[Keys.Q];
+            this.WorldSideSize = this.WorldSideSizeOptions[Keys.T];
 
             // set to 100m per body
-            this.MetersPerBody = this.MetersPerBodyOptions[Keys.Z];
+            this.MetersPerBody = this.MetersPerBodyOptions[Keys.X];
+
+            this.EnableHiberatedDebugDraw = true;
         }
 
         public override void Initialize()
@@ -375,13 +377,11 @@ namespace tainicom.Aether.Physics2D.Samples.Testbed.Tests
                         this.DebugView.DrawAABB(ref activeArea.AABB, bodyActiveAreaColor);
                     }
 
-                    //this.DebugView.DrawSolidCircle(activeArea.Position, activeArea.Radius, Vector2.Zero, activeAreaCircleColor);
-                    //this.DebugView.DrawCircle(activeArea.AABB.Center, activeArea.AABB.Extents.Length(), Color.Gray);
-
-                    // render number of bodies within
+                    /* UNCOMMENT TO: render number of bodies within each active area
                     Vector2 position = new Vector2(activeArea.AABB.LowerBound.X, activeArea.AABB.UpperBound.Y);
                     position = GameInstance.ConvertWorldToScreen(position);
                     DebugView.DrawString((int)position.X, (int)position.Y - 5, "Contains " + activeArea.Bodies.Count.ToString());
+                    */
                 }
                 this.DebugView.EndCustomDraw();
             }

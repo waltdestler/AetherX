@@ -183,15 +183,17 @@ namespace tainicom.Aether.Physics2D.Samples.Testbed
             //    ViewZoom = Math.Min((float)Math.Pow(Math.E, -0.05f) * ViewZoom, 20.0f);
             //else if (_keyboardManager.IsKeyDown(Keys.X)) // Press 'x' to zoom in.
             //    ViewZoom = Math.Max((float)Math.Pow(Math.E, +0.05f) * ViewZoom, 0.02f);
+            const float MIN_ZOOM = .002F;
+            const float MAX_ZOOM = 20.0F;
             if (_keyboardManager.IsKeyDown(Keys.Subtract)) // Press '-' to zoom out.
-                ViewZoom = Math.Min((float)Math.Pow(Math.E, -0.05f) * ViewZoom, 20.0f);
+                ViewZoom = Math.Min((float)Math.Pow(Math.E, -0.05f) * ViewZoom, MAX_ZOOM);
             else if (_keyboardManager.IsKeyDown(Keys.Add)) // Press 'x' to zoom in.
-                ViewZoom = Math.Max((float)Math.Pow(Math.E, +0.05f) * ViewZoom, 0.02f);
+                ViewZoom = Math.Max((float)Math.Pow(Math.E, +0.05f) * ViewZoom, MIN_ZOOM); //0.02f);
             else if (newMouseState.ScrollWheelValue != _oldMouseState.ScrollWheelValue) // Mouse Wheel to Zoom.
             {
-                var wheelDelta = (newMouseState.ScrollWheelValue - _oldMouseState.ScrollWheelValue)/120f;
+                var wheelDelta = (newMouseState.ScrollWheelValue - _oldMouseState.ScrollWheelValue) / 120f;
                 var zoomFactor = (float)Math.Pow(Math.E, 0.05f * wheelDelta);
-                ViewZoom = Math.Min(Math.Max(zoomFactor * ViewZoom, 0.02f), 20.0f);
+                ViewZoom = Math.Min(Math.Max(zoomFactor * ViewZoom, MIN_ZOOM), MAX_ZOOM);
             }
             else if (_keyboardManager.IsNewKeyPress(Keys.R)) // Press 'r' to reset.
                 Restart();
