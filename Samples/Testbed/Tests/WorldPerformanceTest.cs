@@ -89,6 +89,8 @@ namespace tainicom.Aether.Physics2D.Samples.Testbed.Tests
 
             this.CreateBodies();
 
+            this.SetHibernateEnabled(true);
+
             // sets up debug drawing
             base.Initialize();
 
@@ -273,9 +275,53 @@ namespace tainicom.Aether.Physics2D.Samples.Testbed.Tests
 
                     // set it to match current view
                     this.ViewActiveArea.SetPosition(position);
-                    this.ViewActiveArea.SetRadius(20f);
+                    this.ViewActiveArea.SetRadius(100f);
                 }
 
+            }
+        }
+
+        private void SetHibernateEnabled(bool isEnabled)
+        {
+            // if no change, abort.
+            if (isEnabled == this.World.HibernationEnabled)
+                return;
+
+            // set hibernation
+            this.World.HibernationEnabled = isEnabled;
+
+            if (this.World.HibernationEnabled)
+            {
+                // add second debug view for hibernated world
+                this.HibernatedWorldDebugView = new DebugView(this.World.HibernationManager.HibernatedWorld);
+                this.HibernatedWorldDebugView.LoadContent(GameInstance.GraphicsDevice, GameInstance.Content);
+
+                // draw everything in the hibernated world as grey
+                this.HibernatedWorldDebugView.AppendFlags(Diagnostics.DebugViewFlags.AABB);
+                this.HibernatedWorldDebugView.RemoveFlags(Diagnostics.DebugViewFlags.Shape);
+                this.HibernatedWorldDebugView.BodyAabbColor
+                    = this.HibernatedWorldDebugView.BodyAabbRadiusColor
+                    = this.HibernatedWorldDebugView.FixtureAabbColor
+                    = this.HibernatedWorldDebugView.DefaultShapeColor
+                    = this.HibernatedWorldDebugView.InactiveShapeColor
+                    = this.HibernatedWorldDebugView.KinematicShapeColor
+                    = this.HibernatedWorldDebugView.SleepingShapeColor
+                    = this.HibernatedWorldDebugView.StaticShapeColor
+                    = this.HibernatedWorldDebugView.PolygonVertexColor
+                    = this.HibernatedWorldDebugView.JointSegmentColor
+                    = new Color(0.10f, 0.10f, 0.10f, 0.25f);
+            }
+            else
+            {
+                // clear the view active area
+                this.ViewActiveArea = null;
+
+                if (this.HibernatedWorldDebugView != null)
+                {
+                    // also, destroy the debug view
+                    this.HibernatedWorldDebugView.Dispose();
+                    this.HibernatedWorldDebugView = null;
+                }
             }
         }
 
@@ -446,40 +492,7 @@ namespace tainicom.Aether.Physics2D.Samples.Testbed.Tests
 
             if (keyboardManager.IsNewKeyPress(Keys.H))
             {
-                if (this.World.HibernationEnabled)
-                {
-                    // it is enabled, and wer'e about to disable it, so clear the view active area
-                    this.ViewActiveArea = null;
-
-                    // also, destroy the debug view
-                    this.HibernatedWorldDebugView.Dispose();
-                    this.HibernatedWorldDebugView = null;
-                } 
-
-                // toggle hibernation
-                this.World.HibernationEnabled = !this.World.HibernationEnabled;
-
-                if( this.World.HibernationEnabled)
-                {
-                    // add second debug view for hibernated world
-                    this.HibernatedWorldDebugView = new DebugView(this.World.HibernationManager.HibernatedWorld);
-                    this.HibernatedWorldDebugView.LoadContent(GameInstance.GraphicsDevice, GameInstance.Content);
-
-                    // draw everything in the hibernated world as grey
-                    this.HibernatedWorldDebugView.AppendFlags(Diagnostics.DebugViewFlags.AABB);
-                    this.HibernatedWorldDebugView.RemoveFlags(Diagnostics.DebugViewFlags.Shape);
-                    this.HibernatedWorldDebugView.BodyAabbColor
-                        = this.HibernatedWorldDebugView.BodyAabbRadiusColor
-                        = this.HibernatedWorldDebugView.FixtureAabbColor
-                        = this.HibernatedWorldDebugView.DefaultShapeColor 
-                        = this.HibernatedWorldDebugView.InactiveShapeColor
-                        = this.HibernatedWorldDebugView.KinematicShapeColor
-                        = this.HibernatedWorldDebugView.SleepingShapeColor
-                        = this.HibernatedWorldDebugView.StaticShapeColor
-                        = this.HibernatedWorldDebugView.PolygonVertexColor
-                        = this.HibernatedWorldDebugView.JointSegmentColor
-                        = new Color(0.10f, 0.10f, 0.10f, 0.25f );
-                }
+                this.SetHibernateEnabled(!this.World.HibernationEnabled);
             }
         }
 
