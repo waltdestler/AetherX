@@ -51,6 +51,7 @@ namespace tainicom.Aether.Physics2D.Samples.Testbed.Tests
 
         private IndependentActiveArea ViewActiveArea { get; set; }
         DebugView HibernatedWorldDebugView { get; set; }
+        private bool EnableHiberatedDebugDraw { get; set; }
 
         private bool EnableCoordinateRendering { get; set; }
 
@@ -207,6 +208,9 @@ namespace tainicom.Aether.Physics2D.Samples.Testbed.Tests
             DrawString("Press Left Alt to toggle coordinate rendering: " + this.EnableCoordinateRendering);
 
             TextLine += 15;
+            DrawString("Press Right Control to toggle debug rendering of hibernated world: " + this.EnableHiberatedDebugDraw);
+
+            TextLine += 15;
             DrawString("Press to set broadphase algorithm. (J = "+ DYNAMICTREE_BROADPHASE_NAME + ", K = "+ QUADTREE_BROADPHASE_NAME + ", L = "+ BODY_DYNAMICTREE_BROADPHASE_NAME + ")");
             DrawString("Current broadphase algorithm: " + currentBroadPhaseName);
 
@@ -336,7 +340,7 @@ namespace tainicom.Aether.Physics2D.Samples.Testbed.Tests
                 this.DebugView.EndCustomDraw();
             }
 
-            if (this.HibernatedWorldDebugView != null)
+            if (this.HibernatedWorldDebugView != null && this.EnableHiberatedDebugDraw)
             {
                 this.HibernatedWorldDebugView.RenderDebugData(ref projection, ref view);
             }
@@ -428,6 +432,11 @@ namespace tainicom.Aether.Physics2D.Samples.Testbed.Tests
             if( keyboardManager.IsNewKeyPress(Keys.LeftAlt))
             {
                 this.EnableCoordinateRendering = !this.EnableCoordinateRendering;
+            }
+
+            if( keyboardManager.IsNewKeyPress(Keys.RightControl) )
+            {
+                this.EnableHiberatedDebugDraw = !this.EnableHiberatedDebugDraw;
             }
 
             if (keyboardManager.IsNewKeyPress(Keys.LeftControl))
