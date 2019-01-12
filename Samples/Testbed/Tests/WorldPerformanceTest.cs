@@ -24,7 +24,7 @@ namespace tainicom.Aether.Physics2D.Samples.Testbed.Tests
             { Keys.E, 2000 },
             { Keys.R, 5000 },
             { Keys.T, 10000 },
-            { Keys.Y, 15000 }
+            { Keys.Y, 20000 }
         };
 
         private Dictionary<Keys, int> BodyTypeOptions = new Dictionary<Keys, int>
@@ -67,12 +67,12 @@ namespace tainicom.Aether.Physics2D.Samples.Testbed.Tests
         private WorldPerformanceTest()
         {
             // default to smallest world size
-            this.WorldSideSize = this.WorldSideSizeOptions[Keys.T];
+            this.WorldSideSize = this.WorldSideSizeOptions[Keys.W]; //Y];
 
             // set to 100m per body
             this.MetersPerBody = this.MetersPerBodyOptions[Keys.X];
 
-            this.EnableHiberatedDebugDraw = true;
+            this.EnableHiberatedDebugDraw = false;
         }
 
         public override void Initialize()
@@ -180,12 +180,16 @@ namespace tainicom.Aether.Physics2D.Samples.Testbed.Tests
 
             var cMgr = World.ContactManager;
 
+            const int LINE_HEIGHT = 15;
+            TextLine += LINE_HEIGHT * 14; // skip down 14 lines, so we write below the performance info.
+
             DrawString("Press Space to switch between single-core / multi-core solvers.");
             DrawString("Press 1-3 to set VelocityConstraints Threshold. (1-(0 - Always ON), 2-(256), 3-(int.MaxValue - Always OFF))");
             DrawString("Press 4-6 to set PositionConstraints Threshold. (4-(0 - Always ON), 5-(256), 6-(int.MaxValue - Always OFF))");
             DrawString("Press 7-9 to set Collide Threshold.             (7-(0 - Always ON), 8-(256), 9-(int.MaxValue - Always OFF))");
 
-            TextLine += 15 * 10;
+            TextLine += LINE_HEIGHT;
+
             var threshold = cMgr.VelocityConstraintsMultithreadThreshold;
             if (threshold == 0) DrawString("VelocityConstraintsMultithreadThreshold: 0");
             else if (threshold == 256) DrawString("VelocityConstraintsMultithreadThreshold: 256");
@@ -205,21 +209,21 @@ namespace tainicom.Aether.Physics2D.Samples.Testbed.Tests
             DrawString("[IsRunningSlowly = "+ gameTime.IsRunningSlowly.ToString().ToUpper() + "]");
             DrawString("Zoom = " + Math.Round(this.GameInstance.ViewZoom, 2) + ", World Radius (m) = " + WorldRadius + ", Meters per Body: " + MetersPerBody);
 
-            TextLine += 15;
+            TextLine += LINE_HEIGHT;
             DrawString("Press Left Control to toggle debug rendering of game world: " + this.DebugView.Enabled);
 
-            TextLine += 15;
+            TextLine += LINE_HEIGHT;
             DrawString("Press Left Alt to toggle coordinate rendering: " + this.EnableCoordinateRendering);
 
-            TextLine += 15;
+            TextLine += LINE_HEIGHT;
             DrawString("Press Right Control to toggle debug rendering of hibernated world: " + this.EnableHiberatedDebugDraw);
 
-            TextLine += 15;
+            TextLine += LINE_HEIGHT;
             DrawString("Press to set broadphase algorithm. (J = "+ DYNAMICTREE_BROADPHASE_NAME + ", K = "+ QUADTREE_BROADPHASE_NAME + ", L = "+ BODY_DYNAMICTREE_BROADPHASE_NAME + ")");
             DrawString("Current broadphase algorithm: " + currentBroadPhaseName);
 
             // World size options
-            TextLine += 15;
+            TextLine += LINE_HEIGHT;
             var worldSizeOptions = string.Empty;
             foreach( var key in this.WorldSideSizeOptions.Keys )
             {
@@ -229,7 +233,7 @@ namespace tainicom.Aether.Physics2D.Samples.Testbed.Tests
             DrawString(string.Format("Press one of these keys to change it: ({0})", worldSizeOptions));
 
             // Meters-per-body options 
-            TextLine += 15;
+            TextLine += LINE_HEIGHT;
             var metersPerBodyOptions = string.Empty;
             foreach (var key in this.MetersPerBodyOptions.Keys)
             {
@@ -239,7 +243,7 @@ namespace tainicom.Aether.Physics2D.Samples.Testbed.Tests
             DrawString(string.Format("Press one of these keys to change it: ({0})", metersPerBodyOptions));
 
             // Body structure type options 
-            TextLine += 15;
+            TextLine += LINE_HEIGHT;
             var bodyStructureTypeOptions = string.Empty;
             foreach (var key in this.BodyStructureTypeOptions.Keys)
             {
@@ -249,7 +253,7 @@ namespace tainicom.Aether.Physics2D.Samples.Testbed.Tests
             DrawString(string.Format("Press one of these keys to change it: ({0})", bodyStructureTypeOptions));
 
             // Hibernation toggling 
-            TextLine += 15;
+            TextLine += LINE_HEIGHT;
             DrawString("Hibernation enabled: " + this.World.HibernationEnabled.ToString().ToUpper() + ". Press 'h' to toggle. Right-click to create/position an 'active area.'");
 
             

@@ -47,10 +47,6 @@ namespace tainicom.Aether.Physics2D.Dynamics.Hibernation
 
             #region update all ActiveArea AABBs 
 
-            // remove all body tracking AA with no bodies...
-            // TODO: remove this? i think it's redundant.
-            //this.ActiveAreas.RemoveAll(aa => aa.AreaType == ActiveAreaType.BodyTracking && aa.Bodies.Count == 0 && (aa as BodyActiveArea).SecondsAgoCreated > 3.0f);
-
             // process all active areas
             foreach (var activeArea in this.ActiveAreas)
             {
@@ -162,7 +158,7 @@ namespace tainicom.Aether.Physics2D.Dynamics.Hibernation
                             // get body AABB
                             var bodyTransform = body.GetTransform();
                             AABB bodyAabb;
-                            this.ActiveWorld.ContactManager.BroadPhase.GetFatAABB(body.ProxyId, out bodyAabb);
+                            this.ActiveWorld.ContactManager.BroadPhase.GetFatAABB(body.BroadphaseProxyId, out bodyAabb);
 
                             // at this point, we know it's touching. so it's just a matter of whether it's totally inside or partially inside.
                             // contains() returns 'true' only if the AABB is entirely within
@@ -335,9 +331,6 @@ namespace tainicom.Aether.Physics2D.Dynamics.Hibernation
                 {
                     throw new InvalidProgramException("An expired active area still had bodies within it at time of deletion. This is an exception. They should be removed prior to this step.");
                 }
-
-                // just to be safe, we clear this ref too.
-                //(expiredActiveArea as BodyActiveArea).TrackedBody = null;
 
                 // remove expired active area
                 this.ActiveAreas.Remove(expiredActiveArea);

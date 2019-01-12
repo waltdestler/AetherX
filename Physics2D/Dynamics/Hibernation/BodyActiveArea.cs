@@ -51,7 +51,7 @@ namespace tainicom.Aether.Physics2D.Dynamics.Hibernation
             }
 
             // update AABB to body's AABB
-            this.TrackedBody.World.ContactManager.BroadPhase.GetFatAABB(this.TrackedBody.ProxyId, out this.AABB);
+            this.TrackedBody.World.ContactManager.BroadPhase.GetFatAABB(this.TrackedBody.BroadphaseProxyId, out this.AABB);
 
             // add a little margin 
             const float AABB_MARGIN = 2f;

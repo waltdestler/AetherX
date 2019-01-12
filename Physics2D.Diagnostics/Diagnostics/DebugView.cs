@@ -230,7 +230,7 @@ namespace tainicom.Aether.Physics2D.Diagnostics
 
                     // render body AABBs
                     AABB aabb;
-                    bodyBroadphase.GetFatAABB(body.ProxyId, out aabb);
+                    bodyBroadphase.GetFatAABB(body.BroadphaseProxyId, out aabb);
                     DrawAABB(ref aabb, BodyAabbColor);
 
                     // also draw the bounding radius, as it is used for "active areas" if hibernation is enabled.
