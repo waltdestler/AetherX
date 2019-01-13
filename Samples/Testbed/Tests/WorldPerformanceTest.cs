@@ -220,10 +220,6 @@ namespace tainicom.Aether.Physics2D.Samples.Testbed.Tests
                 TextLine += LINE_HEIGHT;
                 DrawString("Press Right Control to toggle debug rendering of hibernated world: " + this.DebugView.HasFlag(DebugViewFlags.HibernatedBodyAABBs) );
 
-                TextLine += LINE_HEIGHT;
-                DrawString("Press to set broadphase algorithm. (J = " + DYNAMICTREE_BROADPHASE_NAME + ", K = " + QUADTREE_BROADPHASE_NAME + ", L = " + BODY_DYNAMICTREE_BROADPHASE_NAME + ")");
-                DrawString("Current broadphase algorithm: " + currentBroadPhaseName);
-
                 // World size options
                 TextLine += LINE_HEIGHT;
                 var worldSizeOptions = string.Empty;
@@ -290,11 +286,6 @@ namespace tainicom.Aether.Physics2D.Samples.Testbed.Tests
 
             }
         }
-
-        const string DYNAMICTREE_BROADPHASE_NAME = "DynamicTree";
-        const string QUADTREE_BROADPHASE_NAME = "QuadTree";
-        const string BODY_DYNAMICTREE_BROADPHASE_NAME = "BodyDynamicTree";
-        private string currentBroadPhaseName = DYNAMICTREE_BROADPHASE_NAME;
 
         public override void DrawDebugView(GameTime gameTime, ref Matrix projection, ref Matrix view)
         {
