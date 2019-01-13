@@ -96,6 +96,7 @@ namespace tainicom.Aether.Physics2D.Diagnostics
             AppendFlags(DebugViewFlags.Shape);
             AppendFlags(DebugViewFlags.Controllers);
             AppendFlags(DebugViewFlags.Joint);
+            AppendFlags(DebugViewFlags.HibernatedBodyAABBs);
         }
 
         #region IDisposable Members
