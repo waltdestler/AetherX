@@ -121,6 +121,11 @@ namespace tainicom.Aether.Physics2D.Samples.Testbed.Framework
                 }
                 Initialize();
             }
+
+            if (keyboardManager.IsNewKeyPress(Keys.H))
+            {
+                this.World.HibernationEnabled = !this.World.HibernationEnabled;
+            }
         }
 
         public virtual void Gamepad(GamePadState state, GamePadState oldState)

@@ -440,11 +440,6 @@ namespace tainicom.Aether.Physics2D.Samples.Testbed.Tests
                 this.DebugView.Enabled = !this.DebugView.Enabled;
             }
 
-            if (keyboardManager.IsNewKeyPress(Keys.H))
-            {
-                this.World.HibernationEnabled = !this.World.HibernationEnabled;
-            }
-
             if( keyboardManager.IsNewKeyPress(Keys.OemTilde))
             {
                 this.IsControlPanelRenderEnabled = !this.IsControlPanelRenderEnabled;
