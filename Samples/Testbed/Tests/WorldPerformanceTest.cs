@@ -265,26 +265,7 @@ namespace tainicom.Aether.Physics2D.Samples.Testbed.Tests
             Vector2 position = GameInstance.ConvertScreenToWorld(state.X, state.Y);
             this.CurrentMouseWorldPosition = position;
 
-            if (state.RightButton == ButtonState.Pressed)
-            {
-                if (this.World.HibernationEnabled)
-                {
-                    // get first independent active area
-                    var activeArea = this.World.HibernationManager.ActiveAreas.FirstOrDefault(aa => aa.AreaType == ActiveAreaType.Independent) as IndependentActiveArea;
-
-                    if(activeArea == null )
-                    {
-                        // init and add
-                        activeArea = new IndependentActiveArea();
-                        activeArea.SetRadius(100f);
-                        this.World.HibernationManager.ActiveAreas.Add(activeArea);
-                    }
-
-                    // set it to match current click position
-                    activeArea.SetPosition(position);
-                }
-
-            }
+            base.Mouse(state, oldState);
         }
 
         public override void DrawDebugView(GameTime gameTime, ref Matrix projection, ref Matrix view)

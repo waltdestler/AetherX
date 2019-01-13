@@ -35,6 +35,8 @@ using tainicom.Aether.Physics2D.Dynamics.Contacts;
 using tainicom.Aether.Physics2D.Dynamics.Joints;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
+using tainicom.Aether.Physics2D.Dynamics.Hibernation;
+using System.Linq;
 
 namespace tainicom.Aether.Physics2D.Samples.Testbed.Framework
 {
@@ -140,6 +142,26 @@ namespace tainicom.Aether.Physics2D.Samples.Testbed.Framework
                 MouseUp();
             else if (state.LeftButton == ButtonState.Pressed && oldState.LeftButton == ButtonState.Released)
                 MouseDown(position);
+
+            if (state.RightButton == ButtonState.Pressed)
+            {
+                if (this.World.HibernationEnabled)
+                {
+                    // get first independent active area
+                    var activeArea = this.World.HibernationManager.ActiveAreas.FirstOrDefault(aa => aa.AreaType == ActiveAreaType.Independent) as IndependentActiveArea;
+
+                    if (activeArea == null)
+                    {
+                        // init and add
+                        activeArea = new IndependentActiveArea();
+                        activeArea.SetRadius(100f);
+                        this.World.HibernationManager.ActiveAreas.Add(activeArea);
+                    }
+
+                    // set it to match current click position
+                    activeArea.SetPosition(position);
+                }
+            }
 
             MouseMove(position);
         }
