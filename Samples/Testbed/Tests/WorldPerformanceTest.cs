@@ -4,6 +4,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using tainicom.Aether.Physics2D.Collision;
 using tainicom.Aether.Physics2D.Collision.Shapes;
 using tainicom.Aether.Physics2D.Diagnostics;
@@ -48,8 +49,6 @@ namespace tainicom.Aether.Physics2D.Samples.Testbed.Tests
             { Keys.J, BodyStructureType.SingleFixtureBox },
             { Keys.K, BodyStructureType.TwelveFixtureStructure }
         };
-
-        private IndependentActiveArea ViewActiveArea { get; set; }
 
         private bool EnableCoordinateRendering { get; set; }
 
@@ -272,19 +271,21 @@ namespace tainicom.Aether.Physics2D.Samples.Testbed.Tests
 
             if (state.RightButton == ButtonState.Pressed)
             {
-                // set view active area, if hibernation is enabled
                 if (this.World.HibernationEnabled)
                 {
-                    if (this.ViewActiveArea == null)
+                    // get first independent active area
+                    var activeArea = this.World.HibernationManager.ActiveAreas.FirstOrDefault(aa => aa.AreaType == ActiveAreaType.Independent) as IndependentActiveArea;
+
+                    if(activeArea == null )
                     {
                         // init and add
-                        this.ViewActiveArea = new IndependentActiveArea();
-                        this.World.HibernationManager.ActiveAreas.Add(this.ViewActiveArea);
+                        activeArea = new IndependentActiveArea();
+                        activeArea.SetRadius(100f);
+                        this.World.HibernationManager.ActiveAreas.Add(activeArea);
                     }
 
-                    // set it to match current view
-                    this.ViewActiveArea.SetPosition(position);
-                    this.ViewActiveArea.SetRadius(100f);
+                    // set it to match current click position
+                    activeArea.SetPosition(position);
                 }
 
             }
@@ -298,12 +299,6 @@ namespace tainicom.Aether.Physics2D.Samples.Testbed.Tests
 
             // set hibernation
             this.World.HibernationEnabled = isEnabled;
-
-            if (!this.World.HibernationEnabled)
-            {
-                // clear the view active area
-                this.ViewActiveArea = null;
-            }
         }
 
         const string DYNAMICTREE_BROADPHASE_NAME = "DynamicTree";
