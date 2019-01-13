@@ -174,89 +174,94 @@ namespace tainicom.Aether.Physics2D.Samples.Testbed.Tests
             };
         }
 
+        private bool IsControlPanelRenderEnabled { get; set; }
+
         public override void Update(GameSettings settings, GameTime gameTime)
         {
             base.Update(settings, gameTime);
 
-            var cMgr = World.ContactManager;
-
             const int LINE_HEIGHT = 15;
             TextLine += LINE_HEIGHT * 14; // skip down 14 lines, so we write below the performance info.
 
-            DrawString("Press Space to switch between single-core / multi-core solvers.");
-            DrawString("Press 1-3 to set VelocityConstraints Threshold. (1-(0 - Always ON), 2-(256), 3-(int.MaxValue - Always OFF))");
-            DrawString("Press 4-6 to set PositionConstraints Threshold. (4-(0 - Always ON), 5-(256), 6-(int.MaxValue - Always OFF))");
-            DrawString("Press 7-9 to set Collide Threshold.             (7-(0 - Always ON), 8-(256), 9-(int.MaxValue - Always OFF))");
+            DrawString("Press tilde (~) to toggle the control panel.");
 
-            TextLine += LINE_HEIGHT;
-
-            var threshold = cMgr.VelocityConstraintsMultithreadThreshold;
-            if (threshold == 0) DrawString("VelocityConstraintsMultithreadThreshold: 0");
-            else if (threshold == 256) DrawString("VelocityConstraintsMultithreadThreshold: 256");
-            else if (threshold == int.MaxValue) DrawString("VelocityConstraintsMultithreadThreshold: int.MaxValue");
-            else DrawString("VelocityConstraintsMultithreadThreshold: " + threshold);
-            threshold = cMgr.PositionConstraintsMultithreadThreshold;
-            if (threshold == 0) DrawString("PositionConstraintsMultithreadThreshold: 0");
-            else if (threshold == 256) DrawString("PositionConstraintsMultithreadThreshold: 256");
-            else if (threshold == int.MaxValue) DrawString("PositionConstraintsMultithreadThreshold: int.MaxValue");
-            else DrawString("PositionConstraintsMultithreadThreshold is Currently: " + threshold);
-            threshold = cMgr.CollideMultithreadThreshold;
-            if (threshold == 0) DrawString("CollideMultithreadThreshold: 0");
-            else if (threshold == 256) DrawString("CollideMultithreadThreshold:  256");
-            else if (threshold == int.MaxValue) DrawString("CollideMultithreadThreshold: int.MaxValue");
-            else DrawString("CollideMultithreadThreshold is Currently: " + threshold);
-
-            DrawString("[IsRunningSlowly = "+ gameTime.IsRunningSlowly.ToString().ToUpper() + "]");
-            DrawString("Zoom = " + Math.Round(this.GameInstance.ViewZoom, 2) + ", World Radius (m) = " + WorldRadius + ", Meters per Body: " + MetersPerBody);
-
-            TextLine += LINE_HEIGHT;
-            DrawString("Press Left Control to toggle debug rendering of game world: " + this.DebugView.Enabled);
-
-            TextLine += LINE_HEIGHT;
-            DrawString("Press Left Alt to toggle coordinate rendering: " + this.EnableCoordinateRendering);
-
-            TextLine += LINE_HEIGHT;
-            DrawString("Press Right Control to toggle debug rendering of hibernated world: " + this.EnableHiberatedDebugDraw);
-
-            TextLine += LINE_HEIGHT;
-            DrawString("Press to set broadphase algorithm. (J = "+ DYNAMICTREE_BROADPHASE_NAME + ", K = "+ QUADTREE_BROADPHASE_NAME + ", L = "+ BODY_DYNAMICTREE_BROADPHASE_NAME + ")");
-            DrawString("Current broadphase algorithm: " + currentBroadPhaseName);
-
-            // World size options
-            TextLine += LINE_HEIGHT;
-            var worldSizeOptions = string.Empty;
-            foreach( var key in this.WorldSideSizeOptions.Keys )
+            if (this.IsControlPanelRenderEnabled)
             {
-                worldSizeOptions += string.Format("{0} = {1}m, ", key.ToString(), this.WorldSideSizeOptions[key]);
+                DrawString("Press Space to switch between single-core / multi-core solvers.");
+                DrawString("Press 1-3 to set VelocityConstraints Threshold. (1-(0 - Always ON), 2-(256), 3-(int.MaxValue - Always OFF))");
+                DrawString("Press 4-6 to set PositionConstraints Threshold. (4-(0 - Always ON), 5-(256), 6-(int.MaxValue - Always OFF))");
+                DrawString("Press 7-9 to set Collide Threshold.             (7-(0 - Always ON), 8-(256), 9-(int.MaxValue - Always OFF))");
+
+                TextLine += LINE_HEIGHT;
+
+                var cMgr = World.ContactManager;
+                var threshold = cMgr.VelocityConstraintsMultithreadThreshold;
+                if (threshold == 0) DrawString("VelocityConstraintsMultithreadThreshold: 0");
+                else if (threshold == 256) DrawString("VelocityConstraintsMultithreadThreshold: 256");
+                else if (threshold == int.MaxValue) DrawString("VelocityConstraintsMultithreadThreshold: int.MaxValue");
+                else DrawString("VelocityConstraintsMultithreadThreshold: " + threshold);
+                threshold = cMgr.PositionConstraintsMultithreadThreshold;
+                if (threshold == 0) DrawString("PositionConstraintsMultithreadThreshold: 0");
+                else if (threshold == 256) DrawString("PositionConstraintsMultithreadThreshold: 256");
+                else if (threshold == int.MaxValue) DrawString("PositionConstraintsMultithreadThreshold: int.MaxValue");
+                else DrawString("PositionConstraintsMultithreadThreshold is Currently: " + threshold);
+                threshold = cMgr.CollideMultithreadThreshold;
+                if (threshold == 0) DrawString("CollideMultithreadThreshold: 0");
+                else if (threshold == 256) DrawString("CollideMultithreadThreshold:  256");
+                else if (threshold == int.MaxValue) DrawString("CollideMultithreadThreshold: int.MaxValue");
+                else DrawString("CollideMultithreadThreshold is Currently: " + threshold);
+
+                DrawString("[IsRunningSlowly = " + gameTime.IsRunningSlowly.ToString().ToUpper() + "]");
+                DrawString("Zoom = " + Math.Round(this.GameInstance.ViewZoom, 2) + ", World Radius (m) = " + WorldRadius + ", Meters per Body: " + MetersPerBody);
+
+                TextLine += LINE_HEIGHT;
+                DrawString("Press Left Control to toggle debug rendering of game world: " + this.DebugView.Enabled);
+
+                TextLine += LINE_HEIGHT;
+                DrawString("Press Left Alt to toggle coordinate rendering: " + this.EnableCoordinateRendering);
+
+                TextLine += LINE_HEIGHT;
+                DrawString("Press Right Control to toggle debug rendering of hibernated world: " + this.EnableHiberatedDebugDraw);
+
+                TextLine += LINE_HEIGHT;
+                DrawString("Press to set broadphase algorithm. (J = " + DYNAMICTREE_BROADPHASE_NAME + ", K = " + QUADTREE_BROADPHASE_NAME + ", L = " + BODY_DYNAMICTREE_BROADPHASE_NAME + ")");
+                DrawString("Current broadphase algorithm: " + currentBroadPhaseName);
+
+                // World size options
+                TextLine += LINE_HEIGHT;
+                var worldSizeOptions = string.Empty;
+                foreach (var key in this.WorldSideSizeOptions.Keys)
+                {
+                    worldSizeOptions += string.Format("{0} = {1}m, ", key.ToString(), this.WorldSideSizeOptions[key]);
+                }
+                DrawString("Current world size (width & height): " + WorldSideSize.ToString() + "m");
+                DrawString(string.Format("Press one of these keys to change it: ({0})", worldSizeOptions));
+
+                // Meters-per-body options 
+                TextLine += LINE_HEIGHT;
+                var metersPerBodyOptions = string.Empty;
+                foreach (var key in this.MetersPerBodyOptions.Keys)
+                {
+                    metersPerBodyOptions += string.Format("{0} = {1}m, ", key.ToString(), this.MetersPerBodyOptions[key]);
+                }
+                DrawString("Current meters-per-body: " + MetersPerBody.ToString() + "m");
+                DrawString(string.Format("Press one of these keys to change it: ({0})", metersPerBodyOptions));
+
+                // Body structure type options 
+                TextLine += LINE_HEIGHT;
+                var bodyStructureTypeOptions = string.Empty;
+                foreach (var key in this.BodyStructureTypeOptions.Keys)
+                {
+                    bodyStructureTypeOptions += string.Format("{0} = {1}, ", key.ToString(), this.BodyStructureTypeOptions[key].ToString());
+                }
+                DrawString("Current body structure type: " + this.BodyStructureType.ToString());
+                DrawString(string.Format("Press one of these keys to change it: ({0})", bodyStructureTypeOptions));
+
+                // Hibernation toggling 
+                TextLine += LINE_HEIGHT;
+                DrawString("Hibernation enabled: " + this.World.HibernationEnabled.ToString().ToUpper() + ". Press 'h' to toggle. Right-click to create/position an 'active area.'");
+
             }
-            DrawString("Current world size (width & height): " + WorldSideSize.ToString() + "m");
-            DrawString(string.Format("Press one of these keys to change it: ({0})", worldSizeOptions));
-
-            // Meters-per-body options 
-            TextLine += LINE_HEIGHT;
-            var metersPerBodyOptions = string.Empty;
-            foreach (var key in this.MetersPerBodyOptions.Keys)
-            {
-                metersPerBodyOptions += string.Format("{0} = {1}m, ", key.ToString(), this.MetersPerBodyOptions[key]);
-            }
-            DrawString("Current meters-per-body: " + MetersPerBody.ToString() + "m");
-            DrawString(string.Format("Press one of these keys to change it: ({0})", metersPerBodyOptions));
-
-            // Body structure type options 
-            TextLine += LINE_HEIGHT;
-            var bodyStructureTypeOptions = string.Empty;
-            foreach (var key in this.BodyStructureTypeOptions.Keys)
-            {
-                bodyStructureTypeOptions += string.Format("{0} = {1}, ", key.ToString(), this.BodyStructureTypeOptions[key].ToString());
-            }
-            DrawString("Current body structure type: " + this.BodyStructureType.ToString());
-            DrawString(string.Format("Press one of these keys to change it: ({0})", bodyStructureTypeOptions));
-
-            // Hibernation toggling 
-            TextLine += LINE_HEIGHT;
-            DrawString("Hibernation enabled: " + this.World.HibernationEnabled.ToString().ToUpper() + ". Press 'h' to toggle. Right-click to create/position an 'active area.'");
-
-            
         }
 
         private Vector2 CurrentMouseScreenPosition = Vector2.Zero;
@@ -497,6 +502,11 @@ namespace tainicom.Aether.Physics2D.Samples.Testbed.Tests
             if (keyboardManager.IsNewKeyPress(Keys.H))
             {
                 this.SetHibernateEnabled(!this.World.HibernationEnabled);
+            }
+
+            if( keyboardManager.IsNewKeyPress(Keys.OemTilde))
+            {
+                this.IsControlPanelRenderEnabled = !this.IsControlPanelRenderEnabled;
             }
         }
 
