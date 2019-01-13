@@ -69,7 +69,8 @@ namespace tainicom.Aether.Physics2D.Diagnostics
         private StringBuilder _graphSbMax = new StringBuilder();   
         private StringBuilder _graphSbAvg = new StringBuilder();   
         private StringBuilder _graphSbMin = new StringBuilder();   
-        private StringBuilder _debugPanelSbObjects = new StringBuilder();        
+        private StringBuilder _debugPanelSbObjects = new StringBuilder();
+        private StringBuilder _debugPanelHibObjects = new StringBuilder();
         private StringBuilder _debugPanelSbUpdate = new StringBuilder();
 
         //Performance graph
@@ -79,7 +80,7 @@ namespace tainicom.Aether.Physics2D.Diagnostics
         public TimeSpan MinimumValue;
         public TimeSpan MaximumValue = TimeSpan.FromMilliseconds(10);
         private List<TimeSpan> _graphValues = new List<TimeSpan>(500);
-        public Rectangle PerformancePanelBounds = new Rectangle(330, 100, 200, 100);
+        public Rectangle PerformancePanelBounds = new Rectangle(500, 100, 300, 100);
         private Vector2[] _background = new Vector2[4];
         public bool Enabled = true;
         
@@ -390,7 +391,34 @@ namespace tainicom.Aether.Physics2D.Diagnostics
             _debugPanelSbObjects.Append("- Joints:   ").AppendNumber(World.JointList.Count).AppendLine();
             _debugPanelSbObjects.Append("- Controllers: ").AppendNumber(World.ControllerList.Count).AppendLine();
             DrawString(x, y, _debugPanelSbObjects);
-            
+
+            _debugPanelHibObjects.Clear();
+            _debugPanelHibObjects.Append("Hibernated:").AppendLine();
+
+            if( this.World.HibernationEnabled )
+            {
+                var hibernatedWorld = World.HibernationManager.HibernatedWorld;
+
+                int hibernatedFixtureCount = 0;
+                for (int i = 0; i < hibernatedWorld.BodyList.Count; i++)
+                {
+                    hibernatedFixtureCount += hibernatedWorld.BodyList[i].FixtureList.Count;
+                }
+
+                _debugPanelHibObjects.Append("- Bodies:   ").AppendNumber(hibernatedWorld.BodyList.Count).AppendLine();
+                _debugPanelHibObjects.Append("- Fixtures: ").AppendNumber(hibernatedFixtureCount).AppendLine();
+                _debugPanelHibObjects.Append("- Contacts: ").AppendNumber(hibernatedWorld.ContactCount).AppendLine();
+                _debugPanelHibObjects.Append("- Proxies:  ").AppendNumber(hibernatedWorld.ProxyCount).AppendLine();
+                _debugPanelHibObjects.Append("- Joints:   ").AppendNumber(hibernatedWorld.JointList.Count).AppendLine();
+                _debugPanelHibObjects.Append("- Controllers: ").AppendNumber(hibernatedWorld.ControllerList.Count).AppendLine();
+            }
+            else
+            {
+                _debugPanelHibObjects.Append("N/A (disabled)");
+            }
+
+            DrawString(x + 125, y, _debugPanelHibObjects);
+
             _debugPanelSbUpdate.Clear();
             _debugPanelSbUpdate.Append("Update time:").AppendLine();
             _debugPanelSbUpdate.Append("- Body:    ").AppendNumber(  (float)World.SolveUpdateTime.TotalMilliseconds, 3).Append(" ms").AppendLine();
@@ -399,7 +427,7 @@ namespace tainicom.Aether.Physics2D.Diagnostics
             _debugPanelSbUpdate.Append("- Joint:   ").AppendNumber(  (float)World.Island.JointUpdateTime.TotalMilliseconds, 3).Append(" ms").AppendLine();
             _debugPanelSbUpdate.Append("- Controller:").AppendNumber((float)World.ControllersUpdateTime.TotalMilliseconds, 3).Append(" ms").AppendLine();
             _debugPanelSbUpdate.Append("- Total:   ").AppendNumber(  (float)World.UpdateTime.TotalMilliseconds, 3).Append(" ms").AppendLine();
-            DrawString(x + 110, y, _debugPanelSbUpdate);
+            DrawString(x + 250, y, _debugPanelSbUpdate);
         }
 
         public void DrawAABB(ref AABB aabb, Color color)

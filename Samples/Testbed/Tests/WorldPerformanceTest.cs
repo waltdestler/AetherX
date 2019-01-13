@@ -180,6 +180,7 @@ namespace tainicom.Aether.Physics2D.Samples.Testbed.Tests
             TextLine += LINE_HEIGHT * 14; // skip down 14 lines, so we write below the performance info.
 
             DrawString("Press tilde (~) to toggle the control panel.");
+            TextLine += LINE_HEIGHT;
 
             if (this.IsControlPanelRenderEnabled)
             {
@@ -207,8 +208,9 @@ namespace tainicom.Aether.Physics2D.Samples.Testbed.Tests
                 else if (threshold == int.MaxValue) DrawString("CollideMultithreadThreshold: int.MaxValue");
                 else DrawString("CollideMultithreadThreshold is Currently: " + threshold);
 
-                DrawString("[IsRunningSlowly = " + gameTime.IsRunningSlowly.ToString().ToUpper() + "]");
-                DrawString("Zoom = " + Math.Round(this.GameInstance.ViewZoom, 2) + ", World Radius (m) = " + WorldRadius + ", Meters per Body: " + MetersPerBody);
+                TextLine += LINE_HEIGHT;
+
+                DrawString("[IsRunningSlowly = " + gameTime.IsRunningSlowly.ToString().ToUpper() + "]" + "      Zoom = " + Math.Round(this.GameInstance.ViewZoom, 2) );
 
                 TextLine += LINE_HEIGHT;
                 DrawString("Press Left Control to toggle debug rendering of game world: " + this.DebugView.Enabled);
