@@ -50,8 +50,6 @@ namespace tainicom.Aether.Physics2D.Samples.Testbed.Tests
         };
 
         private IndependentActiveArea ViewActiveArea { get; set; }
-        DebugView HibernatedWorldDebugView { get; set; }
-        private bool EnableHiberatedDebugDraw { get; set; }
 
         private bool EnableCoordinateRendering { get; set; }
 
@@ -71,8 +69,6 @@ namespace tainicom.Aether.Physics2D.Samples.Testbed.Tests
 
             // set to 100m per body
             this.MetersPerBody = this.MetersPerBodyOptions[Keys.X];
-
-            this.EnableHiberatedDebugDraw = false;
         }
 
         public override void Initialize()
@@ -221,7 +217,7 @@ namespace tainicom.Aether.Physics2D.Samples.Testbed.Tests
                 DrawString("Press Left Alt to toggle coordinate rendering: " + this.EnableCoordinateRendering);
 
                 TextLine += LINE_HEIGHT;
-                DrawString("Press Right Control to toggle debug rendering of hibernated world: " + this.EnableHiberatedDebugDraw);
+                DrawString("Press Right Control to toggle debug rendering of hibernated world: " + this.DebugView.HasFlag(DebugViewFlags.HibernatedBodyAABBs) );
 
                 TextLine += LINE_HEIGHT;
                 DrawString("Press to set broadphase algorithm. (J = " + DYNAMICTREE_BROADPHASE_NAME + ", K = " + QUADTREE_BROADPHASE_NAME + ", L = " + BODY_DYNAMICTREE_BROADPHASE_NAME + ")");
@@ -301,38 +297,10 @@ namespace tainicom.Aether.Physics2D.Samples.Testbed.Tests
             // set hibernation
             this.World.HibernationEnabled = isEnabled;
 
-            if (this.World.HibernationEnabled)
-            {
-                // add second debug view for hibernated world
-                this.HibernatedWorldDebugView = new DebugView(this.World.HibernationManager.HibernatedWorld);
-                this.HibernatedWorldDebugView.LoadContent(GameInstance.GraphicsDevice, GameInstance.Content);
-
-                // draw everything in the hibernated world as grey
-                this.HibernatedWorldDebugView.AppendFlags(Diagnostics.DebugViewFlags.AABB);
-                this.HibernatedWorldDebugView.RemoveFlags(Diagnostics.DebugViewFlags.Shape);
-                this.HibernatedWorldDebugView.BodyAabbColor
-                    = this.HibernatedWorldDebugView.BodyAabbRadiusColor
-                    = this.HibernatedWorldDebugView.FixtureAabbColor
-                    = this.HibernatedWorldDebugView.DefaultShapeColor
-                    = this.HibernatedWorldDebugView.InactiveShapeColor
-                    = this.HibernatedWorldDebugView.KinematicShapeColor
-                    = this.HibernatedWorldDebugView.SleepingShapeColor
-                    = this.HibernatedWorldDebugView.StaticShapeColor
-                    = this.HibernatedWorldDebugView.PolygonVertexColor
-                    = this.HibernatedWorldDebugView.JointSegmentColor
-                    = new Color(0.10f, 0.10f, 0.10f, 0.25f);
-            }
-            else
+            if (!this.World.HibernationEnabled)
             {
                 // clear the view active area
                 this.ViewActiveArea = null;
-
-                if (this.HibernatedWorldDebugView != null)
-                {
-                    // also, destroy the debug view
-                    this.HibernatedWorldDebugView.Dispose();
-                    this.HibernatedWorldDebugView = null;
-                }
             }
         }
 
@@ -393,11 +361,6 @@ namespace tainicom.Aether.Physics2D.Samples.Testbed.Tests
                     */
                 }
                 this.DebugView.EndCustomDraw();
-            }
-
-            if (this.HibernatedWorldDebugView != null && this.EnableHiberatedDebugDraw)
-            {
-                this.HibernatedWorldDebugView.RenderDebugData(ref projection, ref view);
             }
         }
 
@@ -491,7 +454,7 @@ namespace tainicom.Aether.Physics2D.Samples.Testbed.Tests
 
             if( keyboardManager.IsNewKeyPress(Keys.RightControl) )
             {
-                this.EnableHiberatedDebugDraw = !this.EnableHiberatedDebugDraw;
+                this.DebugView.ToggleFlag(DebugViewFlags.HibernatedBodyAABBs);
             }
 
             if (keyboardManager.IsNewKeyPress(Keys.LeftControl))

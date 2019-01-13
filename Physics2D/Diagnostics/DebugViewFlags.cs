@@ -68,6 +68,11 @@ namespace tainicom.Aether.Physics2D.Diagnostics
         /// <summary>
         /// Draws controllers.
         /// </summary>
-        Controllers = (1 << 10)
+        Controllers = (1 << 10),
+
+        /// <summary>
+        /// Draws hibernated bodies.
+        /// </summary>
+        HibernatedBodyAABBs = (1 << 11)
     }
 }

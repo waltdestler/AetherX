@@ -1,3 +1,4 @@
+
 // Copyright (c) 2017 Kastellanos Nikolaos
 
 /* Original source Farseer Physics Engine:
@@ -50,7 +51,7 @@ namespace tainicom.Aether.Physics2D.Diagnostics
         public Color TextColor = Color.White;
         public Color PolygonVertexColor = Color.Red;
         public Color BodyAabbColor = new Color(0.3f, 0.9f, 0.3f);
-        public Color BodyAabbRadiusColor = new Color(0.1f, 0.3f, 0.1f);
+        public Color HibernatedBodyAabbColor = new Color(0.25f, 0.25f, 0.25f);
         public Color FixtureAabbColor = new Color(0.9f, 0.3f, 0.9f);
         public Color JointSegmentColor = new Color(0.5f, 0.8f, 0.8f);
 
@@ -107,7 +108,7 @@ namespace tainicom.Aether.Physics2D.Diagnostics
 
         private void PreSolve(Contact contact, ref Manifold oldManifold)
         {
-            if ((Flags & DebugViewFlags.ContactPoints) == DebugViewFlags.ContactPoints)
+            if (this.HasFlag(DebugViewFlags.ContactPoints))
             {
                 Manifold manifold = contact.Manifold;
 
@@ -143,7 +144,7 @@ namespace tainicom.Aether.Physics2D.Diagnostics
         /// </summary>
         private void DrawDebugData()
         {
-            if ((Flags & DebugViewFlags.Shape) == DebugViewFlags.Shape)
+            if (this.HasFlag(DebugViewFlags.Shape))
             {
                 foreach (Body b in World.BodyList)
                 {
@@ -164,7 +165,7 @@ namespace tainicom.Aether.Physics2D.Diagnostics
                 }
             }
 
-            if ((Flags & DebugViewFlags.ContactPoints) == DebugViewFlags.ContactPoints)
+            if (this.HasFlag(DebugViewFlags.ContactPoints))
             {
                 const float axisScale = 0.3f;
 
@@ -188,7 +189,7 @@ namespace tainicom.Aether.Physics2D.Diagnostics
                 _pointCount = 0;
             }
 
-            if ((Flags & DebugViewFlags.PolygonPoints) == DebugViewFlags.PolygonPoints)
+            if (this.HasFlag(DebugViewFlags.PolygonPoints))
             {
                 foreach (Body body in World.BodyList)
                 {
@@ -209,7 +210,7 @@ namespace tainicom.Aether.Physics2D.Diagnostics
                 }
             }
 
-            if ((Flags & DebugViewFlags.Joint) == DebugViewFlags.Joint)
+            if (this.HasFlag(DebugViewFlags.Joint))
             {
                 foreach (Joint j in World.JointList)
                 {
@@ -217,7 +218,7 @@ namespace tainicom.Aether.Physics2D.Diagnostics
                 }
             }
 
-            if ((Flags & DebugViewFlags.AABB) == DebugViewFlags.AABB)
+            if (this.HasFlag(DebugViewFlags.AABB))
             {
                 var bodyBroadphase = World.ContactManager.BroadPhase;
 
@@ -232,9 +233,6 @@ namespace tainicom.Aether.Physics2D.Diagnostics
                     AABB aabb;
                     bodyBroadphase.GetFatAABB(body.BroadphaseProxyId, out aabb);
                     DrawAABB(ref aabb, BodyAabbColor);
-
-                    // also draw the bounding radius, as it is used for "active areas" if hibernation is enabled.
-                    //this.DrawCircle(aabb.Center, aabb.Extents.Length(), BodyAabbRadiusColor);
 
                     // render fixture AABBs
                     var fixtureTree = body.FixtureTree;
@@ -257,7 +255,7 @@ namespace tainicom.Aether.Physics2D.Diagnostics
                 }
             }
 
-            if ((Flags & DebugViewFlags.CenterOfMass) == DebugViewFlags.CenterOfMass)
+            if (this.HasFlag(DebugViewFlags.CenterOfMass))
             {
                 foreach (Body b in World.BodyList)
                 {
@@ -267,7 +265,7 @@ namespace tainicom.Aether.Physics2D.Diagnostics
                 }
             }
 
-            if ((Flags & DebugViewFlags.Controllers) == DebugViewFlags.Controllers)
+            if (this.HasFlag(DebugViewFlags.Controllers))
             {
                 for (int i = 0; i < World.ControllerList.Count; i++)
                 {
@@ -278,6 +276,28 @@ namespace tainicom.Aether.Physics2D.Diagnostics
                     {
                         AABB container = buoyancy.Container;
                         DrawAABB(ref container, Color.LightBlue);
+                    }
+                }
+            }
+
+            if (this.World.HibernationEnabled)
+            {
+                // render hibernated body AABBs
+                if (this.HasFlag(DebugViewFlags.HibernatedBodyAABBs))
+                {
+                    var hiberatedWorld = this.World.HibernationManager.HibernatedWorld;
+                    var bodyBroadphase = hiberatedWorld.ContactManager.BroadPhase;
+
+                    foreach (Body body in hiberatedWorld.BodyList)
+                    {
+                        if (body.Enabled == false)
+                            continue;
+
+                        var bodyTransform = body.GetTransform();
+
+                        AABB aabb;
+                        bodyBroadphase.GetFatAABB(body.BroadphaseProxyId, out aabb);
+                        DrawAABB(ref aabb, this.HibernatedBodyAabbColor);
                     }
                 }
             }
