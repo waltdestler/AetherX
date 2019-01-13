@@ -86,7 +86,7 @@ namespace tainicom.Aether.Physics2D.Samples.Testbed.Tests
 
             this.CreateBodies();
 
-            this.SetHibernateEnabled(true);
+            this.World.HibernationEnabled = true;
 
             // sets up debug drawing
             base.Initialize();
@@ -291,16 +291,6 @@ namespace tainicom.Aether.Physics2D.Samples.Testbed.Tests
             }
         }
 
-        private void SetHibernateEnabled(bool isEnabled)
-        {
-            // if no change, abort.
-            if (isEnabled == this.World.HibernationEnabled)
-                return;
-
-            // set hibernation
-            this.World.HibernationEnabled = isEnabled;
-        }
-
         const string DYNAMICTREE_BROADPHASE_NAME = "DynamicTree";
         const string QUADTREE_BROADPHASE_NAME = "QuadTree";
         const string BODY_DYNAMICTREE_BROADPHASE_NAME = "BodyDynamicTree";
@@ -461,7 +451,7 @@ namespace tainicom.Aether.Physics2D.Samples.Testbed.Tests
 
             if (keyboardManager.IsNewKeyPress(Keys.H))
             {
-                this.SetHibernateEnabled(!this.World.HibernationEnabled);
+                this.World.HibernationEnabled = !this.World.HibernationEnabled;
             }
 
             if( keyboardManager.IsNewKeyPress(Keys.OemTilde))
