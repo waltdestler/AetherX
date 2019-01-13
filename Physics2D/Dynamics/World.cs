@@ -87,7 +87,7 @@ namespace tainicom.Aether.Physics2D.Dynamics
                 else
                 {
                     // unhibernate everything
-                    // TODO
+                    this.HibernationManager.ReviveAll();
 
                     // dispose the hibernation manager
                     this.HibernationManager = null;

@@ -13,7 +13,6 @@ namespace tainicom.Aether.Physics2D.Dynamics.Hibernation
         public World HibernatedWorld { get; private set; }
         public List<BaseActiveArea> ActiveAreas = new List<BaseActiveArea>();
         private List<Body> BodiesToHibernate = new List<Body>();
-        private List<Body> BodiesToWake = new List<Body>();
 
         public HibernationManager(World world)
         {
@@ -86,11 +85,7 @@ namespace tainicom.Aether.Physics2D.Dynamics.Hibernation
                 // wake them
                 foreach( var hibernatedBody in hibernatedBodiesInActiveArea)
                 {
-                    // clone into the active world
-                    hibernatedBody.DeepClone(this.ActiveWorld);
-
-                    // remove from the hibernated world
-                    this.HibernatedWorld.Remove(hibernatedBody);
+                    this.WakeBody(hibernatedBody);
                 }
 
                 // NOTE: in this case, we don't actually store the bodies in the ActiveArea. anything which 
@@ -364,6 +359,26 @@ namespace tainicom.Aether.Physics2D.Dynamics.Hibernation
             // TODO: remove AA for bodies fully within this AA
             // TODO: hibernate bodies which are outside of AA and haven't collided...
 
+        }
+
+        internal void ReviveAll()
+        {
+            // wake them
+            for (var i = this.HibernatedWorld.BodyList.Count - 1; i >= 0; i--)
+            {
+                var hibernatedBody = this.HibernatedWorld.BodyList[i];
+
+                this.WakeBody(hibernatedBody);
+            }
+        }
+
+        private void WakeBody( Body hibernatedBody )
+        {
+            // clone into the active world
+            hibernatedBody.DeepClone(this.ActiveWorld);
+
+            // remove from the hibernated world
+            this.HibernatedWorld.Remove(hibernatedBody);
         }
     }
 }
