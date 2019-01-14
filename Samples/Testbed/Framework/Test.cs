@@ -82,6 +82,18 @@ namespace tainicom.Aether.Physics2D.Samples.Testbed.Framework
 
         public virtual void DrawDebugView(GameTime gameTime, ref Matrix projection, ref Matrix view)
         {
+            if (this.World.HibernationEnabled)
+            {
+                this.DebugView.BeginCustomDraw(projection, view);
+
+                // show the use where the independent active area would be moved provided right mouse button is clicked
+                Color independentActiveAreaColor = new Color(0.45f, 0.15f, 0.15f);
+                AABB newActiveArea = new AABB(this.MouseWorldPosition, this.IndependentActiveAreaRadius * 2, this.IndependentActiveAreaRadius * 2);
+                this.DebugView.DrawAABB(ref newActiveArea, independentActiveAreaColor);
+
+                this.DebugView.EndCustomDraw();
+            }
+
             DebugView.RenderDebugData(ref projection, ref view);
         }
 
@@ -134,18 +146,20 @@ namespace tainicom.Aether.Physics2D.Samples.Testbed.Framework
         {
         }
 
+        public Vector2 MouseWorldPosition { get; private set; }
+        public float IndependentActiveAreaRadius = 50f;
         public virtual void Mouse(MouseState state, MouseState oldState)
         {
-            Vector2 position = GameInstance.ConvertScreenToWorld(state.X, state.Y);
+            this.MouseWorldPosition = GameInstance.ConvertScreenToWorld(state.X, state.Y);
 
             if (state.LeftButton == ButtonState.Released && oldState.LeftButton == ButtonState.Pressed)
                 MouseUp();
             else if (state.LeftButton == ButtonState.Pressed && oldState.LeftButton == ButtonState.Released)
-                MouseDown(position);
+                MouseDown(this.MouseWorldPosition);
 
-            if (state.RightButton == ButtonState.Pressed)
+            if (this.World.HibernationEnabled)
             {
-                if (this.World.HibernationEnabled)
+                if (state.RightButton == ButtonState.Pressed)
                 {
                     // get first independent active area
                     var activeArea = this.World.HibernationManager.ActiveAreas.FirstOrDefault(aa => aa.AreaType == ActiveAreaType.Independent) as IndependentActiveArea;
@@ -154,16 +168,16 @@ namespace tainicom.Aether.Physics2D.Samples.Testbed.Framework
                     {
                         // init and add
                         activeArea = new IndependentActiveArea();
-                        activeArea.SetRadius(100f);
+                        activeArea.SetRadius(IndependentActiveAreaRadius);
                         this.World.HibernationManager.ActiveAreas.Add(activeArea);
                     }
 
                     // set it to match current click position
-                    activeArea.SetPosition(position);
-                }
+                    activeArea.SetPosition(this.MouseWorldPosition);
+                } 
             }
 
-            MouseMove(position);
+            MouseMove(this.MouseWorldPosition);
         }
 
         private void MouseDown(Vector2 p)

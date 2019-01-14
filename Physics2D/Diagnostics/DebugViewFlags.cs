@@ -73,6 +73,11 @@ namespace tainicom.Aether.Physics2D.Diagnostics
         /// <summary>
         /// Draws hibernated bodies.
         /// </summary>
-        HibernatedBodyAABBs = (1 << 11)
+        HibernatedBodyAABBs = (1 << 11),
+
+        /// <summary>
+        /// Draws active areas.
+        /// </summary>
+        ActiveAreas = (1 << 12)
     }
 }

@@ -118,9 +118,9 @@ namespace tainicom.Aether.Physics2D.Samples.Testbed.Tests
 
             var selectedBodyIndex = (int)this.BodyStructureType; //BOX_BODY_INDEX;
 
-            for (var x = MetersPerBody; x < WorldSideSize - MetersPerBody; x += MetersPerBody)
+            for (var x = MetersPerBody; x <= WorldSideSize - MetersPerBody; x += MetersPerBody)
             {
-                for (var y = MetersPerBody; y < WorldSideSize - MetersPerBody; y += MetersPerBody)
+                for (var y = MetersPerBody; y <= WorldSideSize - MetersPerBody; y += MetersPerBody)
                 {
                     var bodyDef = tempWorld.BodyList[selectedBodyIndex];
                     var body = bodyDef.DeepClone(this.World);
@@ -296,31 +296,6 @@ namespace tainicom.Aether.Physics2D.Samples.Testbed.Tests
                 this.DebugView.EndCustomDraw();
             }
             #endregion
-
-            if (this.World.HibernationEnabled) {
-                // render active areas
-                Color independentActiveAreaColor = new Color(0.9f, 0.3f, 0.3f);
-                Color bodyActiveAreaColor = new Color(0.7f, 0.5f, 0.3f);
-                this.DebugView.BeginCustomDraw(projection, view);
-                foreach (var activeArea in this.World.HibernationManager.ActiveAreas) {
-
-                    if (activeArea.AreaType == ActiveAreaType.Independent)
-                    {
-                        this.DebugView.DrawAABB(ref activeArea.AABB, independentActiveAreaColor);
-                    }
-                    else
-                    {
-                        this.DebugView.DrawAABB(ref activeArea.AABB, bodyActiveAreaColor);
-                    }
-
-                    /* UNCOMMENT TO: render number of bodies within each active area
-                    Vector2 position = new Vector2(activeArea.AABB.LowerBound.X, activeArea.AABB.UpperBound.Y);
-                    position = GameInstance.ConvertWorldToScreen(position);
-                    DebugView.DrawString((int)position.X, (int)position.Y - 5, "Contains " + activeArea.Bodies.Count.ToString());
-                    */
-                }
-                this.DebugView.EndCustomDraw();
-            }
         }
 
         public override void Keyboard(KeyboardManager keyboardManager)

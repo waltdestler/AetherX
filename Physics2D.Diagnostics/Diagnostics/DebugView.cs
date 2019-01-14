@@ -20,6 +20,7 @@ using tainicom.Aether.Physics2D.Common.Maths;
 using tainicom.Aether.Physics2D.Controllers;
 using tainicom.Aether.Physics2D.Dynamics;
 using tainicom.Aether.Physics2D.Dynamics.Contacts;
+using tainicom.Aether.Physics2D.Dynamics.Hibernation;
 using tainicom.Aether.Physics2D.Dynamics.Joints;
 
 namespace tainicom.Aether.Physics2D.Diagnostics
@@ -97,6 +98,7 @@ namespace tainicom.Aether.Physics2D.Diagnostics
             AppendFlags(DebugViewFlags.Controllers);
             AppendFlags(DebugViewFlags.Joint);
             AppendFlags(DebugViewFlags.HibernatedBodyAABBs);
+            AppendFlags(DebugViewFlags.ActiveAreas);
         }
 
         #region IDisposable Members
@@ -300,6 +302,32 @@ namespace tainicom.Aether.Physics2D.Diagnostics
                         AABB aabb;
                         bodyBroadphase.GetFatAABB(body.BroadphaseProxyId, out aabb);
                         DrawAABB(ref aabb, this.HibernatedBodyAabbColor);
+                    }
+                }
+
+                if (this.HasFlag(DebugViewFlags.ActiveAreas))
+                {
+                    // render active areas
+                    Color independentActiveAreaColor = new Color(0.9f, 0.3f, 0.3f);
+                    Color bodyActiveAreaColor = new Color(0.8f, 0.4f, 0.3f);
+
+                    foreach (var activeArea in this.World.HibernationManager.ActiveAreas)
+                    {
+
+                        if (activeArea.AreaType == ActiveAreaType.Independent)
+                        {
+                            this.DrawAABB(ref activeArea.AABB, independentActiveAreaColor);
+                        }
+                        else
+                        {
+                            this.DrawAABB(ref activeArea.AABB, bodyActiveAreaColor);
+                        }
+
+                        /* UNCOMMENT TO: render number of bodies within each active area
+                        Vector2 position = new Vector2(activeArea.AABB.LowerBound.X, activeArea.AABB.UpperBound.Y);
+                        position = GameInstance.ConvertWorldToScreen(position);
+                        DebugView.DrawString((int)position.X, (int)position.Y - 5, "Contains " + activeArea.Bodies.Count.ToString());
+                        */
                     }
                 }
             }
