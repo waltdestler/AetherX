@@ -54,12 +54,11 @@ namespace tainicom.Aether.Physics2D.Dynamics.Hibernation
             this.TrackedBody.World.ContactManager.BroadPhase.GetFatAABB(this.TrackedBody.BroadphaseProxyId, out this.AABB);
 
             // add a little margin 
-            const float AABB_MARGIN = 2f;
+            const float AABB_MARGIN = Settings.BodyActiveAreaMargin;
             this.AABB = new AABB(this.AABB.Center, this.AABB.Width + AABB_MARGIN, this.AABB.Height + AABB_MARGIN);
 
             // update whether is expired
-            const float SECONDS_UNTIL_EXPIRE = 3.0f;
-            this.IsExpired = this.SecondsAgoCreated >= SECONDS_UNTIL_EXPIRE;
+            this.IsExpired = this.SecondsAgoCreated >= Settings.SecondsUntilHibernate;
         }
 
         internal void Renew()

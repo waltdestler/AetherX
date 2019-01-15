@@ -20,12 +20,12 @@ namespace tainicom.Aether.Physics2D.Samples.Testbed.Tests
     {
         private Dictionary<Keys, int> WorldSideSizeOptions = new Dictionary<Keys, int>
         {
-            { Keys.Q, 500 },
-            { Keys.W, 1000 },
-            { Keys.E, 2000 },
-            { Keys.R, 5000 },
-            { Keys.T, 10000 },
-            { Keys.Y, 20000 }
+            { Keys.Q, 100 },
+            { Keys.W, 2000 },
+            { Keys.E, 5000 },
+            { Keys.R, 10000 },
+            { Keys.T, 25000 },
+            { Keys.Y, 100000 }
         };
 
         private Dictionary<Keys, int> BodyTypeOptions = new Dictionary<Keys, int>
