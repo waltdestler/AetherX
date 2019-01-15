@@ -302,11 +302,12 @@ namespace tainicom.Aether.Physics2D.Dynamics.Hibernation
             // hibernate all flagged bodies.
             foreach (var body in this.BodiesToHibernate)
             {
-                // clone into the hibernated world
-                body.DeepClone(this.HibernatedWorld);
-
-                // remove from the active world
+                // remove from active world 
+                // NOTE: we don't call the World.Remove() method, as that actually destroys the body, fixtures, etc. 
                 this.ActiveWorld.Remove(body);
+
+                // add to hibernated world
+                this.HibernatedWorld.Add(body);
             }
 
             // clear the list
@@ -378,7 +379,7 @@ namespace tainicom.Aether.Physics2D.Dynamics.Hibernation
             hibernatedBody.DeepClone(this.ActiveWorld);
 
             // remove from the hibernated world
-            this.HibernatedWorld.Remove(hibernatedBody);
+            this.HibernatedWorld.Destroy(hibernatedBody);
         }
     }
 }

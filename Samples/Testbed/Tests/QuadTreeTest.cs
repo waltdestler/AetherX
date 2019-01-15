@@ -61,7 +61,7 @@ namespace tainicom.Aether.Physics2D.Samples.Testbed.Tests
             bigbody.Position = Vector2.UnitX * 25;
             bigbody.CreateFixture(bigshape);
 
-            World.Remove(bigbody);
+            World.Destroy(bigbody);
 
             //
             //populate

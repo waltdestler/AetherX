@@ -169,7 +169,7 @@ namespace tainicom.Aether.Physics2D.Common.PhysicsLogic
                 body.LinearVelocity = _velocitiesCache[i];
             }
 
-            World.Remove(MainBody);
+            World.Destroy(MainBody);
             
             State = BreakableBodyState.Broken;
         }

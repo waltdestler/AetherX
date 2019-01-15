@@ -537,6 +537,19 @@ namespace tainicom.Aether.Physics2D.Dynamics
 #endif
         }
 
+        /// <summary>
+        /// Removes a body from this world, including its proxy, and returns it. Fixtures, events, etc., are all maintained.
+        /// </summary>
+        /// <param name="body"></param>
+        /// <returns></returns>
+        internal Body Remove(Body body)
+        {
+            this.BodyList.Remove(body);
+            body.DestroyProxy();
+            body._world = null;
+            return body;
+        }
+
         private void SolveTOI(ref TimeStep step, ref SolverIterations iterations)
         {
             Island.Reset(2 * Settings.MaxTOIContacts, Settings.MaxTOIContacts, 0, ContactManager);
@@ -1062,7 +1075,7 @@ namespace tainicom.Aether.Physics2D.Dynamics
         /// </summary>
         /// <param name="body">The body.</param>
         /// <exception cref="System.InvalidOperationException">Thrown when the world is Locked/Stepping.</exception>
-        public virtual void Remove(Body body)
+        public virtual void Destroy(Body body)
         {
             if (IsLocked)
                 throw new InvalidOperationException("The World is locked.");
@@ -1333,7 +1346,7 @@ namespace tainicom.Aether.Physics2D.Dynamics
                     Debug.WriteLine("The body is already marked for removal. You are removing the body more than once.");
             }
             else
-                Remove(body);
+                Destroy(body);
 
 #if USE_AWAKE_BODY_SET
             if (AwakeBodySet.Contains(body))
@@ -1407,7 +1420,7 @@ namespace tainicom.Aether.Physics2D.Dynamics
             if (_bodyRemoveList.Count > 0)
             {
                 foreach (Body body in _bodyRemoveList)
-                    Remove(body);
+                    Destroy(body);
                 _bodyRemoveList.Clear();
             }
 
@@ -1834,7 +1847,7 @@ namespace tainicom.Aether.Physics2D.Dynamics
 
             for (int i = BodyList.Count - 1; i >= 0; i--)
             {
-                Remove(BodyList[i]);
+                Destroy(BodyList[i]);
             }
 
             for (int i = ControllerList.Count - 1; i >= 0; i--)

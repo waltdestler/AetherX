@@ -211,7 +211,7 @@ namespace tainicom.Aether.Physics2D.Common.PolygonManipulation
                         secondFixture.BodyType = BodyType.Dynamic;
                     }
 
-                    world.Remove(fixtures[i].Body);
+                    world.Destroy(fixtures[i].Body);
                 }
             }
 
