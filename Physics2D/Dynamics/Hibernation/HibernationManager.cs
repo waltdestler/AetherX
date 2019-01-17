@@ -47,8 +47,10 @@ namespace tainicom.Aether.Physics2D.Dynamics.Hibernation
             #region update all ActiveArea AABBs 
 
             // process all active areas
-            foreach (var activeArea in this.ActiveAreas)
+            for ( var i = this.ActiveAreas.Count - 1; i >= 0; i-- )
             {
+                var activeArea = this.ActiveAreas[i];
+
                 // update its bounding box
                 activeArea.Update();
 
@@ -67,6 +69,19 @@ namespace tainicom.Aether.Physics2D.Dynamics.Hibernation
                             // renew the expiration, as it's clear it's still kicking around someone who cares about it.
                             // NOTE: if it's entirely within another AA then this body AA will be removed elsewhere. this condition really just ensures "partially in"
                             bodyActiveArea.Renew();
+                        }
+                        else
+                        {
+                            // remove all area bodies from this active area...
+                            for( var bodyIndex = bodyActiveArea.Bodies.Count - 1; bodyIndex >= 0; bodyIndex--)
+                            {
+                                var areaBody = bodyActiveArea.Bodies[bodyIndex];
+
+                                this.RemoveAreaBody(activeArea, areaBody);
+                            }
+
+                            // remove this active area...
+                            this.ActiveAreas.RemoveAt(i);
                         }
                     }
                 }
@@ -132,14 +147,14 @@ namespace tainicom.Aether.Physics2D.Dynamics.Hibernation
                     // store the old status
                     areaBody.PriorStatus = areaBody.PositionStatus;
 
-                    if (activeArea.AreaType == ActiveAreaType.BodyTracking && (activeArea as BodyActiveArea).IsExpired)
-                    {
-                        // because the active area is expired, we consider all bodies totlly outside of it, as it is about to disappear.
-                        areaBody.PositionStatus = AreaBodyStatus.Invalid; // we also set this to invalid, so we're sure to hit the "status changed" event.
-                        areaBody.PositionStatus = AreaBodyStatus.TotallyOut;
-                    }
-                    else
-                    {
+                    //if (activeArea.AreaType == ActiveAreaType.BodyTracking && (activeArea as BodyActiveArea).IsExpired)
+                    //{
+                    //    // because the active area is expired, we consider all bodies totlly outside of it, as it is about to disappear.
+                    //    areaBody.PositionStatus = AreaBodyStatus.Invalid; // we also set this to invalid, so we're sure to hit the "status changed" event.
+                    //    areaBody.PositionStatus = AreaBodyStatus.TotallyOut;
+                    //}
+                    //else
+                    //{
                         // determine whether this body is still touching the AA's AABB
                         var isTouchingActiveAreaAABB = bodiesInActiveArea.Contains(body);
 
@@ -170,7 +185,7 @@ namespace tainicom.Aether.Physics2D.Dynamics.Hibernation
                                 areaBody.PositionStatus = AreaBodyStatus.PartiallyIn;
                             }
                         }
-                    }
+                    //}
                 }
             }
 
@@ -254,29 +269,7 @@ namespace tainicom.Aether.Physics2D.Dynamics.Hibernation
 
                         if (areaBody.PositionStatus == AreaBodyStatus.TotallyOut)
                         {
-                            //if( activeArea.AreaType == ActiveAreaType.BodyTracking && areaBody.Body == (activeArea as BodyActiveArea).TrackedBody)
-                            //{
-                            //    // this AA is tracking that body, then remove the entire AA.
-                            //    // NOTE: I doubt this ever happens... when would a body leave its own body-tracking area?
-                            //    this.ActiveAreas.Remove(activeArea);
-                            //}
-                            //else
-                            //{
-                                // it's out of this AA, so we remove it from this AA.
-                                activeArea.Bodies.Remove(areaBody);
-                            //}
-
-                            // if it's not in any other AA at this point, hibernate it.
-                            var activeAreasContainingBody = this.ActiveAreas.Where(aa => aa.Bodies.Select(aab => aab.Body).Contains(body));
-                            if (!activeAreasContainingBody.Any())
-                            {
-                                // no other active area has this body in it, so go ahead and hibernate the body
-                                this.BodiesToHibernate.Add(body);
-                            }
-                            //else
-                            //{
-                            //    // other AA have this body in it, so we should have them double-check that no additional AA is needed by resetting the 
-                            //}
+                            this.RemoveAreaBody(activeArea, areaBody);
                         }
                     }
 
@@ -355,6 +348,23 @@ namespace tainicom.Aether.Physics2D.Dynamics.Hibernation
             // TODO: remove AA for bodies fully within this AA
             // TODO: hibernate bodies which are outside of AA and haven't collided...
 
+        }
+
+        private void RemoveAreaBody(BaseActiveArea activeArea, AreaBody areaBody)
+        {
+            // remove it from this AA.
+             activeArea.Bodies.Remove(areaBody);
+
+            // if it's not in any other AA at this point, hibernate it.
+            var activeAreasContainingBody = this.ActiveAreas.Where(aa => 
+                aa != activeArea // is a different active area
+                && aa.Bodies.Select(aab => aab.Body).Contains(areaBody.Body)); // contains the body
+            
+            if (!activeAreasContainingBody.Any())
+            {
+                // no other active area has this body in it, so go ahead and hibernate the body
+                this.BodiesToHibernate.Add(areaBody.Body);
+            }
         }
 
         private void HibernateBody(Body body)

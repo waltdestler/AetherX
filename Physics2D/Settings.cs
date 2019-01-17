@@ -216,7 +216,7 @@ namespace tainicom.Aether.Physics2D
         #region Hibernation Settings
 
         public const float BodyActiveAreaMargin = 10f;
-        public const float SecondsUntilHibernate = 10f;
+        public const float SecondsUntilHibernate = 5f;
 
         #endregion
 
