@@ -282,13 +282,14 @@ namespace tainicom.Aether.Physics2D.Dynamics.Hibernation
 
                         var isAnotherActiveAreaContainingBody = this.ActiveAreas.Any(aa =>
                             aa != activeArea // ...a different active area
+                            && aa.IsExpired == false // ...isn't also an expired AA
                             && aa.Bodies.Select(aab => aab.Body).Contains(bodyActiveArea.TrackedBody)); // contains this body active area's tracked body
 
                         if (isAnotherActiveAreaContainingBody)
                         {
                             // renew the expiration, as it's clear it's still kicking around someone who cares about it.
                             // NOTE: if it's entirely within another AA then this body AA will be removed elsewhere. this condition really just ensures "partially in"
-                            bodyActiveArea.Renew();
+                            //bodyActiveArea.Renew();
 
                             // abort further expiration processing for this active area
                             continue;
