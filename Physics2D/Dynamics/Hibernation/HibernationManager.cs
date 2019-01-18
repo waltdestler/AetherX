@@ -23,7 +23,6 @@ namespace tainicom.Aether.Physics2D.Dynamics.Hibernation
             this.HibernatedWorld = new World();
             // TODO: set properties to match active world? does it matter, since we're not stepping?
 
-
             // do an initial game-world pass to hibernate all bodies
             // going forward, all active bodies will be gauranteed in be in an AA, so this won't be neccessary.
             // OPTIMIZATION IDEA: allow constructor to accept a list of active areas and process them prior to 
@@ -44,73 +43,132 @@ namespace tainicom.Aether.Physics2D.Dynamics.Hibernation
             if (this.HibernatedWorld.IsLocked)
                 throw new InvalidOperationException("The hibernated World is locked.");
 
-            #region update all ActiveArea AABBs 
+            // This should always come first. It updates AABBs, expiration timers, etc.
+            this.UpdateActiveAreas();
+
+            // Handle expirations.
+            this.RemoveExpiredActiveAreas();
+
+            // un-hibernate bodies ("wake")
+            this.WakeBodiesInActiveAreas();
+
+            // Add new bodies and update positions.
+            this.UpdateActiveAreaBodies();
+
+            // Enact ramifications of status changes.
+            this.ProcessActiveAreaBodyPositionChanges();
+
+            // Hibernate all flagged bodies.
+            this.HibernateBodies();
+        }
+
+        private void HibernateBodies()
+        {
+            // hibernate all flagged bodies.
+            foreach (var body in this.BodiesToHibernate)
+            {
+                this.HibernateBody(body);
+            }
+
+            // clear the list
+            this.BodiesToHibernate.Clear();
+        }
+
+        private void ProcessActiveAreaBodyPositionChanges()
+        {
 
             // process all active areas
-            for ( var i = this.ActiveAreas.Count - 1; i >= 0; i-- )
+            for (var i = 0; i < this.ActiveAreas.Count; i++)
             {
+                // get current active area
                 var activeArea = this.ActiveAreas[i];
 
-                // update its bounding box
-                activeArea.Update();
-
-                if (activeArea.AreaType == ActiveAreaType.BodyTracking) 
+                // Loop over current ActiveArea bodies to update their statuses.
+                for (var areaBodyIndex = activeArea.Bodies.Count - 1; areaBodyIndex >= 0; areaBodyIndex--)
                 {
-                    var bodyActiveArea = activeArea as BodyActiveArea;
+                    // get the body
+                    var areaBody = activeArea.Bodies[areaBodyIndex];
+                    var body = areaBody.Body;
 
-                    if (bodyActiveArea.IsExpired)
+                    if (areaBody.PositionStatus == AreaBodyStatus.Invalid)
                     {
-                        var isAnotherActiveAreaContainingBody = this.ActiveAreas.Any(aa => 
-                            aa != activeArea // ...a different active area
-                            && aa.Bodies.Select(aab => aab.Body).Contains(bodyActiveArea.TrackedBody)); // contains this body active area's tracked body
+                        throw new InvalidProgramException("All active area bodies should have their position status set by this point.");
+                    }
 
-                        if (isAnotherActiveAreaContainingBody)
+                    if (areaBody.PositionStatus == AreaBodyStatus.TotallyIn)
+                    {
+
+                        // this body is totally within this AA, so if there's a separate AA tracking this one specifically, 
+                        // it's not needed, as that would be redundant.
+                        // OPTIMIZATION IDEA: give body a ref to its own tracking AA. if !null when set, throw. super-easy look-up.
+                        var bodyAAs = this.ActiveAreas.Where(aa =>
+                            aa != activeArea // other AA is not this AA
+                            && aa.AreaType == ActiveAreaType.BodyTracking // other AA is a body tracking AA...
+                            && (aa as BodyActiveArea).TrackedBody == body // ...and it's tracking this body specifically
+                            ); //&& aa.Bodies.Select( aab => aab.Body ).Any( b => b == body ) ); // 
+
+                        switch (bodyAAs.Count())
                         {
-                            // renew the expiration, as it's clear it's still kicking around someone who cares about it.
-                            // NOTE: if it's entirely within another AA then this body AA will be removed elsewhere. this condition really just ensures "partially in"
-                            bodyActiveArea.Renew();
-                        }
-                        else
-                        {
-                            // remove all area bodies from this active area...
-                            for( var bodyIndex = bodyActiveArea.Bodies.Count - 1; bodyIndex >= 0; bodyIndex--)
-                            {
-                                var areaBody = bodyActiveArea.Bodies[bodyIndex];
+                            case 0:
+                                // no problem. no bodyAA to care about.
+                                break;
 
-                                this.RemoveAreaBody(activeArea, areaBody);
-                            }
+                            case 1:
+                                // destroy it! it is redundant.
+                                this.ActiveAreas.Remove(bodyAAs.First());
+                                break;
 
-                            // remove this active area...
-                            this.ActiveAreas.RemoveAt(i);
+                            default:
+                                // this really shouldn't happen. it means there is more than one bodyAA for this body.
+                                throw new InvalidProgramException("There is more than one ActiveArea for this body. This should never happen. There is a bug elsewhere.");
                         }
                     }
+
+                    var statusHasChanged = areaBody.PriorStatus != areaBody.PositionStatus;
+                    if (statusHasChanged)
+                    {
+                        switch (areaBody.PositionStatus)
+                        {
+
+
+                            case AreaBodyStatus.PartiallyIn:
+                            case AreaBodyStatus.TotallyOut:
+
+                                // determine if needs to create own AA. (non-zero linear or angular velocity)
+                                var warrantsBodyActiveArea = body.AngularVelocity != 0 || body.LinearVelocity.Length() > 0;
+
+                                if (warrantsBodyActiveArea)
+                                {
+
+                                    // determine if has own AA
+                                    var hasBodyActiveArea = this.ActiveAreas.Any(aa => aa.AreaType == ActiveAreaType.BodyTracking && (aa as BodyActiveArea).TrackedBody == body);
+
+                                    if (!hasBodyActiveArea)
+                                    {
+                                        // create body AA
+                                        this.ActiveAreas.Add(new BodyActiveArea(body));
+                                    }
+                                }
+
+                                break;
+                        }
+
+                        if (areaBody.PositionStatus == AreaBodyStatus.TotallyOut)
+                        {
+                            this.RemoveAreaBody(activeArea, areaBody);
+                        }
+                    }
+
+
                 }
             }
+        }
 
-            #endregion
-
-            #region un-hibernate bodies ("wake")
-
-            // process all active areas
-            foreach ( var activeArea in this.ActiveAreas)
-            {
-                // get all hibernated bodies in its aabb
-                var hibernatedBodiesInActiveArea = this.HibernatedWorld.FindBodiesInAABB(ref activeArea.AABB);
-
-                // wake them
-                foreach( var hibernatedBody in hibernatedBodiesInActiveArea)
-                {
-                    this.WakeBody(hibernatedBody);
-                }
-
-                // NOTE: in this case, we don't actually store the bodies in the ActiveArea. anything which 
-                //       collides is instantly woken, and there's no need to store a history.
-            }
-
-            #endregion
-
-            #region Add new bodies and update position statuses for all bodies in active area.
-
+        /// <summary>
+        /// Adds colliding bodies to active areas and updates position statuses for all bodies within the active area.
+        /// </summary>
+        private void UpdateActiveAreaBodies()
+        {
             // process all active areas
             for (var i = 0; i < this.ActiveAreas.Count; i++)
             {
@@ -155,199 +213,110 @@ namespace tainicom.Aether.Physics2D.Dynamics.Hibernation
                     //}
                     //else
                     //{
-                        // determine whether this body is still touching the AA's AABB
-                        var isTouchingActiveAreaAABB = bodiesInActiveArea.Contains(body);
+                    // determine whether this body is still touching the AA's AABB
+                    var isTouchingActiveAreaAABB = bodiesInActiveArea.Contains(body);
 
-                        if (!isTouchingActiveAreaAABB)
+                    if (!isTouchingActiveAreaAABB)
+                    {
+                        // it's not touching the AABB at all, so it's totally out.
+                        areaBody.PositionStatus = AreaBodyStatus.TotallyOut;
+                    }
+                    else
+                    {
+                        // get body AABB
+                        var bodyTransform = body.GetTransform();
+                        AABB bodyAabb;
+                        this.ActiveWorld.ContactManager.BroadPhase.GetFatAABB(body.BroadphaseProxyId, out bodyAabb);
+
+                        // at this point, we know it's touching. so it's just a matter of whether it's totally inside or partially inside.
+                        // contains() returns 'true' only if the AABB is entirely within
+                        var isTotallyWithinActiveArea = activeArea.AABB.Contains(ref bodyAabb);
+
+                        if (isTotallyWithinActiveArea)
                         {
-                            // it's not touching the AABB at all, so it's totally out.
-                            areaBody.PositionStatus = AreaBodyStatus.TotallyOut;
+                            // it's totally inside the ActiveArea AABB.
+                            areaBody.PositionStatus = AreaBodyStatus.TotallyIn;
                         }
                         else
                         {
-                            // get body AABB
-                            var bodyTransform = body.GetTransform();
-                            AABB bodyAabb;
-                            this.ActiveWorld.ContactManager.BroadPhase.GetFatAABB(body.BroadphaseProxyId, out bodyAabb);
-
-                            // at this point, we know it's touching. so it's just a matter of whether it's totally inside or partially inside.
-                            // contains() returns 'true' only if the AABB is entirely within
-                            var isTotallyWithinActiveArea = activeArea.AABB.Contains(ref bodyAabb);
-
-                            if (isTotallyWithinActiveArea)
-                            {
-                                // it's totally inside the ActiveArea AABB.
-                                areaBody.PositionStatus = AreaBodyStatus.TotallyIn;
-                            }
-                            else
-                            {
-                                // at this point, we know it must be partially within.
-                                areaBody.PositionStatus = AreaBodyStatus.PartiallyIn;
-                            }
+                            // at this point, we know it must be partially within.
+                            areaBody.PositionStatus = AreaBodyStatus.PartiallyIn;
                         }
+                    }
                     //}
                 }
             }
+        }
 
-            #endregion
-
-            #region Enact ramifications of status changes.
-
+        private void WakeBodiesInActiveAreas()
+        {
             // process all active areas
-            for (var i = 0; i < this.ActiveAreas.Count; i++)
+            foreach (var activeArea in this.ActiveAreas)
             {
-                // get current active area
+                // get all hibernated bodies in its aabb
+                var hibernatedBodiesInActiveArea = this.HibernatedWorld.FindBodiesInAABB(ref activeArea.AABB);
+
+                // wake them
+                foreach (var hibernatedBody in hibernatedBodiesInActiveArea)
+                {
+                    this.WakeBody(hibernatedBody);
+                }
+
+                // NOTE: in this case, we don't actually store the bodies in the ActiveArea. anything which 
+                //       collides is instantly woken, and there's no need to store a history.
+            }
+        }
+
+        private void RemoveExpiredActiveAreas()
+        {
+            for (var i = this.ActiveAreas.Count - 1; i >= 0; i--)
+            {
                 var activeArea = this.ActiveAreas[i];
 
-                // Loop over current ActiveArea bodies to update their statuses.
-                for (var areaBodyIndex = activeArea.Bodies.Count - 1; areaBodyIndex >= 0; areaBodyIndex--)
+                if (activeArea.AreaType == ActiveAreaType.BodyTracking)
                 {
-                    // get the body
-                    var areaBody = activeArea.Bodies[areaBodyIndex];
-                    var body = areaBody.Body;
+                    var bodyActiveArea = activeArea as BodyActiveArea;
 
-                    if( areaBody.PositionStatus == AreaBodyStatus.Invalid )
+                    if (bodyActiveArea.IsExpired)
                     {
-                        throw new InvalidProgramException("All active area bodies should have their position status set by this point.");
-                    }
+                        var isAnotherActiveAreaContainingBody = this.ActiveAreas.Any(aa =>
+                            aa != activeArea // ...a different active area
+                            && aa.Bodies.Select(aab => aab.Body).Contains(bodyActiveArea.TrackedBody)); // contains this body active area's tracked body
 
-                    if( areaBody.PositionStatus == AreaBodyStatus.TotallyIn) { 
-
-                        // this body is totally within this AA, so if there's a separate AA tracking this one specifically, 
-                        // it's not needed, as that would be redundant.
-                        // OPTIMIZATION IDEA: give body a ref to its own tracking AA. if !null when set, throw. super-easy look-up.
-                        var bodyAAs = this.ActiveAreas.Where(aa =>
-                            aa != activeArea // other AA is not this AA
-                            && aa.AreaType == ActiveAreaType.BodyTracking // other AA is a body tracking AA...
-                            && (aa as BodyActiveArea).TrackedBody == body // ...and it's tracking this body specifically
-                            ); //&& aa.Bodies.Select( aab => aab.Body ).Any( b => b == body ) ); // 
-
-                        switch (bodyAAs.Count())
+                        if (isAnotherActiveAreaContainingBody)
                         {
-                            case 0:
-                                // no problem. no bodyAA to care about.
-                                break;
-
-                            case 1:
-                                // destroy it! it is redundant.
-                                this.ActiveAreas.Remove(bodyAAs.First());
-                                break;
-
-                            default:
-                                // this really shouldn't happen. it means there is more than one bodyAA for this body.
-                                throw new InvalidProgramException("There is more than one ActiveArea for this body. This should never happen. There is a bug elsewhere.");
-                        } 
-                    }
-
-                    var statusHasChanged = areaBody.PriorStatus != areaBody.PositionStatus;
-                    if( statusHasChanged )
-                    {
-                        switch (areaBody.PositionStatus)
-                        {
-                        
-
-                            case AreaBodyStatus.PartiallyIn:
-                            case AreaBodyStatus.TotallyOut:
-
-                                // determine if needs to create own AA. (non-zero linear or angular velocity)
-                                var warrantsBodyActiveArea = body.AngularVelocity != 0 || body.LinearVelocity.Length() > 0;
-
-                                if (warrantsBodyActiveArea) {
-
-                                    // determine if has own AA
-                                    var hasBodyActiveArea = this.ActiveAreas.Any(aa => aa.AreaType == ActiveAreaType.BodyTracking && (aa as BodyActiveArea).TrackedBody == body);
-
-                                    if (!hasBodyActiveArea)
-                                    {
-                                        // create body AA
-                                        this.ActiveAreas.Add(new BodyActiveArea(body)); 
-                                    }
-                                }
-                               
-                                break;
+                            // renew the expiration, as it's clear it's still kicking around someone who cares about it.
+                            // NOTE: if it's entirely within another AA then this body AA will be removed elsewhere. this condition really just ensures "partially in"
+                            bodyActiveArea.Renew();
                         }
-
-                        if (areaBody.PositionStatus == AreaBodyStatus.TotallyOut)
+                        else
                         {
-                            this.RemoveAreaBody(activeArea, areaBody);
+                            // remove all area bodies from this active area...
+                            for (var bodyIndex = bodyActiveArea.Bodies.Count - 1; bodyIndex >= 0; bodyIndex--)
+                            {
+                                var areaBody = bodyActiveArea.Bodies[bodyIndex];
+
+                                this.RemoveAreaBody(activeArea, areaBody);
+                            }
+
+                            // remove this active area...
+                            this.ActiveAreas.RemoveAt(i);
                         }
                     }
-
-
                 }
             }
+        }
 
-            #endregion
-
-            // notes:
-            // it's the order of events. can be "in" other body's AA, but have its own body AA. then its AA rolls around and removes the body... now the body's status changed event has been processed... 
-            // and it has no Body AA and it's within another AA. 
-            // solution... when removing a body from an AA... reset its position status in all other AA as... invalid... so it's processed again... that should work, but it's kind of inelegant.
-            //             the other AA will just recreate the bodyAA for this body anew. 
-            // solution2... when a bodyAA expires, check if the body is within any other AA. if it is extend expiration by... 2 sec... more elegant. doesn't even destroy the bodyAA.
-
-            // bug2:
-            // when body leaves bodyA, even when both are within an IndependentAA, the body has a bodyAA created. it should be removed instantly... since it's in the IAA, but since
-            // the IAA position status didn't change, it doesn't 
-
-            #region Hibernate all flagged bodies. 
-
-            // hibernate all flagged bodies.
-            foreach (var body in this.BodiesToHibernate)
+        private void UpdateActiveAreas()
+        {
+            // process all active areas
+            for (var i = this.ActiveAreas.Count - 1; i >= 0; i--)
             {
-                this.HibernateBody(body);
+                var activeArea = this.ActiveAreas[i];
+
+                // update its bounding box
+                activeArea.Update();
             }
-
-            // clear the list
-            this.BodiesToHibernate.Clear();
-
-            #endregion
-
-            #region Remove expired active areas
-
-            // get expired active areas
-            var expiredActiveAreas = this.ActiveAreas.Where(aa => aa.AreaType == ActiveAreaType.BodyTracking && (aa as BodyActiveArea).IsExpired).ToList();
-
-            for (var i = expiredActiveAreas.Count - 1; i >= 0; i--)
-            {
-                var expiredActiveArea = expiredActiveAreas[i];
-                if (expiredActiveArea.Bodies.Any())
-                {
-                    throw new InvalidProgramException("An expired active area still had bodies within it at time of deletion. This is an exception. They should be removed prior to this step.");
-                }
-
-                // remove expired active area
-                this.ActiveAreas.Remove(expiredActiveArea);
-            }
-
-            #endregion
-            //if match found in collide bodies, remove from collide bodies (basically ignore). update status to 'in' or 'partially in' depending on "contains" call. include ramification.
-
-            // any bodies which are in the active area's list of bodies, but weren't fonud in the AABB query should be marked as 
-            // "totally outside" and any which are new should be added to the collection.
-
-            //var body = hibernatedBodyResult.Body;
-
-            //// get body AABB
-            //var bodyTransform = body.GetTransform();
-            //AABB bodyAabb;
-            //this.HibernatedWorld.ContactManager.BroadPhase.GetFatAABB(body.ProxyId, out bodyAabb);
-
-            //// AABB is a box, but active areas are actually circles, so we do a radius check.
-            //// NOTE: we use the active area's position and radius for the check rather than active area's aabb
-            //var bodyDistance = Vector2.Distance(bodyAabb.Center, activeArea.Position);
-            //var bodyInActiveAreaCircle = bodyDistance < (bodyAabb.Radius + activeArea.Radius); 
-
-            //if( !bodyInActiveAreaCircle)
-            //{
-            //    // didn't quite make it. it's in the AABB, but not within the active area's circle. skip it.
-            //    continue;
-            //}
-
-            // TODO: create AA for bodies only partilly within a AA
-            // TODO: remove AA for bodies fully within this AA
-            // TODO: hibernate bodies which are outside of AA and haven't collided...
-
         }
 
         private void RemoveAreaBody(BaseActiveArea activeArea, AreaBody areaBody)
