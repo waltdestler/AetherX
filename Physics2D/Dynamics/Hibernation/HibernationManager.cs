@@ -273,12 +273,13 @@ namespace tainicom.Aether.Physics2D.Dynamics.Hibernation
             {
                 var activeArea = this.ActiveAreas[i];
 
-                if (activeArea.AreaType == ActiveAreaType.BodyTracking)
+                if (activeArea.IsExpired)
                 {
-                    var bodyActiveArea = activeArea as BodyActiveArea;
-
-                    if (bodyActiveArea.IsExpired)
+                    // if this is a body tracking AA, only remove if not within any other AA
+                    if (activeArea.AreaType == ActiveAreaType.BodyTracking)
                     {
+                        var bodyActiveArea = activeArea as BodyActiveArea;
+
                         var isAnotherActiveAreaContainingBody = this.ActiveAreas.Any(aa =>
                             aa != activeArea // ...a different active area
                             && aa.Bodies.Select(aab => aab.Body).Contains(bodyActiveArea.TrackedBody)); // contains this body active area's tracked body
@@ -288,21 +289,22 @@ namespace tainicom.Aether.Physics2D.Dynamics.Hibernation
                             // renew the expiration, as it's clear it's still kicking around someone who cares about it.
                             // NOTE: if it's entirely within another AA then this body AA will be removed elsewhere. this condition really just ensures "partially in"
                             bodyActiveArea.Renew();
-                        }
-                        else
-                        {
-                            // remove all area bodies from this active area...
-                            for (var bodyIndex = bodyActiveArea.Bodies.Count - 1; bodyIndex >= 0; bodyIndex--)
-                            {
-                                var areaBody = bodyActiveArea.Bodies[bodyIndex];
 
-                                this.RemoveAreaBody(activeArea, areaBody);
-                            }
-
-                            // remove this active area...
-                            this.ActiveAreas.RemoveAt(i);
+                            // abort further expiration processing for this active area
+                            continue;
                         }
                     }
+
+                    // remove all area bodies from this active area...
+                    for (var bodyIndex = activeArea.Bodies.Count - 1; bodyIndex >= 0; bodyIndex--)
+                    {
+                        var areaBody = activeArea.Bodies[bodyIndex];
+
+                        this.RemoveAreaBody(activeArea, areaBody);
+                    }
+
+                    // remove this active area...
+                    this.ActiveAreas.RemoveAt(i);
                 }
             }
         }

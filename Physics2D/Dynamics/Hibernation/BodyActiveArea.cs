@@ -9,7 +9,6 @@ namespace tainicom.Aether.Physics2D.Dynamics.Hibernation
     internal class BodyActiveArea : BaseActiveArea
     {
         internal Body TrackedBody { get; set; }
-        internal bool IsExpired { get; private set; }
 
         /// <summary>
         /// Creation time in UTC and ticks.

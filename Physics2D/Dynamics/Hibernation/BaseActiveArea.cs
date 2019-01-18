@@ -14,8 +14,7 @@ namespace tainicom.Aether.Physics2D.Dynamics.Hibernation
         public float Radius { get; protected set; }
         public ActiveAreaType AreaType { get; protected set; }
         public List<AreaBody> Bodies { get; protected set; }
-
-
+        public bool IsExpired { get; protected set; }
 
         public BaseActiveArea()
         {

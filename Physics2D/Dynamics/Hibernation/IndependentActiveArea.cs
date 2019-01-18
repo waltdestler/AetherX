@@ -14,6 +14,11 @@ namespace tainicom.Aether.Physics2D.Dynamics.Hibernation
             this.AreaType = ActiveAreaType.Independent;
         }
 
+        public void Expire()
+        {
+            this.IsExpired = true;
+        }
+
         public void SetPosition(Vector2 position)
         {
             this.Position = position;
