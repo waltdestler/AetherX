@@ -152,19 +152,22 @@ namespace tainicom.Aether.Physics2D.Diagnostics
             {
                 foreach (Body b in World.BodyList)
                 {
+                    Color color;
+                    if (b.Enabled == false)
+                        color = InactiveShapeColor;
+                    else if (b.BodyType == BodyType.Static)
+                        color = StaticShapeColor;
+                    else if (b.BodyType == BodyType.Kinematic)
+                        color = KinematicShapeColor;
+                    else if (b.Awake == false)
+                        color = SleepingShapeColor;
+                    else
+                        color = DefaultShapeColor;
+
                     Transform xf = b.GetTransform();
                     foreach (Fixture f in b.FixtureList)
                     {
-                        if (b.Enabled == false)
-                            DrawShape(f, xf, InactiveShapeColor);
-                        else if (b.BodyType == BodyType.Static)
-                            DrawShape(f, xf, StaticShapeColor);
-                        else if (b.BodyType == BodyType.Kinematic)
-                            DrawShape(f, xf, KinematicShapeColor);
-                        else if (b.Awake == false)
-                            DrawShape(f, xf, SleepingShapeColor);
-                        else
-                            DrawShape(f, xf, DefaultShapeColor);
+                        DrawShape(f, xf, color);
                     }
                 }
             }
