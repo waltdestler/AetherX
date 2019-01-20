@@ -134,20 +134,23 @@ namespace tainicom.Aether.Physics2D.Dynamics.Hibernation
                             case AreaBodyStatus.PartiallyIn:
                             case AreaBodyStatus.TotallyOut:
 
-                                // determine if needs to create own AA. (non-zero linear or angular velocity)
-                                var warrantsBodyActiveArea = body.AngularVelocity != 0 || body.LinearVelocity.Length() > 0;
+                                // determine if needs to create own AA. (non-static and awake)
+                                var warrantsBodyActiveArea = body.BodyType != BodyType.Static && body.Awake; //body.AngularVelocity != 0 || body.LinearVelocity.Length() > 0;
 
                                 if (warrantsBodyActiveArea)
                                 {
 
                                     // determine if has own AA
-                                    var hasBodyActiveArea = this.ActiveAreas.Any(aa => aa.AreaType == ActiveAreaType.BodyTracking && (aa as BodyActiveArea).TrackedBody == body);
+                                    var bodyActiveArea = this.ActiveAreas.FirstOrDefault(aa => aa.AreaType == ActiveAreaType.BodyTracking && (aa as BodyActiveArea).TrackedBody == body);
 
-                                    if (!hasBodyActiveArea)
+                                    if (bodyActiveArea == null)
                                     {
                                         // create body AA
                                         this.ActiveAreas.Add(new BodyActiveArea(body));
-                                    }
+                                    } else {
+                                        // renew the expiration timer on this AA
+                                        (bodyActiveArea as BodyActiveArea).RenewExpiration();
+                                    } 
                                 }
 
                                 break;
