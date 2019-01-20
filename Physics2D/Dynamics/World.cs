@@ -37,7 +37,7 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
+using tainicom.Aether.Physics2D.Diagnostics;
 using System.Threading;
 using Microsoft.Xna.Framework;
 using tainicom.Aether.Physics2D.Collision;
@@ -113,7 +113,7 @@ namespace tainicom.Aether.Physics2D.Dynamics
         private Vector2 _point1;
         private Vector2 _point2;
         private List<Fixture> _testPointAllFixtures;
-        private Stopwatch _watch = new Stopwatch();
+        private System.Diagnostics.Stopwatch _watch = new System.Diagnostics.Stopwatch();
         private readonly ThreadLocal<Func<Fixture, Vector2, Vector2, float, float>> _rayCastCallback = new ThreadLocal<Func<Fixture, Vector2, Vector2, float, float>>();
         private Func<RayCastInput, int, object, float> _rayCastCallbackBroadPhaseWrapper;
         private Func<RayCastInput, int, object, float> _rayCastCallbackFixturePhaseWrapper;
@@ -545,8 +545,23 @@ namespace tainicom.Aether.Physics2D.Dynamics
         internal Body Remove(Body body)
         {
             this.BodyList.Remove(body);
+
+            // Delete the attached contacts.
+            ContactEdge ce = body.ContactList;
+            while (ce != null)
+            {
+                ContactEdge ce0 = ce;
+                ce = ce.Next;
+                ContactManager.Destroy(ce0.Contact);
+            }
+            body.ContactList = null;
+
+            // Destroy the proxy for this world. It will be recreated if/when it is re-added to a world.
             body.DestroyProxy();
+
+            // Clear world ref.
             body._world = null;
+
             return body;
         }
 
