@@ -29,7 +29,7 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
+using tainicom.Aether.Physics2D.Diagnostics;
 using tainicom.Aether.Physics2D.Common;
 using Microsoft.Xna.Framework;
 using System.Threading;

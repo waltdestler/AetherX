@@ -28,7 +28,7 @@
 */
 
 using System;
-using System.Diagnostics;
+using tainicom.Aether.Physics2D.Diagnostics;
 using tainicom.Aether.Physics2D.Collision;
 using tainicom.Aether.Physics2D.Collision.Shapes;
 using tainicom.Aether.Physics2D.Common;
