@@ -294,6 +294,46 @@ namespace tainicom.Aether.Physics2D.Dynamics.Hibernation
                             // abort further expiration processing for this active area
                             continue;
                         }
+
+                        // TODO:
+                        // next... check if all bodies connected by joints are also expired...
+                        // if not... abort
+                        // bug... if joint is expired... but can't be removed due to above logic... would be hibernated and immediately awoken.
+                        // also... would have to recursively check all of that joined body's joined bodies... hmm.
+                        // add an IsAbleToBeRemoved which is set to true if no other AA are overlapping. one loop sets this.
+                        // add a second loop to compare both ISExpired and IsAbleToBeRemoved to see if removal may proceed.
+                    }
+
+                    // if this AA has any bodies we still consider "active" then we don't remove it.
+                    // NOTE: this fixes a bug where bodies being removed causes other bodies to shift incorrectly.
+                    //if (activeArea.Bodies.Select(ab => ab.Body)
+                    //    // we won't remove this AA if it contains any bodies which..
+                    //    .Any(b =>
+                    //    b.ContactList != null // is currently contacting another body
+                    //    //&& !b.Awake // and isn't asleep, i.e. if it's asleep we're okay removing it, even if it has contacts.
+                    //    //&& b.BodyType != BodyType.Static // and isn't static, i.e. if it's static we're okay removing it, even if it has contacts.
+                    //    ))
+                    //{
+                    //    // abort further expiration processing for this active area
+                    //    continue;
+                    //}
+
+                    // get all bodies
+                    var activeBodies = activeArea.Bodies.Select(ab => ab.Body);
+
+                    // discard static bodies
+                    activeBodies = activeBodies.Where(b => b.BodyType == BodyType.Static);
+
+                    // discard bodies which are asleep
+                    activeBodies = activeBodies.Where(b => !b.Awake);
+
+                    // discard bodies which aren't contacting anything
+                    activeBodies = activeBodies.Where(b => !b.HasContacts);
+                    
+                    if( activeBodies.Any())
+                    {
+                        // if any active bodies survived the filtering, then we won't expire this AA yet.
+                        continue;
                     }
 
                     // remove all area bodies from this active area...

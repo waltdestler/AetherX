@@ -80,6 +80,8 @@ namespace tainicom.Aether.Physics2D.Dynamics
 
         public ControllerFilter ControllerFilter = new ControllerFilter(ControllerCategory.All);
 
+        public bool HasContacts { get { return ContactList != null; } }
+
         public Body()
         {
             FixtureList = new List<Fixture>();
