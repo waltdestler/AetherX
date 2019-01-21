@@ -226,14 +226,13 @@ namespace tainicom.Aether.Physics2D.Dynamics.Hibernation
                     }
                     else
                     {
-                        // get body AABB
-                        var bodyTransform = body.GetTransform();
-                        AABB bodyAabb;
-                        this.ActiveWorld.ContactManager.BroadPhase.GetFatAABB(body.BroadphaseProxyId, out bodyAabb);
+                        // get body hibernation AABB
+                        //var bodyTransform = body.GetTransform();
+                        AABB bodyActiveAreaAabb = BaseActiveArea.CalculateBodyAABB(body, Settings.BodyActiveAreaMargin);
 
                         // at this point, we know it's touching. so it's just a matter of whether it's totally inside or partially inside.
                         // contains() returns 'true' only if the AABB is entirely within
-                        var isTotallyWithinActiveArea = activeArea.AABB.Contains(ref bodyAabb);
+                        var isTotallyWithinActiveArea = activeArea.AABB.Contains(ref bodyActiveAreaAabb);
 
                         if (isTotallyWithinActiveArea)
                         {
@@ -325,15 +324,16 @@ namespace tainicom.Aether.Physics2D.Dynamics.Hibernation
                     var activeBodies = activeArea.Bodies.Select(ab => ab.Body);
 
                     // discard static bodies
-                    activeBodies = activeBodies.Where(b => b.BodyType == BodyType.Static);
+                    activeBodies = activeBodies.Where(b => b.BodyType != BodyType.Static);
 
                     // discard bodies which are asleep
-                    activeBodies = activeBodies.Where(b => !b.Awake);
+                    //activeBodies = activeBodies.Where(b => b.Awake);
 
                     // discard bodies which aren't contacting anything
-                    activeBodies = activeBodies.Where(b => !b.HasContacts);
+                    // this doesn't seem to be working. is it because this hibernation logic happens before island is set? hmm...
+                    activeBodies = activeBodies.Where(b => b.HasContacts);
                     
-                    if( activeBodies.Any())
+                    if( activeBodies.Any() )
                     {
                         // if any active bodies survived the filtering, then we won't expire this AA yet.
                         continue;

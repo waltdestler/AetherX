@@ -26,5 +26,17 @@ namespace tainicom.Aether.Physics2D.Dynamics.Hibernation
         {
             throw new NotImplementedException("Update method must be overridden in child class of BaseActiveArea.");
         }
+
+        internal static AABB CalculateBodyAABB(Body body, float margin = Settings.BodyActiveAreaMargin)
+        {
+            // get body hibernation AABB
+            AABB bodyAabb;
+            body.World.ContactManager.BroadPhase.GetFatAABB(body.BroadphaseProxyId, out bodyAabb);
+
+            // add a little margin 
+            bodyAabb = new AABB(bodyAabb.Center, bodyAabb.Width + margin, bodyAabb.Height + margin);
+
+            return bodyAabb;
+        }
     }
 }

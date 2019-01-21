@@ -164,6 +164,11 @@ namespace tainicom.Aether.Physics2D.Diagnostics
                     else
                         color = DefaultShapeColor;
 
+                    if(b.HasContacts)
+                    {
+                        color = Color.Red;
+                    }
+
                     Transform xf = b.GetTransform();
                     foreach (Fixture f in b.FixtureList)
                     {

@@ -50,11 +50,13 @@ namespace tainicom.Aether.Physics2D.Dynamics.Hibernation
             }
 
             // update AABB to body's AABB
-            this.TrackedBody.World.ContactManager.BroadPhase.GetFatAABB(this.TrackedBody.BroadphaseProxyId, out this.AABB);
+            //this.TrackedBody.World.ContactManager.BroadPhase.GetFatAABB(this.TrackedBody.BroadphaseProxyId, out this.AABB);
 
-            // add a little margin 
-            const float AABB_MARGIN = Settings.BodyActiveAreaMargin;
-            this.AABB = new AABB(this.AABB.Center, this.AABB.Width + AABB_MARGIN, this.AABB.Height + AABB_MARGIN);
+            //// add a little margin 
+            //const float AABB_MARGIN = Settings.BodyActiveAreaMargin;
+            //this.AABB = new AABB(this.AABB.Center, this.AABB.Width + AABB_MARGIN, this.AABB.Height + AABB_MARGIN);
+
+            this.AABB = BaseActiveArea.CalculateBodyAABB(this.TrackedBody);
 
             // update whether is expired
             this.IsExpired = this.SecondsAgoCreated >= Settings.SecondsUntilHibernate;
