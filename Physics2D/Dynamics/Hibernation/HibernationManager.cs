@@ -149,8 +149,16 @@ namespace tainicom.Aether.Physics2D.Dynamics.Hibernation
                                         // create body AA
                                         this.ActiveAreas.Add(new BodyActiveArea(body));
                                     } else {
-                                        // renew the expiration timer on this AA
-                                        (bodyActiveArea as BodyActiveArea).RenewExpiration();
+                                        if (activeArea is IndependentActiveArea)
+                                        {
+                                            // renew the expiration timer on this AA
+                                            (bodyActiveArea as BodyActiveArea).RenewExpiration();
+                                        }
+                                        else
+                                        {
+                                            // just ensure expiration isn't any shorter than this AA
+                                            (bodyActiveArea as BodyActiveArea).EnsureExpirationNoLessThan(activeArea as BodyActiveArea);
+                                        }
                                     } 
                                 }
 
@@ -342,6 +350,12 @@ namespace tainicom.Aether.Physics2D.Dynamics.Hibernation
 
             if (dynamicContactingBodies.Any())
             {
+                //if (activeArea is BodyActiveArea)
+                //{
+                //    // clear additional AABBs.
+                //    (activeArea as BodyActiveArea).AdditionalAABBs.Clear();
+                //}
+
                 // for each body with contacts, check if all bodies touching are in this AA. If so, we can still expire this AA, otherwise we'll grow the size of the AA
                 // in an attempt to scoop up those other bodies. the trick is that they all need to expire at the same time.
                 var activeAreaBodies = activeArea.Bodies.Select(ab => ab.Body);
@@ -355,16 +369,17 @@ namespace tainicom.Aether.Physics2D.Dynamics.Hibernation
 
                         var contactBodyA = ce0.Contact.FixtureA.Body;
                         var contactBodyB = ce0.Contact.FixtureB.Body;
-                        var isContactedBodyInAA =
-                            (contactBodyA == dynamicContactingBody || activeAreaBodies.Contains(contactBodyA))
-                            && (contactBodyB == dynamicContactingBody || activeAreaBodies.Contains(contactBodyB));
 
-                        if (!isContactedBodyInAA)
+                        // get the "other" body this one is touching
+                        var otherBody = (contactBodyA == dynamicContactingBody) ? contactBodyB : contactBodyA;
+
+                        if (!activeAreaBodies.Contains(otherBody))
                         {
                             if (activeArea is BodyActiveArea)
                             {
                                 // we increase the size of this AA in an attempt to swallow up all other nearby contacting bodies
                                 (activeArea as BodyActiveArea).BodyAABBMargin += Settings.BodyActiveAreaMargin;
+                                //(activeArea as BodyActiveArea).AdditionalAABBs.Add(BaseActiveArea.CalculateBodyAABB(otherBody, Settings.BodyActiveAreaMargin * 1.5f));
                             }
                             // abort further expiration processing.
                             return;

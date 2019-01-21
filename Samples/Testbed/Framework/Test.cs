@@ -86,8 +86,8 @@ namespace tainicom.Aether.Physics2D.Samples.Testbed.Framework
             {
                 this.DebugView.BeginCustomDraw(projection, view);
 
-                // show the use where the independent active area would be moved provided right mouse button is clicked
-                Color independentActiveAreaColor = new Color(0.45f, 0.15f, 0.15f);
+                // show the user where the independent active area would be moved provided right mouse button is clicked
+                Color independentActiveAreaColor = new Color(0.30f, 0.10f, 0.10f);
                 AABB newActiveArea = new AABB(this.MouseWorldPosition, this.IndependentActiveAreaRadius * 2, this.IndependentActiveAreaRadius * 2);
                 this.DebugView.DrawAABB(ref newActiveArea, independentActiveAreaColor);
 

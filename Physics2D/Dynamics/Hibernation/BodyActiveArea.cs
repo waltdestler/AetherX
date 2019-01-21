@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.Xna.Framework;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -6,14 +7,14 @@ using tainicom.Aether.Physics2D.Collision;
 
 namespace tainicom.Aether.Physics2D.Dynamics.Hibernation
 {
-    internal class BodyActiveArea : BaseActiveArea
+    public class BodyActiveArea : BaseActiveArea
     {
         internal Body TrackedBody { get; set; }
 
         /// <summary>
         /// Creation time in UTC and ticks.
         /// </summary>
-        private long CreationUtcTime { get; set; }
+        internal long CreationUtcTime { get; private set; }
 
         public float SecondsAgoCreated
         {
@@ -41,10 +42,13 @@ namespace tainicom.Aether.Physics2D.Dynamics.Hibernation
             this.RenewExpiration();
         }
 
+        public List<AABB> AdditionalAABBs = new List<AABB>();
         public float BodyAABBMargin = Settings.BodyActiveAreaMargin;
 
         internal override void Update()
         {
+            this.Center();
+
             if (this.TrackedBody != null)
             {
                 // simply center on the body.
@@ -60,8 +64,49 @@ namespace tainicom.Aether.Physics2D.Dynamics.Hibernation
 
             this.AABB = BaseActiveArea.CalculateBodyAABB(this.TrackedBody, BodyAABBMargin);
 
+            // add all other additional AABBs
+            for( var i = 0; i <this.AdditionalAABBs.Count; i++)
+            {
+                var addtlAABB = this.AdditionalAABBs[i];
+                this.AABB.Combine(ref addtlAABB);
+            }
+
             // update whether is expired
             this.IsExpired = this.SecondsAgoCreated >= Settings.SecondsUntilHibernate;
+        }
+
+        public Vector2 BodiesCenter;
+        private void Center()
+        {
+            // TODO: instead of doing this off of positions, use AABBs. combine all body AABBs, get center, find body closest to center.
+
+            // if it has multiple bodies, then center on the one closest to the center.
+            if (this.Bodies.Count > 1)
+            {
+                // find average body position
+                var averagePosition = Vector2.Zero;
+                foreach (var body in this.Bodies.Select(ab => ab.Body))
+                {
+                    // sum 'em all
+                    averagePosition += body.Position;
+                }
+                // divide by #
+                averagePosition /= this.Bodies.Count;
+
+
+                //Body closestBody = this.Bodies[0].Body;
+                //var closestDistance = Vector2.Distance(this.closestBody.Position)
+                //BodyclosestBody = this.Bodies[0];
+                //for (var i = 1; i < this.Bodies.Count)
+                //    var centerMostBody = this.Bodies.Min(ab => Vector ab.Body.Position)
+
+                BodiesCenter = averagePosition;
+            }
+            else
+            {
+                // just use the center of the tracked body.
+                BodiesCenter = this.TrackedBody.Position;
+            }
         }
 
         internal void RenewExpiration()
@@ -71,6 +116,14 @@ namespace tainicom.Aether.Physics2D.Dynamics.Hibernation
 
             // reset expiration.
             this.IsExpired = false;
+        }
+
+        internal void EnsureExpirationNoLessThan( BodyActiveArea bodyActiveArea )
+        {
+            if( this.CreationUtcTime < bodyActiveArea.CreationUtcTime)
+            {
+                this.CreationUtcTime = bodyActiveArea.CreationUtcTime;
+            }
         }
     }
 }
