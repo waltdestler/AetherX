@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using tainicom.Aether.Physics2D.Collision;
+using tainicom.Aether.Physics2D.Dynamics.Contacts;
 
 namespace tainicom.Aether.Physics2D.Dynamics.Hibernation
 {
@@ -228,7 +229,7 @@ namespace tainicom.Aether.Physics2D.Dynamics.Hibernation
                     {
                         // get body hibernation AABB
                         //var bodyTransform = body.GetTransform();
-                        AABB bodyActiveAreaAabb = BaseActiveArea.CalculateBodyAABB(body, Settings.BodyActiveAreaMargin);
+                        AABB bodyActiveAreaAabb = BaseActiveArea.CalculateBodyAABB(body);
 
                         // at this point, we know it's touching. so it's just a matter of whether it's totally inside or partially inside.
                         // contains() returns 'true' only if the AABB is entirely within
@@ -277,80 +278,113 @@ namespace tainicom.Aether.Physics2D.Dynamics.Hibernation
 
                 if (activeArea.IsExpired)
                 {
-                    // if this is a body tracking AA, only remove if not within any other AA
-                    if (activeArea.AreaType == ActiveAreaType.BodyTracking)
-                    {
-                        var bodyActiveArea = activeArea as BodyActiveArea;
-
-                        var isAnotherActiveAreaContainingBody = this.ActiveAreas.Any(aa =>
-                            aa != activeArea // ...a different active area
-                            && aa.IsExpired == false // ...isn't also an expired AA
-                            && aa.Bodies.Select(aab => aab.Body).Contains(bodyActiveArea.TrackedBody)); // contains this body active area's tracked body
-
-                        if (isAnotherActiveAreaContainingBody)
-                        {
-                            // renew the expiration, as it's clear it's still kicking around someone who cares about it.
-                            // NOTE: if it's entirely within another AA then this body AA will be removed elsewhere. this condition really just ensures "partially in"
-                            //bodyActiveArea.Renew();
-
-                            // abort further expiration processing for this active area
-                            continue;
-                        }
-
-                        // TODO:
-                        // next... check if all bodies connected by joints are also expired...
-                        // if not... abort
-                        // bug... if joint is expired... but can't be removed due to above logic... would be hibernated and immediately awoken.
-                        // also... would have to recursively check all of that joined body's joined bodies... hmm.
-                        // add an IsAbleToBeRemoved which is set to true if no other AA are overlapping. one loop sets this.
-                        // add a second loop to compare both ISExpired and IsAbleToBeRemoved to see if removal may proceed.
-                    }
-
-                    // if this AA has any bodies we still consider "active" then we don't remove it.
-                    // NOTE: this fixes a bug where bodies being removed causes other bodies to shift incorrectly.
-                    //if (activeArea.Bodies.Select(ab => ab.Body)
-                    //    // we won't remove this AA if it contains any bodies which..
-                    //    .Any(b =>
-                    //    b.ContactList != null // is currently contacting another body
-                    //    //&& !b.Awake // and isn't asleep, i.e. if it's asleep we're okay removing it, even if it has contacts.
-                    //    //&& b.BodyType != BodyType.Static // and isn't static, i.e. if it's static we're okay removing it, even if it has contacts.
-                    //    ))
-                    //{
-                    //    // abort further expiration processing for this active area
-                    //    continue;
-                    //}
-
-                    // get all bodies
-                    var activeBodies = activeArea.Bodies.Select(ab => ab.Body);
-
-                    // discard static bodies
-                    activeBodies = activeBodies.Where(b => b.BodyType != BodyType.Static);
-
-                    // discard bodies which are asleep
-                    //activeBodies = activeBodies.Where(b => b.Awake);
-
-                    // discard bodies which aren't contacting anything
-                    // this doesn't seem to be working. is it because this hibernation logic happens before island is set? hmm...
-                    activeBodies = activeBodies.Where(b => b.HasContacts);
-                    
-                    if( activeBodies.Any() )
-                    {
-                        // if any active bodies survived the filtering, then we won't expire this AA yet.
-                        continue;
-                    }
-
-                    // remove all area bodies from this active area...
-                    for (var bodyIndex = activeArea.Bodies.Count - 1; bodyIndex >= 0; bodyIndex--)
-                    {
-                        var areaBody = activeArea.Bodies[bodyIndex];
-
-                        this.RemoveAreaBody(activeArea, areaBody);
-                    }
-
-                    // remove this active area...
-                    this.ActiveAreas.RemoveAt(i);
+                    this.ProcessExpiredActiveArea(activeArea);
                 }
             }
+        }
+
+        private void ProcessExpiredActiveArea(BaseActiveArea activeArea)
+        {
+            // if this is a body tracking AA, only remove if not within any other AA
+            if (activeArea.AreaType == ActiveAreaType.BodyTracking)
+            {
+                var bodyActiveArea = activeArea as BodyActiveArea;
+
+                var isAnotherActiveAreaContainingBody = this.ActiveAreas.Any(aa =>
+                    aa != activeArea // ...a different active area
+                    && aa.IsExpired == false // ...isn't also an expired AA
+                    && aa.Bodies.Select(aab => aab.Body).Contains(bodyActiveArea.TrackedBody)); // contains this body active area's tracked body
+
+                if (isAnotherActiveAreaContainingBody)
+                {
+                    // renew the expiration, as it's clear it's still kicking around someone who cares about it.
+                    // NOTE: if it's entirely within another AA then this body AA will be removed elsewhere. this condition really just ensures "partially in"
+                    //bodyActiveArea.Renew();
+
+                    // abort further expiration processing for this active area
+                    return;
+                }
+
+                // TODO:
+                // next... check if all bodies connected by joints are also expired...
+                // if not... abort
+                // bug... if joint is expired... but can't be removed due to above logic... would be hibernated and immediately awoken.
+                // also... would have to recursively check all of that joined body's joined bodies... hmm.
+                // add an IsAbleToBeRemoved which is set to true if no other AA are overlapping. one loop sets this.
+                // add a second loop to compare both ISExpired and IsAbleToBeRemoved to see if removal may proceed.
+            }
+
+            // if this AA has any bodies we still consider "active" then we don't remove it.
+            // NOTE: this fixes a bug where bodies being removed causes other bodies to shift incorrectly.
+            //if (activeArea.Bodies.Select(ab => ab.Body)
+            //    // we won't remove this AA if it contains any bodies which..
+            //    .Any(b =>
+            //    b.ContactList != null // is currently contacting another body
+            //    //&& !b.Awake // and isn't asleep, i.e. if it's asleep we're okay removing it, even if it has contacts.
+            //    //&& b.BodyType != BodyType.Static // and isn't static, i.e. if it's static we're okay removing it, even if it has contacts.
+            //    ))
+            //{
+            //    // abort further expiration processing for this active area
+            //    continue;
+            //}
+
+            // get all bodies
+            var dynamicContactingBodies = activeArea.Bodies.Select(ab => ab.Body);
+
+            // discard static bodies
+            dynamicContactingBodies = dynamicContactingBodies.Where(b => b.BodyType != BodyType.Static);
+
+            // discard bodies which are asleep
+            //activeBodies = activeBodies.Where(b => b.Awake);
+
+            // discard bodies which aren't contacting anything
+            dynamicContactingBodies = dynamicContactingBodies.Where(b => b.HasContacts);
+
+            if (dynamicContactingBodies.Any())
+            {
+                // for each body with contacts, check if all bodies touching are in this AA. If so, we can still expire this AA, otherwise we'll grow the size of the AA
+                // in an attempt to scoop up those other bodies. the trick is that they all need to expire at the same time.
+                var activeAreaBodies = activeArea.Bodies.Select(ab => ab.Body);
+                foreach (var dynamicContactingBody in dynamicContactingBodies)
+                {
+                    ContactEdge ce = dynamicContactingBody.ContactList;
+                    while (ce != null)
+                    {
+                        ContactEdge ce0 = ce;
+                        ce = ce.Next;
+
+                        var contactBodyA = ce0.Contact.FixtureA.Body;
+                        var contactBodyB = ce0.Contact.FixtureB.Body;
+                        var isContactedBodyInAA =
+                            (contactBodyA == dynamicContactingBody || activeAreaBodies.Contains(contactBodyA))
+                            && (contactBodyB == dynamicContactingBody || activeAreaBodies.Contains(contactBodyB));
+
+                        if (!isContactedBodyInAA)
+                        {
+                            if (activeArea is BodyActiveArea)
+                            {
+                                // we increase the size of this AA in an attempt to swallow up all other nearby contacting bodies
+                                (activeArea as BodyActiveArea).BodyAABBMargin += Settings.BodyActiveAreaMargin;
+                            }
+                            // abort further expiration processing.
+                            return;
+                        }
+                    }
+                }
+
+                // if we're reached this point then all contacting bodies are in this AA so it's safe to remove them all in one swoop and we'll continue processing expiration.
+            }
+
+            // remove all area bodies from this active area...
+            for (var bodyIndex = activeArea.Bodies.Count - 1; bodyIndex >= 0; bodyIndex--)
+            {
+                var areaBody = activeArea.Bodies[bodyIndex];
+
+                this.RemoveAreaBody(activeArea, areaBody);
+            }
+
+            // remove this active area...
+            this.ActiveAreas.Remove(activeArea);
         }
 
         private void UpdateActiveAreas()

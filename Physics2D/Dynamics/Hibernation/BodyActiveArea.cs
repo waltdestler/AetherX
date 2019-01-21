@@ -41,6 +41,8 @@ namespace tainicom.Aether.Physics2D.Dynamics.Hibernation
             this.RenewExpiration();
         }
 
+        public float BodyAABBMargin = Settings.BodyActiveAreaMargin;
+
         internal override void Update()
         {
             if (this.TrackedBody != null)
@@ -56,7 +58,7 @@ namespace tainicom.Aether.Physics2D.Dynamics.Hibernation
             //const float AABB_MARGIN = Settings.BodyActiveAreaMargin;
             //this.AABB = new AABB(this.AABB.Center, this.AABB.Width + AABB_MARGIN, this.AABB.Height + AABB_MARGIN);
 
-            this.AABB = BaseActiveArea.CalculateBodyAABB(this.TrackedBody);
+            this.AABB = BaseActiveArea.CalculateBodyAABB(this.TrackedBody, BodyAABBMargin);
 
             // update whether is expired
             this.IsExpired = this.SecondsAgoCreated >= Settings.SecondsUntilHibernate;
