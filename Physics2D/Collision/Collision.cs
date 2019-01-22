@@ -591,6 +591,14 @@ namespace tainicom.Aether.Physics2D.Collision
                 Vector2.Max(p1, p2),
                 Vector2.Max(p3, p4));
         }
+
+        public static AABB operator *(float scaleFactor, AABB value) {
+            return new AABB(value.LowerBound * scaleFactor, value.UpperBound * scaleFactor);
+        }
+        public static AABB operator *(AABB value, float scaleFactor)
+        {
+            return new AABB(value.LowerBound * scaleFactor, value.UpperBound * scaleFactor);
+        }
     }
 
     /// <summary>

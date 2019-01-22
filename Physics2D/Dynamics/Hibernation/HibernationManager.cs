@@ -136,13 +136,13 @@ namespace tainicom.Aether.Physics2D.Dynamics.Hibernation
                             case AreaBodyStatus.TotallyOut:
 
                                 // determine if needs to create own AA. (non-static and awake)
-                                var warrantsBodyActiveArea = body.BodyType != BodyType.Static && body.Awake; //body.AngularVelocity != 0 || body.LinearVelocity.Length() > 0;
+                                var warrantsBodyActiveArea = body.BodyType != BodyType.Static; //&& body.Awake; //body.AngularVelocity != 0 || body.LinearVelocity.Length() > 0;
 
                                 if (warrantsBodyActiveArea)
                                 {
 
                                     // determine if has own AA
-                                    var bodyActiveArea = this.ActiveAreas.FirstOrDefault(aa => aa.AreaType == ActiveAreaType.BodyTracking && (aa as BodyActiveArea).TrackedBody == body);
+                                    var bodyActiveArea = this.GetBodyActiveArea( body );
 
                                     if (bodyActiveArea == null)
                                     {
@@ -174,6 +174,11 @@ namespace tainicom.Aether.Physics2D.Dynamics.Hibernation
 
                 }
             }
+        }
+
+        private BodyActiveArea GetBodyActiveArea(Body body)
+        {
+            return this.ActiveAreas.FirstOrDefault(aa => aa.AreaType == ActiveAreaType.BodyTracking && (aa as BodyActiveArea).TrackedBody == body) as BodyActiveArea;
         }
 
         /// <summary>
@@ -361,6 +366,7 @@ namespace tainicom.Aether.Physics2D.Dynamics.Hibernation
                 var activeAreaBodies = activeArea.Bodies.Select(ab => ab.Body);
                 foreach (var dynamicContactingBody in dynamicContactingBodies)
                 {
+                    bool isMissingContactingBodies = false;
                     ContactEdge ce = dynamicContactingBody.ContactList;
                     while (ce != null)
                     {
@@ -378,12 +384,32 @@ namespace tainicom.Aether.Physics2D.Dynamics.Hibernation
                             if (activeArea is BodyActiveArea)
                             {
                                 // we increase the size of this AA in an attempt to swallow up all other nearby contacting bodies
-                                (activeArea as BodyActiveArea).BodyAABBMargin += Settings.BodyActiveAreaMargin;
-                                //(activeArea as BodyActiveArea).AdditionalAABBs.Add(BaseActiveArea.CalculateBodyAABB(otherBody, Settings.BodyActiveAreaMargin * 1.5f));
+                                //(activeArea as BodyActiveArea).BodyAABBMargin += Settings.BodyActiveAreaMargin;
+
+                                var contactingBodyAAbb = new AABB();
+
+                                // determine if has own AA
+                                var bodyActiveArea = this.GetBodyActiveArea(otherBody);
+                                if(bodyActiveArea != null)
+                                {
+                                    contactingBodyAAbb = bodyActiveArea.AABB * 1.1f;
+                                } else {
+                                    contactingBodyAAbb = BaseActiveArea.CalculateBodyAABB(otherBody, Settings.BodyActiveAreaMargin * 1.1f);
+                                }
+
+                                (activeArea as BodyActiveArea).AdditionalAABBs.Add(contactingBodyAAbb);
+                                
+                                //(activeArea as BodyActiveArea).RenewExpiration(1.0f);
                             }
-                            // abort further expiration processing.
-                            return;
+                            
+                            isMissingContactingBodies = true;
                         }
+                    }
+
+                    if (isMissingContactingBodies)
+                    {
+                        // abort further expiration processing.
+                        return;
                     }
                 }
 

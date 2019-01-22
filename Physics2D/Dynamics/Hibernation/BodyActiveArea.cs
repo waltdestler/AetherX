@@ -109,10 +109,20 @@ namespace tainicom.Aether.Physics2D.Dynamics.Hibernation
             }
         }
 
-        internal void RenewExpiration()
+        /// <summary>
+        /// If secondsToAdd is null, then renews expiration time as if it was just created, otherwise adds the specified number of seconds.
+        /// </summary>
+        /// <param name="secondsToAdd"></param>
+        internal void RenewExpiration(float? secondsToAdd = null)
         {
-            // snapshot this time. it could be creation or renewal.
-            this.CreationUtcTime = DateTime.UtcNow.Ticks;
+            if (secondsToAdd.HasValue)
+            {
+                // add seconds
+                this.CreationUtcTime += (long)(TimeSpan.TicksPerSecond * secondsToAdd.Value);
+            } else {
+                // snapshot this time. it could be creation or renewal.
+                this.CreationUtcTime = DateTime.UtcNow.Ticks;
+            }
 
             // reset expiration.
             this.IsExpired = false;
