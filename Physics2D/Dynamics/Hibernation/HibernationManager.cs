@@ -47,6 +47,8 @@ namespace tainicom.Aether.Physics2D.Dynamics.Hibernation
             // This should always come first. It updates AABBs, expiration timers, etc.
             this.UpdateActiveAreas();
 
+            this.MergeBodyActiveAreas();
+
             // Handle expirations.
             this.RemoveExpiredActiveAreas();
 
@@ -61,6 +63,45 @@ namespace tainicom.Aether.Physics2D.Dynamics.Hibernation
 
             // Hibernate all flagged bodies.
             this.HibernateBodies();
+        }
+
+        private void MergeBodyActiveAreas()
+        {
+            var bodyAAs = this.ActiveAreas.Where(aa => aa.AreaType == ActiveAreaType.BodyTracking).ToList();
+
+            // get first in list
+            var curBodyAA = bodyAAs.ElementAtOrDefault(0);
+            while (curBodyAA != null)
+            {
+                // remove first from the list
+                bodyAAs.RemoveAt(0);
+
+                // find all other bodyAA which touch this one.
+                var touchingAAs = bodyAAs.Where(aa => curBodyAA.AABB.Overlaps(ref aa.AABB)).ToList();
+
+                for( var i = touchingAAs.Count - 1; i >= 0; i--)
+                {
+                    var touchingAA = touchingAAs[i];
+
+                    // add all these AABBs to this AA
+                    (curBodyAA as BodyActiveArea).AdditionalAABBs.Add(touchingAA.AABB);
+
+                    // add the bodies too
+                    curBodyAA.Bodies.AddRange(touchingAA.Bodies);
+
+                    // ensure expiration time
+                    //(curBodyAA as BodyActiveArea).EnsureExpirationNoLessThan(touchingAA as BodyActiveArea);
+
+                    // remove them from the list of body AAs
+                    bodyAAs.Remove(touchingAA);
+
+                    // also from the global AAs
+                    this.ActiveAreas.Remove(touchingAA);
+                }
+
+                // next in list
+                curBodyAA = bodyAAs.ElementAtOrDefault(0);
+            }
         }
 
         private void HibernateBodies()
@@ -355,6 +396,9 @@ namespace tainicom.Aether.Physics2D.Dynamics.Hibernation
 
             if (dynamicContactingBodies.Any())
             {
+                (activeArea as BodyActiveArea).RenewExpiration(0.25f);
+                return;
+
                 //if (activeArea is BodyActiveArea)
                 //{
                 //    // clear additional AABBs.
