@@ -378,6 +378,12 @@ namespace tainicom.Aether.Physics2D.Dynamics.Hibernation
 
                         // get the "other" body this one is touching
                         var otherBody = (contactBodyA == dynamicContactingBody) ? contactBodyB : contactBodyA;
+                        
+                        // if it's a static body, then we skip it.
+                        if( otherBody.BodyType == BodyType.Static )
+                        {
+                            continue;
+                        }
 
                         if (!activeAreaBodies.Contains(otherBody))
                         {
@@ -386,15 +392,18 @@ namespace tainicom.Aether.Physics2D.Dynamics.Hibernation
                                 // we increase the size of this AA in an attempt to swallow up all other nearby contacting bodies
                                 //(activeArea as BodyActiveArea).BodyAABBMargin += Settings.BodyActiveAreaMargin;
 
+                                const float AABB_MARGIN_MULTIPLIER = 1.1f;
                                 var contactingBodyAAbb = new AABB();
 
                                 // determine if has own AA
                                 var bodyActiveArea = this.GetBodyActiveArea(otherBody);
                                 if(bodyActiveArea != null)
                                 {
-                                    contactingBodyAAbb = bodyActiveArea.AABB * 1.1f;
+                                    // Add the BodyActiveArea's AABB
+                                    contactingBodyAAbb = bodyActiveArea.AABB * AABB_MARGIN_MULTIPLIER;
                                 } else {
-                                    contactingBodyAAbb = BaseActiveArea.CalculateBodyAABB(otherBody, Settings.BodyActiveAreaMargin * 1.1f);
+                                    // Derive the body's AABB
+                                    contactingBodyAAbb = BaseActiveArea.CalculateBodyAABB(otherBody, Settings.BodyActiveAreaMargin * AABB_MARGIN_MULTIPLIER);
                                 }
 
                                 (activeArea as BodyActiveArea).AdditionalAABBs.Add(contactingBodyAAbb);
