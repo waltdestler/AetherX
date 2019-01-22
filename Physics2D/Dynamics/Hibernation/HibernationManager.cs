@@ -86,11 +86,20 @@ namespace tainicom.Aether.Physics2D.Dynamics.Hibernation
                     // add all these AABBs to this AA
                     (curBodyAA as BodyActiveArea).AdditionalAABBs.Add(touchingAA.AABB);
 
-                    // add the bodies too
-                    curBodyAA.Bodies.AddRange(touchingAA.Bodies);
+                    var curBodyAABodies = curBodyAA.Bodies.Select(ab => ab.Body);
+                    foreach (var touchingAABody in touchingAA.Bodies)
+                    {
+                        if (!curBodyAABodies.Contains(touchingAABody.Body))
+                        {
+                            // this body isn't in the current body AA, so let's add it.
+                            curBodyAA.Bodies.Add(touchingAABody);
+                        }
+                    }
 
                     // ensure expiration time
                     //(curBodyAA as BodyActiveArea).EnsureExpirationNoLessThan(touchingAA as BodyActiveArea);
+
+                    touchingAA.Bodies.Clear();
 
                     // remove them from the list of body AAs
                     bodyAAs.Remove(touchingAA);
@@ -396,8 +405,8 @@ namespace tainicom.Aether.Physics2D.Dynamics.Hibernation
 
             if (dynamicContactingBodies.Any())
             {
-                (activeArea as BodyActiveArea).RenewExpiration(0.25f);
-                return;
+                //(activeArea as BodyActiveArea).RenewExpiration(0.25f);
+                //return;
 
                 //if (activeArea is BodyActiveArea)
                 //{
@@ -431,29 +440,29 @@ namespace tainicom.Aether.Physics2D.Dynamics.Hibernation
 
                         if (!activeAreaBodies.Contains(otherBody))
                         {
-                            if (activeArea is BodyActiveArea)
-                            {
-                                // we increase the size of this AA in an attempt to swallow up all other nearby contacting bodies
-                                //(activeArea as BodyActiveArea).BodyAABBMargin += Settings.BodyActiveAreaMargin;
+                            //if (activeArea is BodyActiveArea)
+                            //{
+                            //    // we increase the size of this AA in an attempt to swallow up all other nearby contacting bodies
+                            //    //(activeArea as BodyActiveArea).BodyAABBMargin += Settings.BodyActiveAreaMargin;
 
-                                const float AABB_MARGIN_MULTIPLIER = 1.1f;
-                                var contactingBodyAAbb = new AABB();
+                            //    const float AABB_MARGIN_MULTIPLIER = 1.1f;
+                            //    var contactingBodyAAbb = new AABB();
 
-                                // determine if has own AA
-                                var bodyActiveArea = this.GetBodyActiveArea(otherBody);
-                                if(bodyActiveArea != null)
-                                {
-                                    // Add the BodyActiveArea's AABB
-                                    contactingBodyAAbb = bodyActiveArea.AABB * AABB_MARGIN_MULTIPLIER;
-                                } else {
-                                    // Derive the body's AABB
-                                    contactingBodyAAbb = BaseActiveArea.CalculateBodyAABB(otherBody, Settings.BodyActiveAreaMargin * AABB_MARGIN_MULTIPLIER);
-                                }
+                            //    // determine if has own AA
+                            //    var bodyActiveArea = this.GetBodyActiveArea(otherBody);
+                            //    if(bodyActiveArea != null)
+                            //    {
+                            //        // Add the BodyActiveArea's AABB
+                            //        contactingBodyAAbb = bodyActiveArea.AABB * AABB_MARGIN_MULTIPLIER;
+                            //    } else {
+                            //        // Derive the body's AABB
+                            //        contactingBodyAAbb = BaseActiveArea.CalculateBodyAABB(otherBody, Settings.BodyActiveAreaMargin * AABB_MARGIN_MULTIPLIER);
+                            //    }
 
-                                (activeArea as BodyActiveArea).AdditionalAABBs.Add(contactingBodyAAbb);
+                            //    (activeArea as BodyActiveArea).AdditionalAABBs.Add(contactingBodyAAbb);
                                 
-                                //(activeArea as BodyActiveArea).RenewExpiration(1.0f);
-                            }
+                            //    //(activeArea as BodyActiveArea).RenewExpiration(1.0f);
+                            //}
                             
                             isMissingContactingBodies = true;
                         }
@@ -496,7 +505,7 @@ namespace tainicom.Aether.Physics2D.Dynamics.Hibernation
         private void RemoveAreaBody(BaseActiveArea activeArea, AreaBody areaBody)
         {
             // remove it from this AA.
-             activeArea.Bodies.Remove(areaBody);
+            activeArea.Bodies.Remove(areaBody);
 
             // if it's not in any other AA at this point, hibernate it.
             var activeAreasContainingBody = this.ActiveAreas.Where(aa => 
