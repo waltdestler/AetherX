@@ -44,16 +44,16 @@ namespace tainicom.Aether.Physics2D.Dynamics.Hibernation
             if (this.HibernatedWorld.IsLocked)
                 throw new InvalidOperationException("The hibernated World is locked.");
 
-            // This should always come first. It updates AABBs, expiration timers, etc.
-            this.UpdateActiveAreas();
-
-            // Merge body AAs which are touching. This helps things like stacks and piles stay in sync and also helps perf.
-            this.MergeDenseBodyActiveAreas();
-
             // TODO: method to break up large body AAs -- if density is too low, then undo grouping and have every body have its own? could also test AABB collisions...
             //       for each body in it, if it doesn't collide with any other body AABBs in the bodyAreaAABB, then remove it...
             //       refactor BodyAA to just get the AABB from all the bodies within... rather than "additional AABBs..."
             this.SplitSparseBodyActiveAreas();
+
+            // Refresh active area AABBs, expiration timers, etc.
+            this.UpdateActiveAreas();
+
+            // Merge body AAs which are touching. This helps things like stacks and piles stay in sync and also helps perf.
+            this.MergeDenseBodyActiveAreas();
 
             // Handle expirations.
             this.RemoveExpiredActiveAreas();
@@ -121,7 +121,55 @@ namespace tainicom.Aether.Physics2D.Dynamics.Hibernation
 
         private void SplitSparseBodyActiveAreas()
         {
-            //throw new NotImplementedException();
+            var bodyAAs = this.ActiveAreas.Where(aa => aa.AreaType == ActiveAreaType.BodyTracking).ToList();
+
+            foreach (var bodyAA in bodyAAs)
+            {
+                if(bodyAA.Bodies.Count < 2)
+                {
+                    // if there's only one body, then there's nothing to split.
+                    continue;
+                }
+
+                for (var i = bodyAA.Bodies.Count - 1; i >= 0; i--)
+                {
+                    var curBodyArea = bodyAA.Bodies[i];
+                    var curBody = curBodyArea.Body;
+
+                    var isOverlappingAnotherBody = this.BodyOverlapsOtherBodiesInActiveArea(bodyAA, curBody);
+                    
+                    if( !isOverlappingAnotherBody)
+                    {
+                        // we'll remove it from this body AA 
+                        bodyAA.Bodies.Remove(curBodyArea);
+
+                        // create its own body AA
+                        this.ActiveAreas.Add(new BodyActiveArea(curBody));
+                    }
+
+                }
+            }
+        }
+
+        private bool BodyOverlapsOtherBodiesInActiveArea(BaseActiveArea activeArea, Body body)
+        {
+            // TODO: calc each bodyArea AABB once initially each loop then refer to it, rather than calcing each time.
+
+            var bodyAABB = BaseActiveArea.CalculateBodyAABB(body);
+
+            foreach (var otherBody in activeArea.Bodies)
+            {
+                if (body == otherBody.Body)
+                    continue;
+
+                var otherBodyAABB = BaseActiveArea.CalculateBodyAABB(otherBody.Body);
+                if (bodyAABB.Overlaps(ref otherBodyAABB))
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         private void HibernateBodies()
