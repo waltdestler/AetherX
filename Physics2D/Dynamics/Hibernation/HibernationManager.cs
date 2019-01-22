@@ -47,7 +47,13 @@ namespace tainicom.Aether.Physics2D.Dynamics.Hibernation
             // This should always come first. It updates AABBs, expiration timers, etc.
             this.UpdateActiveAreas();
 
-            this.MergeBodyActiveAreas();
+            // Merge body AAs which are touching. This helps things like stacks and piles stay in sync and also helps perf.
+            this.MergeDenseBodyActiveAreas();
+
+            // TODO: method to break up large body AAs -- if density is too low, then undo grouping and have every body have its own? could also test AABB collisions...
+            //       for each body in it, if it doesn't collide with any other body AABBs in the bodyAreaAABB, then remove it...
+            //       refactor BodyAA to just get the AABB from all the bodies within... rather than "additional AABBs..."
+            this.SplitSparseBodyActiveAreas();
 
             // Handle expirations.
             this.RemoveExpiredActiveAreas();
@@ -65,7 +71,7 @@ namespace tainicom.Aether.Physics2D.Dynamics.Hibernation
             this.HibernateBodies();
         }
 
-        private void MergeBodyActiveAreas()
+        private void MergeDenseBodyActiveAreas()
         {
             var bodyAAs = this.ActiveAreas.Where(aa => aa.AreaType == ActiveAreaType.BodyTracking).ToList();
 
@@ -84,7 +90,7 @@ namespace tainicom.Aether.Physics2D.Dynamics.Hibernation
                     var touchingAA = touchingAAs[i];
 
                     // add all these AABBs to this AA
-                    (curBodyAA as BodyActiveArea).AdditionalAABBs.Add(touchingAA.AABB);
+                    //(curBodyAA as BodyActiveArea).AdditionalAABBs.Add(touchingAA.AABB);
 
                     var curBodyAABodies = curBodyAA.Bodies.Select(ab => ab.Body);
                     foreach (var touchingAABody in touchingAA.Bodies)
@@ -111,6 +117,11 @@ namespace tainicom.Aether.Physics2D.Dynamics.Hibernation
                 // next in list
                 curBodyAA = bodyAAs.ElementAtOrDefault(0);
             }
+        }
+
+        private void SplitSparseBodyActiveAreas()
+        {
+            //throw new NotImplementedException();
         }
 
         private void HibernateBodies()

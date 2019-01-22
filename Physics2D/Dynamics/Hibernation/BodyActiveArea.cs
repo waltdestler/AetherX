@@ -47,7 +47,7 @@ namespace tainicom.Aether.Physics2D.Dynamics.Hibernation
 
         internal override void Update()
         {
-            this.Center();
+            //this.Center();
 
             if (this.TrackedBody != null)
             {
@@ -65,49 +65,63 @@ namespace tainicom.Aether.Physics2D.Dynamics.Hibernation
             this.AABB = BaseActiveArea.CalculateBodyAABB(this.TrackedBody, BodyAABBMargin);
 
             // add all other additional AABBs
-            for( var i = 0; i <this.AdditionalAABBs.Count; i++)
+            //for( var i = 0; i <this.AdditionalAABBs.Count; i++)
+            //{
+            //    var addtlAABB = this.AdditionalAABBs[i];
+            //    this.AABB.Combine(ref addtlAABB);
+            //}
+
+            // add all other body AABBs
+            for (var i = 0; i < this.Bodies.Count; i++)
             {
-                var addtlAABB = this.AdditionalAABBs[i];
-                this.AABB.Combine(ref addtlAABB);
+                var body = this.Bodies[i];
+
+                if( body.Body.BodyType == BodyType.Static)
+                {
+                    continue;
+                }
+
+                var bodyAABB = BaseActiveArea.CalculateBodyAABB(body.Body);
+                this.AABB.Combine(ref bodyAABB);
             }
 
             // update whether is expired
             this.IsExpired = this.SecondsAgoCreated >= Settings.SecondsUntilHibernate;
         }
 
-        public Vector2 BodiesCenter;
-        private void Center()
-        {
-            // TODO: instead of doing this off of positions, use AABBs. combine all body AABBs, get center, find body closest to center.
+        //public Vector2 BodiesCenter;
+        //private void Center()
+        //{
+        //    // TODO: instead of doing this off of positions, use AABBs. combine all body AABBs, get center, find body closest to center.
 
-            // if it has multiple bodies, then center on the one closest to the center.
-            if (this.Bodies.Count > 1)
-            {
-                // find average body position
-                var averagePosition = Vector2.Zero;
-                foreach (var body in this.Bodies.Select(ab => ab.Body))
-                {
-                    // sum 'em all
-                    averagePosition += body.Position;
-                }
-                // divide by #
-                averagePosition /= this.Bodies.Count;
+        //    // if it has multiple bodies, then center on the one closest to the center.
+        //    if (this.Bodies.Count > 1)
+        //    {
+        //        // find average body position
+        //        var averagePosition = Vector2.Zero;
+        //        foreach (var body in this.Bodies.Select(ab => ab.Body))
+        //        {
+        //            // sum 'em all
+        //            averagePosition += body.Position;
+        //        }
+        //        // divide by #
+        //        averagePosition /= this.Bodies.Count;
 
 
-                //Body closestBody = this.Bodies[0].Body;
-                //var closestDistance = Vector2.Distance(this.closestBody.Position)
-                //BodyclosestBody = this.Bodies[0];
-                //for (var i = 1; i < this.Bodies.Count)
-                //    var centerMostBody = this.Bodies.Min(ab => Vector ab.Body.Position)
+        //        //Body closestBody = this.Bodies[0].Body;
+        //        //var closestDistance = Vector2.Distance(this.closestBody.Position)
+        //        //BodyclosestBody = this.Bodies[0];
+        //        //for (var i = 1; i < this.Bodies.Count)
+        //        //    var centerMostBody = this.Bodies.Min(ab => Vector ab.Body.Position)
 
-                BodiesCenter = averagePosition;
-            }
-            else
-            {
-                // just use the center of the tracked body.
-                BodiesCenter = this.TrackedBody.Position;
-            }
-        }
+        //        BodiesCenter = averagePosition;
+        //    }
+        //    else
+        //    {
+        //        // just use the center of the tracked body.
+        //        BodiesCenter = this.TrackedBody.Position;
+        //    }
+        //}
 
         /// <summary>
         /// If secondsToAdd is null, then renews expiration time as if it was just created, otherwise adds the specified number of seconds.
