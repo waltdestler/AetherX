@@ -458,6 +458,11 @@ namespace tainicom.Aether.Physics2D.Collision
             return true;
         }
 
+        public bool Overlaps(ref AABB aabb)
+        {
+            return AABB.TestOverlap(ref this, ref aabb);
+        }
+
         /// <summary>
         /// Raycast against this AABB using the specificed points and maxfraction (found in input)
         /// </summary>
