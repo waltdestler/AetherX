@@ -65,9 +65,11 @@ namespace tainicom.Aether.Physics2D.Dynamics.Hibernation
             this.WakeBodiesInActiveAreas();
 
             // Add new bodies and update positions.
+            // TODO: optimize this
             this.UpdateActiveAreaBodies();
 
             // Enact ramifications of status changes.
+            // TODO: optimize this.
             this.ProcessActiveAreaBodyPositionChanges();
 
             // Hibernate all flagged bodies.
@@ -192,7 +194,10 @@ namespace tainicom.Aether.Physics2D.Dynamics.Hibernation
         {
 
             // process all active areas
-            for (var i = 0; i < this.ActiveAreas.Count; i++)
+            var activeAreas = this.ActiveAreas;//.Where(aa => aa.AreaType == ActiveAreaType.Independent).ToList();
+
+            // process all active areas
+            for (var i = 0; i < activeAreas.Count; i++)
             {
                 // get current active area
                 var activeArea = this.ActiveAreas[i];
@@ -255,13 +260,15 @@ namespace tainicom.Aether.Physics2D.Dynamics.Hibernation
                                 {
 
                                     // determine if has own AA
-                                    var bodyActiveArea = this.GetBodyActiveArea( body );
+                                    var bodyActiveArea = this.GetBodyActiveArea(body);
 
                                     if (bodyActiveArea == null)
                                     {
                                         // create body AA
                                         this.ActiveAreas.Add(new BodyActiveArea(body));
-                                    } else {
+                                    }
+                                    else
+                                    {
                                         if (activeArea is IndependentActiveArea)
                                         {
                                             // renew the expiration timer on this AA
@@ -272,7 +279,7 @@ namespace tainicom.Aether.Physics2D.Dynamics.Hibernation
                                             // just ensure expiration isn't any shorter than this AA
                                             (bodyActiveArea as BodyActiveArea).EnsureExpirationNoLessThan(activeArea as BodyActiveArea);
                                         }
-                                    } 
+                                    }
                                 }
 
                                 break;
@@ -299,8 +306,10 @@ namespace tainicom.Aether.Physics2D.Dynamics.Hibernation
         /// </summary>
         private void UpdateActiveAreaBodies()
         {
+            var activeAreas = this.ActiveAreas;//.Where(aa => aa.AreaType == ActiveAreaType.Independent).ToList();
+
             // process all active areas
-            for (var i = 0; i < this.ActiveAreas.Count; i++)
+            for (var i = 0; i < activeAreas.Count; i++)
             {
                 // get current active area
                 var activeArea = this.ActiveAreas[i];
