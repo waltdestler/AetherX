@@ -458,12 +458,19 @@ namespace tainicom.Aether.Physics2D.Diagnostics
 
             _debugPanelSbUpdate.Clear();
             _debugPanelSbUpdate.Append("Update time:").AppendLine();
-            _debugPanelSbUpdate.Append("- Body:    ").AppendNumber(  (float)World.SolveUpdateTime.TotalMilliseconds, 3).Append(" ms").AppendLine();
-            _debugPanelSbUpdate.Append("- Contact: ").AppendNumber(  (float)World.ContactsUpdateTime.TotalMilliseconds, 3).Append(" ms").AppendLine();
-            _debugPanelSbUpdate.Append("- CCD:     ").AppendNumber(  (float)World.ContinuousPhysicsTime.TotalMilliseconds, 3).Append(" ms").AppendLine();
-            _debugPanelSbUpdate.Append("- Joint:   ").AppendNumber(  (float)World.Island.JointUpdateTime.TotalMilliseconds, 3).Append(" ms").AppendLine();
-            _debugPanelSbUpdate.Append("- Controller:").AppendNumber((float)World.ControllersUpdateTime.TotalMilliseconds, 3).Append(" ms").AppendLine();
-            _debugPanelSbUpdate.Append("- Total:   ").AppendNumber(  (float)World.UpdateTime.TotalMilliseconds, 3).Append(" ms").AppendLine();
+
+            if (this.World.HibernationEnabled)
+            {
+                _debugPanelSbUpdate.Append("- Hibernation: ").AppendNumber((float)World.HibernateTime.TotalMilliseconds, 3).Append(" ms").AppendLine();
+            }
+            _debugPanelSbUpdate.Append("- Body:        ").AppendNumber(  (float)World.SolveUpdateTime.TotalMilliseconds, 3).Append(" ms").AppendLine();
+            _debugPanelSbUpdate.Append("- Add/Rem Bod: ").AppendNumber((float)World.AddRemoveTime.TotalMilliseconds, 3).Append(" ms").AppendLine();
+            _debugPanelSbUpdate.Append("- N Fix Cntct: ").AppendNumber((float)World.NewContactsTime.TotalMilliseconds, 3).Append(" ms").AppendLine();
+            _debugPanelSbUpdate.Append("- Contact:     ").AppendNumber(  (float)World.ContactsUpdateTime.TotalMilliseconds, 3).Append(" ms").AppendLine();
+            _debugPanelSbUpdate.Append("- CCD:         ").AppendNumber(  (float)World.ContinuousPhysicsTime.TotalMilliseconds, 3).Append(" ms").AppendLine();
+            _debugPanelSbUpdate.Append("- Joint:       ").AppendNumber(  (float)World.Island.JointUpdateTime.TotalMilliseconds, 3).Append(" ms").AppendLine();
+            _debugPanelSbUpdate.Append("- Controller:  ").AppendNumber((float)World.ControllersUpdateTime.TotalMilliseconds, 3).Append(" ms").AppendLine();
+            _debugPanelSbUpdate.Append("- Total:       ").AppendNumber(  (float)World.UpdateTime.TotalMilliseconds, 3).Append(" ms").AppendLine();
             DrawString(x + 250, y, _debugPanelSbUpdate);
         }
 
