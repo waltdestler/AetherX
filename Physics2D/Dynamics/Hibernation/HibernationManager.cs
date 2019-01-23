@@ -15,15 +15,17 @@ namespace tainicom.Aether.Physics2D.Dynamics.Hibernation
         public List<BaseActiveArea> ActiveAreas = new List<BaseActiveArea>();
         private List<Body> BodiesToHibernate = new List<Body>();
 
+        // TODO: only merge or spit every... 10th second?
+
         public HibernationManager(World world)
         {
             // store reference to active world
             this.ActiveWorld = world;
 
             // create a new world to store hibernated bodies
-            this.HibernatedWorld = new World();
             // TODO: set properties to match active world? does it matter, since we're not stepping?
-
+            this.HibernatedWorld = new World();
+            
             // do an initial game-world pass to hibernate all bodies
             // going forward, all active bodies will be gauranteed in be in an AA, so this won't be neccessary.
             // OPTIMIZATION IDEA: allow constructor to accept a list of active areas and process them prior to 
@@ -130,16 +132,12 @@ namespace tainicom.Aether.Physics2D.Dynamics.Hibernation
 
         private void SplitSparseBodyActiveAreas()
         {
-            var bodyAAs = this.ActiveAreas.Where(aa => aa.AreaType == ActiveAreaType.BodyTracking).ToList();
+            // get all body AAs which have more than X bodies.
+            const int LARGE_AA_BODY_COUNT = 2;
+            var largeBodyAAs = this.ActiveAreas.Where(aa => aa.AreaType == ActiveAreaType.BodyTracking && aa.AreaBodies.Count >= LARGE_AA_BODY_COUNT).ToList();
 
-            foreach (var bodyAA in bodyAAs)
+            foreach (var bodyAA in largeBodyAAs)
             {
-                if(bodyAA.AreaBodies.Count < 2)
-                {
-                    // if there's only one body, then there's nothing to split.
-                    continue;
-                }
-
                 for (var i = bodyAA.AreaBodies.Count - 1; i >= 0; i--)
                 {
                     var curBodyArea = bodyAA.AreaBodies[i];
@@ -418,17 +416,14 @@ namespace tainicom.Aether.Physics2D.Dynamics.Hibernation
             {
                 var bodyActiveArea = activeArea as BodyActiveArea;
 
-                var isAnotherActiveAreaContainingBody = this.ActiveAreas.Any(aa =>
+                var bodies = activeArea.AreaBodies.Select(ab => ab.Body);
+                var isAnotherActiveAreaContainingBodiesInCommon = this.ActiveAreas.Any(aa =>
                     aa != activeArea // ...a different active area
                     && aa.IsExpired == false // ...isn't also an expired AA
-                    && aa.AreaBodies.Select(aab => aab.Body).Contains(bodyActiveArea.TrackedBody)); // contains this body active area's tracked body
+                    && aa.AreaBodies.Select(aab => aab.Body).Intersect(bodies).Any()); // contains any bodies in common
 
-                if (isAnotherActiveAreaContainingBody)
+                if (isAnotherActiveAreaContainingBodiesInCommon)
                 {
-                    // renew the expiration, as it's clear it's still kicking around someone who cares about it.
-                    // NOTE: if it's entirely within another AA then this body AA will be removed elsewhere. this condition really just ensures "partially in"
-                    //bodyActiveArea.Renew();
-
                     // abort further expiration processing for this active area
                     return;
                 }
@@ -456,6 +451,7 @@ namespace tainicom.Aether.Physics2D.Dynamics.Hibernation
             //    continue;
             //}
 
+            /*
             // get all bodies
             var dynamicContactingBodies = activeArea.AreaBodies.Select(ab => ab.Body);
 
@@ -542,6 +538,7 @@ namespace tainicom.Aether.Physics2D.Dynamics.Hibernation
 
                 // if we're reached this point then all contacting bodies are in this AA so it's safe to remove them all in one swoop and we'll continue processing expiration.
             }
+            */
 
             // remove all area bodies from this active area...
             for (var bodyIndex = activeArea.AreaBodies.Count - 1; bodyIndex >= 0; bodyIndex--)
