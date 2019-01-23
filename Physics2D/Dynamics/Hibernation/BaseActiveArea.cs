@@ -13,16 +13,24 @@ namespace tainicom.Aether.Physics2D.Dynamics.Hibernation
         public Vector2 Position { get; protected set; }
         public float Radius { get; protected set; }
         public ActiveAreaType AreaType { get; protected set; }
-        public List<AreaBody> Bodies { get; protected set; }
+        public List<AreaBody> AreaBodies { get; protected set; }
         public bool IsExpired { get; protected set; }
 
         public BaseActiveArea()
         {
-            this.Bodies = new List<AreaBody>();
+            this.AreaBodies = new List<AreaBody>();
 
         }
+        
+        internal void UpdateAreaBodyAABBs()
+        {
+            foreach( var areaBody in this.AreaBodies )
+            {
+                areaBody.UpdateAABB();
+            }
+        }
 
-        internal virtual void Update()
+        internal virtual void UpdateAABB()
         {
             throw new NotImplementedException("Update method must be overridden in child class of BaseActiveArea.");
         }

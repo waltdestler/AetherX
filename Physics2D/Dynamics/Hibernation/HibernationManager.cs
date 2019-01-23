@@ -44,13 +44,14 @@ namespace tainicom.Aether.Physics2D.Dynamics.Hibernation
             if (this.HibernatedWorld.IsLocked)
                 throw new InvalidOperationException("The hibernated World is locked.");
 
-            // TODO: method to break up large body AAs -- if density is too low, then undo grouping and have every body have its own? could also test AABB collisions...
-            //       for each body in it, if it doesn't collide with any other body AABBs in the bodyAreaAABB, then remove it...
-            //       refactor BodyAA to just get the AABB from all the bodies within... rather than "additional AABBs..."
+            // Update all active area body AABBs
+            this.UpdateActiveAreaBodyAABBs();
+
+            // split up large AAs
             this.SplitSparseBodyActiveAreas();
 
             // Refresh active area AABBs, expiration timers, etc.
-            this.UpdateActiveAreas();
+            this.UpdateActiveAreasAABBs();
 
             // Merge body AAs which are touching. This helps things like stacks and piles stay in sync and also helps perf.
             this.MergeDenseBodyActiveAreas();
@@ -69,6 +70,14 @@ namespace tainicom.Aether.Physics2D.Dynamics.Hibernation
 
             // Hibernate all flagged bodies.
             this.HibernateBodies();
+        }
+
+        private void UpdateActiveAreaBodyAABBs()
+        {
+            foreach( var aa in this.ActiveAreas )
+            {
+                aa.UpdateAreaBodyAABBs();
+            }
         }
 
         private void MergeDenseBodyActiveAreas()
@@ -92,20 +101,20 @@ namespace tainicom.Aether.Physics2D.Dynamics.Hibernation
                     // add all these AABBs to this AA
                     //(curBodyAA as BodyActiveArea).AdditionalAABBs.Add(touchingAA.AABB);
 
-                    var curBodyAABodies = curBodyAA.Bodies.Select(ab => ab.Body);
-                    foreach (var touchingAABody in touchingAA.Bodies)
+                    var curBodyAABodies = curBodyAA.AreaBodies.Select(ab => ab.Body);
+                    foreach (var touchingAABody in touchingAA.AreaBodies)
                     {
                         if (!curBodyAABodies.Contains(touchingAABody.Body))
                         {
                             // this body isn't in the current body AA, so let's add it.
-                            curBodyAA.Bodies.Add(touchingAABody);
+                            curBodyAA.AreaBodies.Add(touchingAABody);
                         }
                     }
 
                     // ensure expiration time
                     //(curBodyAA as BodyActiveArea).EnsureExpirationNoLessThan(touchingAA as BodyActiveArea);
 
-                    touchingAA.Bodies.Clear();
+                    touchingAA.AreaBodies.Clear();
 
                     // remove them from the list of body AAs
                     bodyAAs.Remove(touchingAA);
@@ -125,45 +134,42 @@ namespace tainicom.Aether.Physics2D.Dynamics.Hibernation
 
             foreach (var bodyAA in bodyAAs)
             {
-                if(bodyAA.Bodies.Count < 2)
+                if(bodyAA.AreaBodies.Count < 2)
                 {
                     // if there's only one body, then there's nothing to split.
                     continue;
                 }
 
-                for (var i = bodyAA.Bodies.Count - 1; i >= 0; i--)
+                for (var i = bodyAA.AreaBodies.Count - 1; i >= 0; i--)
                 {
-                    var curBodyArea = bodyAA.Bodies[i];
-                    var curBody = curBodyArea.Body;
+                    var curBodyArea = bodyAA.AreaBodies[i];
 
-                    var isOverlappingAnotherBody = this.BodyOverlapsOtherBodiesInActiveArea(bodyAA, curBody);
+                    var isOverlappingAnotherBody = this.BodyOverlapsOtherBodiesInActiveArea(bodyAA, curBodyArea);
                     
                     if( !isOverlappingAnotherBody)
                     {
                         // we'll remove it from this body AA 
-                        bodyAA.Bodies.Remove(curBodyArea);
+                        bodyAA.AreaBodies.Remove(curBodyArea);
 
                         // create its own body AA
-                        this.ActiveAreas.Add(new BodyActiveArea(curBody));
+                        this.ActiveAreas.Add(new BodyActiveArea(curBodyArea.Body));
                     }
 
                 }
             }
         }
 
-        private bool BodyOverlapsOtherBodiesInActiveArea(BaseActiveArea activeArea, Body body)
+        private bool BodyOverlapsOtherBodiesInActiveArea(BaseActiveArea activeArea, AreaBody areaBody)
         {
-            // TODO: calc each bodyArea AABB once initially each loop then refer to it, rather than calcing each time.
-
-            var bodyAABB = BaseActiveArea.CalculateBodyAABB(body);
-
-            foreach (var otherBody in activeArea.Bodies)
+            for(var i = 0; i < activeArea.AreaBodies.Count; i++)
             {
-                if (body == otherBody.Body)
+                var otherAreaBody = activeArea.AreaBodies[i];
+
+                // it's the same AreaBody so skip it.
+                if (areaBody == otherAreaBody)
                     continue;
 
-                var otherBodyAABB = BaseActiveArea.CalculateBodyAABB(otherBody.Body);
-                if (bodyAABB.Overlaps(ref otherBodyAABB))
+                if (areaBody.AABB.Overlaps(ref otherAreaBody.AABB))
                 {
                     return true;
                 }
@@ -194,10 +200,10 @@ namespace tainicom.Aether.Physics2D.Dynamics.Hibernation
                 var activeArea = this.ActiveAreas[i];
 
                 // Loop over current ActiveArea bodies to update their statuses.
-                for (var areaBodyIndex = activeArea.Bodies.Count - 1; areaBodyIndex >= 0; areaBodyIndex--)
+                for (var areaBodyIndex = activeArea.AreaBodies.Count - 1; areaBodyIndex >= 0; areaBodyIndex--)
                 {
                     // get the body
-                    var areaBody = activeArea.Bodies[areaBodyIndex];
+                    var areaBody = activeArea.AreaBodies[areaBodyIndex];
                     var body = areaBody.Body;
 
                     if (areaBody.PositionStatus == AreaBodyStatus.Invalid)
@@ -305,7 +311,7 @@ namespace tainicom.Aether.Physics2D.Dynamics.Hibernation
                 var bodiesInActiveArea = this.ActiveWorld.FindBodiesInAABB(ref activeArea.AABB);
 
                 // add all bodies which weren't already in AA
-                var activeAreaBodies = activeArea.Bodies.Select(b => b.Body).ToList();
+                var activeAreaBodies = activeArea.AreaBodies.Select(b => b.Body).ToList();
                 for (var biaaIndex = bodiesInActiveArea.Count - 1; biaaIndex >= 0; biaaIndex--)
                 {
                     // get body
@@ -317,16 +323,16 @@ namespace tainicom.Aether.Physics2D.Dynamics.Hibernation
                     if (!isAlreadyInActiveArea)
                     {
                         // didn't find it. add it.
-                        activeArea.Bodies.Add(new AreaBody(body));
+                        activeArea.AreaBodies.Add(new AreaBody(body));
                     }
                 }
 
                 // Loop over current ActiveArea bodies to update their statuses.
-                for (var areaBodyIndex = activeArea.Bodies.Count - 1; areaBodyIndex >= 0; areaBodyIndex--)
+                for (var areaBodyIndex = activeArea.AreaBodies.Count - 1; areaBodyIndex >= 0; areaBodyIndex--)
                 {
                     // get the body
-                    var areaBody = activeArea.Bodies[areaBodyIndex];
-                    var body = areaBody.Body;
+                    var areaBody = activeArea.AreaBodies[areaBodyIndex];
+                    //ar body = areaBody.Body;
 
                     // store the old status
                     areaBody.PriorStatus = areaBody.PositionStatus;
@@ -340,7 +346,7 @@ namespace tainicom.Aether.Physics2D.Dynamics.Hibernation
                     //else
                     //{
                     // determine whether this body is still touching the AA's AABB
-                    var isTouchingActiveAreaAABB = bodiesInActiveArea.Contains(body);
+                    var isTouchingActiveAreaAABB = bodiesInActiveArea.Contains(areaBody.Body);
 
                     if (!isTouchingActiveAreaAABB)
                     {
@@ -351,11 +357,11 @@ namespace tainicom.Aether.Physics2D.Dynamics.Hibernation
                     {
                         // get body hibernation AABB
                         //var bodyTransform = body.GetTransform();
-                        AABB bodyActiveAreaAabb = BaseActiveArea.CalculateBodyAABB(body);
+                        //AABB bodyActiveAreaAabb = BaseActiveArea.CalculateBodyAABB(body);
 
                         // at this point, we know it's touching. so it's just a matter of whether it's totally inside or partially inside.
                         // contains() returns 'true' only if the AABB is entirely within
-                        var isTotallyWithinActiveArea = activeArea.AABB.Contains(ref bodyActiveAreaAabb);
+                        var isTotallyWithinActiveArea = activeArea.AABB.Contains(ref areaBody.AABB);
 
                         if (isTotallyWithinActiveArea)
                         {
@@ -415,7 +421,7 @@ namespace tainicom.Aether.Physics2D.Dynamics.Hibernation
                 var isAnotherActiveAreaContainingBody = this.ActiveAreas.Any(aa =>
                     aa != activeArea // ...a different active area
                     && aa.IsExpired == false // ...isn't also an expired AA
-                    && aa.Bodies.Select(aab => aab.Body).Contains(bodyActiveArea.TrackedBody)); // contains this body active area's tracked body
+                    && aa.AreaBodies.Select(aab => aab.Body).Contains(bodyActiveArea.TrackedBody)); // contains this body active area's tracked body
 
                 if (isAnotherActiveAreaContainingBody)
                 {
@@ -451,7 +457,7 @@ namespace tainicom.Aether.Physics2D.Dynamics.Hibernation
             //}
 
             // get all bodies
-            var dynamicContactingBodies = activeArea.Bodies.Select(ab => ab.Body);
+            var dynamicContactingBodies = activeArea.AreaBodies.Select(ab => ab.Body);
 
             // discard static bodies
             dynamicContactingBodies = dynamicContactingBodies.Where(b => b.BodyType != BodyType.Static);
@@ -475,7 +481,7 @@ namespace tainicom.Aether.Physics2D.Dynamics.Hibernation
 
                 // for each body with contacts, check if all bodies touching are in this AA. If so, we can still expire this AA, otherwise we'll grow the size of the AA
                 // in an attempt to scoop up those other bodies. the trick is that they all need to expire at the same time.
-                var activeAreaBodies = activeArea.Bodies.Select(ab => ab.Body);
+                var activeAreaBodies = activeArea.AreaBodies.Select(ab => ab.Body);
                 foreach (var dynamicContactingBody in dynamicContactingBodies)
                 {
                     bool isMissingContactingBodies = false;
@@ -538,9 +544,9 @@ namespace tainicom.Aether.Physics2D.Dynamics.Hibernation
             }
 
             // remove all area bodies from this active area...
-            for (var bodyIndex = activeArea.Bodies.Count - 1; bodyIndex >= 0; bodyIndex--)
+            for (var bodyIndex = activeArea.AreaBodies.Count - 1; bodyIndex >= 0; bodyIndex--)
             {
-                var areaBody = activeArea.Bodies[bodyIndex];
+                var areaBody = activeArea.AreaBodies[bodyIndex];
 
                 this.RemoveAreaBody(activeArea, areaBody);
             }
@@ -549,7 +555,7 @@ namespace tainicom.Aether.Physics2D.Dynamics.Hibernation
             this.ActiveAreas.Remove(activeArea);
         }
 
-        private void UpdateActiveAreas()
+        private void UpdateActiveAreasAABBs()
         {
             // process all active areas
             for (var i = this.ActiveAreas.Count - 1; i >= 0; i--)
@@ -557,19 +563,19 @@ namespace tainicom.Aether.Physics2D.Dynamics.Hibernation
                 var activeArea = this.ActiveAreas[i];
 
                 // update its bounding box
-                activeArea.Update();
+                activeArea.UpdateAABB();
             }
         }
 
         private void RemoveAreaBody(BaseActiveArea activeArea, AreaBody areaBody)
         {
             // remove it from this AA.
-            activeArea.Bodies.Remove(areaBody);
+            activeArea.AreaBodies.Remove(areaBody);
 
             // if it's not in any other AA at this point, hibernate it.
             var activeAreasContainingBody = this.ActiveAreas.Where(aa => 
                 aa != activeArea // is a different active area
-                && aa.Bodies.Select(aab => aab.Body).Contains(areaBody.Body)); // contains the body
+                && aa.AreaBodies.Select(aab => aab.Body).Contains(areaBody.Body)); // contains the body
             
             if (!activeAreasContainingBody.Any())
             {

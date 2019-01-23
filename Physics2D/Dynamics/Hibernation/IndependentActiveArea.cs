@@ -29,7 +29,7 @@ namespace tainicom.Aether.Physics2D.Dynamics.Hibernation
             this.Radius = radius;
         }
 
-        internal override void Update()
+        internal override void UpdateAABB()
         {
             // update AABB
             var diameter = this.Radius * 2.0f;

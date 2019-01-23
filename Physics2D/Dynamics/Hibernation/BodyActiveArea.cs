@@ -33,7 +33,7 @@ namespace tainicom.Aether.Physics2D.Dynamics.Hibernation
             // automatically add it to the list of bodies as "totally in"
             var areaBody = new AreaBody(trackedBody);
             areaBody.PositionStatus = AreaBodyStatus.TotallyIn;
-            this.Bodies.Add(areaBody);
+            this.AreaBodies.Add(areaBody);
             
             // set type
             this.AreaType = ActiveAreaType.BodyTracking;
@@ -45,7 +45,7 @@ namespace tainicom.Aether.Physics2D.Dynamics.Hibernation
         public List<AABB> AdditionalAABBs = new List<AABB>();
         public float BodyAABBMargin = Settings.BodyActiveAreaMargin;
 
-        internal override void Update()
+        internal override void UpdateAABB()
         {
             //this.Center();
 
@@ -72,17 +72,16 @@ namespace tainicom.Aether.Physics2D.Dynamics.Hibernation
             //}
 
             // add all other body AABBs
-            for (var i = 0; i < this.Bodies.Count; i++)
+            for (var i = 0; i < this.AreaBodies.Count; i++)
             {
-                var body = this.Bodies[i];
+                var areaBody = this.AreaBodies[i];
 
-                if( body.Body.BodyType == BodyType.Static)
+                if( areaBody.Body.BodyType == BodyType.Static)
                 {
                     continue;
                 }
 
-                var bodyAABB = BaseActiveArea.CalculateBodyAABB(body.Body);
-                this.AABB.Combine(ref bodyAABB);
+                this.AABB.Combine(ref areaBody.AABB);
             }
 
             // update whether is expired
