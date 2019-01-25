@@ -13,9 +13,9 @@ namespace tainicom.Aether.Physics2D.Dynamics.Hibernation
         private World ActiveWorld { get; set; }
         public World HibernatedWorld { get; private set; }
         public List<BaseActiveArea> ActiveAreas = new List<BaseActiveArea>();
-        private List<Body> BodiesToHibernate = new List<Body>();
-
-        // TODO: only merge or spit every... 10th second?
+       //private List<Body> BodiesToHibernate = new List<Body>();
+        private System.Diagnostics.Stopwatch StopWatch = new System.Diagnostics.Stopwatch();
+        //private bool IsInitRequired = true;
 
         public HibernationManager(World world)
         {
@@ -25,16 +25,21 @@ namespace tainicom.Aether.Physics2D.Dynamics.Hibernation
             // create a new world to store hibernated bodies
             // TODO: set properties to match active world? does it matter, since we're not stepping?
             this.HibernatedWorld = new World();
-            
+
             // do an initial game-world pass to hibernate all bodies
             // going forward, all active bodies will be gauranteed in be in an AA, so this won't be neccessary.
             // OPTIMIZATION IDEA: allow constructor to accept a list of active areas and process them prior to 
             //                    this initial hibernate, to prevent hibernating bodies we're going to instantly unhibernate.
-            foreach (var body in this.ActiveWorld.BodyList)
+            for (var i = this.ActiveWorld.BodyList.Count - 1; i >= 0; i--)
             {
+                var body = this.ActiveWorld.BodyList[i];
+
                 // for now, we're just going to mark everything as neededing hibernation.
-                this.BodiesToHibernate.Add(body);
+                //this.BodiesToHibernate.Add(body);
+                this.HibernateBody(body);
             }
+
+            this.StopWatch.Start();
         }
 
         public void Update()
@@ -46,17 +51,33 @@ namespace tainicom.Aether.Physics2D.Dynamics.Hibernation
             if (this.HibernatedWorld.IsLocked)
                 throw new InvalidOperationException("The hibernated World is locked.");
 
+            var elapsedSeconds = this.StopWatch.ElapsedMilliseconds / 1000f;
+            const float SECONDS_PER_UPDATE = 0.1f;
+            bool isInfrequentUpdate = false;
+            if (elapsedSeconds > SECONDS_PER_UPDATE)
+            {
+                isInfrequentUpdate = true;
+                this.StopWatch.Restart();
+            }
+
             // Update all active area body AABBs
             this.UpdateActiveAreaBodyAABBs();
 
-            // split up large AAs
-            this.SplitSparseBodyActiveAreas();
+            if (isInfrequentUpdate)
+            {
+                // split up large AAs
+                this.SplitSparseBodyActiveAreas();
+            }
 
             // Refresh active area AABBs, expiration timers, etc.
             this.UpdateActiveAreasAABBs();
 
-            // Merge body AAs which are touching. This helps things like stacks and piles stay in sync and also helps perf.
-            this.MergeDenseBodyActiveAreas();
+            if (isInfrequentUpdate)
+            {
+
+                // Merge body AAs which are touching. This helps things like stacks and piles stay in sync and also helps perf.
+                this.MergeDenseBodyActiveAreas();
+            }
 
             // Handle expirations.
             this.RemoveExpiredActiveAreas();
@@ -71,9 +92,6 @@ namespace tainicom.Aether.Physics2D.Dynamics.Hibernation
             // Enact ramifications of status changes.
             // TODO: optimize this.
             this.ProcessActiveAreaBodyPositionChanges();
-
-            // Hibernate all flagged bodies.
-            this.HibernateBodies();
         }
 
         private void UpdateActiveAreaBodyAABBs()
@@ -148,11 +166,11 @@ namespace tainicom.Aether.Physics2D.Dynamics.Hibernation
                     
                     if( !isOverlappingAnotherBody)
                     {
-                        // we'll remove it from this body AA 
-                        bodyAA.AreaBodies.Remove(curBodyArea);
-
                         // create its own body AA
                         this.ActiveAreas.Add(new BodyActiveArea(curBodyArea.Body));
+
+                        // we'll remove it from this body AA 
+                        bodyAA.AreaBodies.Remove(curBodyArea);
                     }
 
                 }
@@ -176,18 +194,6 @@ namespace tainicom.Aether.Physics2D.Dynamics.Hibernation
             }
 
             return false;
-        }
-
-        private void HibernateBodies()
-        {
-            // hibernate all flagged bodies.
-            foreach (var body in this.BodiesToHibernate)
-            {
-                this.HibernateBody(body);
-            }
-
-            // clear the list
-            this.BodiesToHibernate.Clear();
         }
 
         private void ProcessActiveAreaBodyPositionChanges()
@@ -462,15 +468,18 @@ namespace tainicom.Aether.Physics2D.Dynamics.Hibernation
             activeArea.AreaBodies.Remove(areaBody);
 
             // if it's not in any other AA at this point, hibernate it.
-            var activeAreasContainingBody = this.ActiveAreas.Where(aa => 
-                aa != activeArea // is a different active area
-                && aa.AreaBodies.Select(aab => aab.Body).Contains(areaBody.Body)); // contains the body
+            //var activeAreasContainingBody = this.ActiveAreas.Where(aa => 
+            //    aa != activeArea // is a different active area
+            //    && aa.AreaBodies.Select(aab => aab.Body).Contains(areaBody.Body)); // contains the body
             
-            if (!activeAreasContainingBody.Any())
-            {
+            //if (!activeAreasContainingBody.Any())
+            //{
                 // no other active area has this body in it, so go ahead and hibernate the body
-                this.BodiesToHibernate.Add(areaBody.Body);
-            }
+                //this.BodiesToHibernate.Add(areaBody.Body);
+            //}
+            this.HibernateBody(areaBody.Body);
+
+
         }
 
         private void HibernateBody(Body body)
