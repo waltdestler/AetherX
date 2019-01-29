@@ -47,33 +47,105 @@ namespace tainicom.Aether.Physics2D.Dynamics.Hibernation
                 throw new InvalidOperationException("The hibernated World is locked.");
 
             // Update all active area body AABBs
+            // (all AAs)
             this.UpdateActiveAreaBodyAABBs();
 
             // split up large AAs
+            // (BodyAA only)
             this.SplitSparseBodyActiveAreas();
 
             // Refresh active area AABBs, expiration timers, etc.
+            // (all AAs)
             this.UpdateActiveAreasAABBs();
 
             // Merge body AAs which are touching. This helps things like stacks and piles stay in sync and also helps perf.
-            this.MergeDenseBodyActiveAreas();
+            // (BodyAA only)
+            //this.MergeDenseBodyActiveAreas();
 
             // Handle expirations.
-            this.RemoveExpiredActiveAreas();
+            // (BodyAA only)
+            //this.RemoveExpiredActiveAreas();
 
             // un-hibernate bodies ("wake")
+            // (all AAs)
             this.WakeBodiesInActiveAreas();
 
-            // Add new bodies and update positions.
-            // TODO: optimize this
-            this.UpdateActiveAreaBodies();
+            // Add bodies to any AA they overlap
+            // Because IAA are dynamic in size and position, we must always verify all relevant bodies are in them. (body AA should be merged in the "MergeDenseBodyActiveAreas" method.
+            // (IndependentAA only)
+            this.AddAwakeBodiesToIndependentActiveAreas();
+
+            // Create body AAs for any bodies protruding outside independentAA
+            this.AdjustBodyAAsForBodiesInIndependentAreas();
 
             // Enact ramifications of status changes.
             // TODO: optimize this.
-            this.ProcessActiveAreaBodyPositionChanges();
+            //this.ProcessActiveAreaBodyPositionChanges();
 
             // Hibernate all flagged bodies.
             this.HibernateBodies();
+        }
+
+        private void AdjustBodyAAsForBodiesInIndependentAreas()
+        {
+            var independentActiveAreas = this.ActiveAreas.Where(aa => aa.AreaType == ActiveAreaType.Independent).ToList();
+
+            // process all active areas
+            for (var i = 0; i < independentActiveAreas.Count; i++)
+            {
+                // get current active area
+                var independentActiveArea = independentActiveAreas[i];
+
+                // Find all bodies which collide with active area AABB.
+                //foreach (var areaBody in activeArea.AreaBodies) {
+                for (var areaBodyIndex = independentActiveArea.AreaBodies.Count - 1; areaBodyIndex >= 0; areaBodyIndex--)
+                {
+                    var areaBody = independentActiveArea.AreaBodies[areaBodyIndex];
+
+                    var isFullyContained = independentActiveArea.AABB.Contains(ref areaBody.AABB);
+
+                    if( !isFullyContained )
+                    {
+                        // determine if needs to create own AA. (non-static)
+                        var warrantsBodyActiveArea = areaBody.Body.BodyType != BodyType.Static; //&& body.Awake; //body.AngularVelocity != 0 || body.LinearVelocity.Length() > 0;
+
+                        if (warrantsBodyActiveArea)
+                        {
+                            // determine if has own AA
+                            //var bodyActiveArea = this.GetBodyActiveArea(areaBody.Body);
+
+                            var bodyActiveAreasContainingBody = 
+                                this.ActiveAreas.Where(aa => 
+                                    aa.AreaType == ActiveAreaType.BodyTracking
+                                    && aa.AreaBodies.Select(ab => ab.Body).Contains(areaBody.Body)
+                                    );
+
+                            if (bodyActiveAreasContainingBody.Count() == 0)
+                            {
+                                // create body AA
+                                this.ActiveAreas.Add(new BodyActiveArea(areaBody.Body));
+                            }
+                            else
+                            {
+                                foreach (var bodyActiveArea in bodyActiveAreasContainingBody)
+                                {
+                                    // renew the expiration timer on this body AA, so it doesn't really begin expiring until its not touching the independent AA
+                                    (bodyActiveArea as BodyActiveArea).RenewExpiration();
+                                }
+                            }
+                        }
+
+                        // if it's totally outside of the AA, then remove it.
+                        var isOverlapping = independentActiveArea.AABB.Overlaps(ref areaBody.AABB);
+                        var isTotallyOutside = !isOverlapping;
+                        if (isTotallyOutside)
+                        {
+                            // remove it!
+                            this.RemoveAreaBodyFromActiveArea(independentActiveArea, areaBody);
+                        }
+                    }
+                }
+            }
         }
 
         private void UpdateActiveAreaBodyAABBs()
@@ -149,14 +221,41 @@ namespace tainicom.Aether.Physics2D.Dynamics.Hibernation
                     if( !isOverlappingAnotherBody)
                     {
                         // we'll remove it from this body AA 
-                        bodyAA.AreaBodies.Remove(curBodyArea);
+                        bodyAA.AreaBodies.RemoveAt(i);//.Remove(curBodyArea);
 
                         // create its own body AA
                         this.ActiveAreas.Add(new BodyActiveArea(curBodyArea.Body));
-                    }
 
+                        var nonStaticBodyCount = bodyAA.AreaBodies.Count(ab => ab.Body.BodyType != BodyType.Static);
+                        if (nonStaticBodyCount == 0)
+                        {
+                            // there are no non-static bodies in the area, so we remove it.
+                            this.RemoveActiveArea(bodyAA);
+                        }
+                    }
                 }
             }
+        }
+
+        private void RemoveActiveArea(BaseActiveArea activeArea)
+        {
+            for (var i = activeArea.AreaBodies.Count - 1; i >= 0; i--)
+            {
+                var areaBody = activeArea.AreaBodies[i];
+                switch ( areaBody.Body.BodyType )
+                {
+                    case BodyType.Static:
+                        // okay, remove it.
+                        this.RemoveAreaBodyFromActiveArea(activeArea, areaBody);
+                        break;
+
+                    default:
+                        throw new InvalidOperationException("An active area is being removed which contains bodies which are not static.");
+                }
+            }
+            
+            // remove the active area
+            this.ActiveAreas.Remove(activeArea);
         }
 
         private bool BodyOverlapsOtherBodiesInActiveArea(BaseActiveArea activeArea, AreaBody areaBody)
@@ -190,186 +289,148 @@ namespace tainicom.Aether.Physics2D.Dynamics.Hibernation
             this.BodiesToHibernate.Clear();
         }
 
-        private void ProcessActiveAreaBodyPositionChanges()
-        {
+        //private void ProcessActiveAreaBodyPositionChanges()
+        //{
 
-            // process all active areas
-            var activeAreas = this.ActiveAreas;//.Where(aa => aa.AreaType == ActiveAreaType.Independent).ToList();
+        //    // process all active areas
+        //    var activeAreas = this.ActiveAreas;//.Where(aa => aa.AreaType == ActiveAreaType.Independent).ToList();
 
-            // process all active areas
-            for (var i = 0; i < activeAreas.Count; i++)
-            {
-                // get current active area
-                var activeArea = this.ActiveAreas[i];
+        //    // process all active areas
+        //    for (var i = 0; i < activeAreas.Count; i++)
+        //    {
+        //        // get current active area
+        //        var activeArea = this.ActiveAreas[i];
 
-                // Loop over current ActiveArea bodies to update their statuses.
-                for (var areaBodyIndex = activeArea.AreaBodies.Count - 1; areaBodyIndex >= 0; areaBodyIndex--)
-                {
-                    // get the body
-                    var areaBody = activeArea.AreaBodies[areaBodyIndex];
-                    var body = areaBody.Body;
+        //        // Loop over current ActiveArea bodies to update their statuses.
+        //        for (var areaBodyIndex = activeArea.AreaBodies.Count - 1; areaBodyIndex >= 0; areaBodyIndex--)
+        //        {
+        //            // get the body
+        //            var areaBody = activeArea.AreaBodies[areaBodyIndex];
+        //            var body = areaBody.Body;
 
-                    if (areaBody.PositionStatus == AreaBodyStatus.Invalid)
-                    {
-                        throw new InvalidProgramException("All active area bodies should have their position status set by this point.");
-                    }
+        //            if (areaBody.PositionStatus == AreaBodyStatus.Invalid)
+        //            {
+        //                throw new InvalidProgramException("All active area bodies should have their position status set by this point.");
+        //            }
 
-                    if (areaBody.PositionStatus == AreaBodyStatus.TotallyIn)
-                    {
+        //            if (areaBody.PositionStatus == AreaBodyStatus.TotallyIn)
+        //            {
 
-                        // this body is totally within this AA, so if there's a separate AA tracking this one specifically, 
-                        // it's not needed, as that would be redundant.
-                        // OPTIMIZATION IDEA: give body a ref to its own tracking AA. if !null when set, throw. super-easy look-up.
-                        var bodyAAs = this.ActiveAreas.Where(aa =>
-                            aa != activeArea // other AA is not this AA
-                            && aa.AreaType == ActiveAreaType.BodyTracking // other AA is a body tracking AA...
-                            && (aa as BodyActiveArea).TrackedBody == body // ...and it's tracking this body specifically
-                            ); //&& aa.Bodies.Select( aab => aab.Body ).Any( b => b == body ) ); // 
+        //                // this body is totally within this AA, so if there's a separate AA tracking this one specifically, 
+        //                // it's not needed, as that would be redundant.
+        //                // OPTIMIZATION IDEA: give body a ref to its own tracking AA. if !null when set, throw. super-easy look-up.
+        //                var bodyAAs = this.ActiveAreas.Where(aa =>
+        //                    aa != activeArea // other AA is not this AA
+        //                    && aa.AreaType == ActiveAreaType.BodyTracking // other AA is a body tracking AA...
+        //                    && (aa as BodyActiveArea).TrackedBody == body // ...and it's tracking this body specifically
+        //                    ); //&& aa.Bodies.Select( aab => aab.Body ).Any( b => b == body ) ); // 
 
-                        switch (bodyAAs.Count())
-                        {
-                            case 0:
-                                // no problem. no bodyAA to care about.
-                                break;
+        //                switch (bodyAAs.Count())
+        //                {
+        //                    case 0:
+        //                        // no problem. no bodyAA to care about.
+        //                        break;
 
-                            case 1:
-                                // destroy it! it is redundant.
-                                this.ActiveAreas.Remove(bodyAAs.First());
-                                break;
+        //                    case 1:
+        //                        // destroy it! it is redundant.
+        //                        this.ActiveAreas.Remove(bodyAAs.First());
+        //                        break;
 
-                            default:
-                                // this really shouldn't happen. it means there is more than one bodyAA for this body.
-                                throw new InvalidProgramException("There is more than one ActiveArea for this body. This should never happen. There is a bug elsewhere.");
-                        }
-                    }
+        //                    default:
+        //                        // this really shouldn't happen. it means there is more than one bodyAA for this body.
+        //                        throw new InvalidProgramException("There is more than one ActiveArea for this body. This should never happen. There is a bug elsewhere.");
+        //                }
+        //            }
 
-                    var statusHasChanged = areaBody.PriorStatus != areaBody.PositionStatus;
-                    if (statusHasChanged)
-                    {
-                        switch (areaBody.PositionStatus)
-                        {
-
-
-                            case AreaBodyStatus.PartiallyIn:
-                            case AreaBodyStatus.TotallyOut:
-
-                                // determine if needs to create own AA. (non-static and awake)
-                                var warrantsBodyActiveArea = body.BodyType != BodyType.Static; //&& body.Awake; //body.AngularVelocity != 0 || body.LinearVelocity.Length() > 0;
-
-                                if (warrantsBodyActiveArea)
-                                {
-
-                                    // determine if has own AA
-                                    var bodyActiveArea = this.GetBodyActiveArea(body);
-
-                                    if (bodyActiveArea == null)
-                                    {
-                                        // create body AA
-                                        this.ActiveAreas.Add(new BodyActiveArea(body));
-                                    }
-                                    else
-                                    {
-                                        if (activeArea is IndependentActiveArea)
-                                        {
-                                            // renew the expiration timer on this AA
-                                            (bodyActiveArea as BodyActiveArea).RenewExpiration();
-                                        }
-                                        else
-                                        {
-                                            // just ensure expiration isn't any shorter than this AA
-                                            (bodyActiveArea as BodyActiveArea).EnsureExpirationNoLessThan(activeArea as BodyActiveArea);
-                                        }
-                                    }
-                                }
-
-                                break;
-                        }
-
-                        if (areaBody.PositionStatus == AreaBodyStatus.TotallyOut)
-                        {
-                            this.RemoveAreaBody(activeArea, areaBody);
-                        }
-                    }
+        //            var statusHasChanged = areaBody.PriorStatus != areaBody.PositionStatus;
+        //            if (statusHasChanged)
+        //            {
+        //                switch (areaBody.PositionStatus)
+        //                {
 
 
-                }
-            }
-        }
+        //                    case AreaBodyStatus.PartiallyIn:
+        //                    case AreaBodyStatus.TotallyOut:
 
-        private BodyActiveArea GetBodyActiveArea(Body body)
-        {
-            return this.ActiveAreas.FirstOrDefault(aa => aa.AreaType == ActiveAreaType.BodyTracking && (aa as BodyActiveArea).TrackedBody == body) as BodyActiveArea;
-        }
+        //                        // determine if needs to create own AA. (non-static and awake)
+        //                        var warrantsBodyActiveArea = body.BodyType != BodyType.Static; //&& body.Awake; //body.AngularVelocity != 0 || body.LinearVelocity.Length() > 0;
+
+        //                        if (warrantsBodyActiveArea)
+        //                        {
+
+        //                            // determine if has own AA
+        //                            var bodyActiveArea = this.GetBodyActiveArea(body);
+
+        //                            if (bodyActiveArea == null)
+        //                            {
+        //                                // create body AA
+        //                                this.ActiveAreas.Add(new BodyActiveArea(body));
+        //                            }
+        //                            else
+        //                            {
+        //                                if (activeArea is IndependentActiveArea)
+        //                                {
+        //                                    // renew the expiration timer on this AA
+        //                                    (bodyActiveArea as BodyActiveArea).RenewExpiration();
+        //                                }
+        //                                else
+        //                                {
+        //                                    // just ensure expiration isn't any shorter than this AA
+        //                                    (bodyActiveArea as BodyActiveArea).EnsureExpirationNoLessThan(activeArea as BodyActiveArea);
+        //                                }
+        //                            }
+        //                        }
+
+        //                        break;
+        //                }
+
+        //                if (areaBody.PositionStatus == AreaBodyStatus.TotallyOut)
+        //                {
+        //                    this.RemoveAreacrgl.f.Body(activeArea, areaBody);
+        //                }
+        //            }
+
+
+        //        }
+        //    }
+        //}
+
+        //private BodyActiveArea GetBodyActiveArea(Body body)
+        //{
+        //    return this.ActiveAreas.FirstOrDefault(aa => aa.AreaType == ActiveAreaType.BodyTracking && (aa as BodyActiveArea).AreaBodies.Select(ab => ab.Body).Contains(body));
+        //}
 
         /// <summary>
         /// Adds colliding bodies to active areas and updates position statuses for all bodies within the active area.
         /// </summary>
-        private void UpdateActiveAreaBodies()
+        private void AddAwakeBodiesToIndependentActiveAreas()
         {
-            var activeAreas = this.ActiveAreas;//.Where(aa => aa.AreaType == ActiveAreaType.Independent).ToList();
+            var independentActiveAreas = this.ActiveAreas.Where(aa => aa.AreaType == ActiveAreaType.Independent).ToList();
 
             // process all active areas
-            for (var i = 0; i < activeAreas.Count; i++)
+            for (var i = 0; i < independentActiveAreas.Count; i++)
             {
                 // get current active area
-                var activeArea = this.ActiveAreas[i];
+                var independentActiveArea = independentActiveAreas[i];
 
-                // Find all bodies which collide with active area AABB.
-                var bodiesInActiveArea = this.ActiveWorld.FindBodiesInAABB(ref activeArea.AABB);
+                // find all bodies which collide with active area AABB.
+                var bodiesInActiveArea = this.ActiveWorld.FindBodiesInAABB(ref independentActiveArea.AABB);
 
                 // add all bodies which weren't already in AA
-                var activeAreaBodies = activeArea.AreaBodies.Select(b => b.Body).ToList();
+                var independentActiveAreaBodies = independentActiveArea.AreaBodies.Select(b => b.Body).ToList();
                 for (var biaaIndex = bodiesInActiveArea.Count - 1; biaaIndex >= 0; biaaIndex--)
                 {
                     // get body
                     var body = bodiesInActiveArea[biaaIndex];
 
                     // determine if this body is already in the AA
-                    var isAlreadyInActiveArea = activeAreaBodies.Contains(body);
+                    var isAlreadyInActiveArea = independentActiveAreaBodies.Contains(body);
 
                     if (!isAlreadyInActiveArea)
                     {
                         // didn't find it. add it.
-                        activeArea.AreaBodies.Add(new AreaBody(body));
+                        independentActiveArea.AreaBodies.Add(new AreaBody(body));
                     }
-                }
-
-                // Loop over current ActiveArea bodies to update their statuses.
-                for (var areaBodyIndex = activeArea.AreaBodies.Count - 1; areaBodyIndex >= 0; areaBodyIndex--)
-                {
-                    // get the body
-                    var areaBody = activeArea.AreaBodies[areaBodyIndex];
-                    //ar body = areaBody.Body;
-
-                    // store the old status
-                    areaBody.PriorStatus = areaBody.PositionStatus;
-
-                    // determine whether this body is still touching the AA's AABB
-                    var isTouchingActiveAreaAABB = bodiesInActiveArea.Contains(areaBody.Body);
-
-                    if (!isTouchingActiveAreaAABB)
-                    {
-                        // it's not touching the AABB at all, so it's totally out.
-                        areaBody.PositionStatus = AreaBodyStatus.TotallyOut;
-                    }
-                    else
-                    {
-                        // at this point, we know it's touching. so it's just a matter of whether it's totally inside or partially inside.
-                        // contains() returns 'true' only if the AABB is entirely within
-                        var isTotallyWithinActiveArea = activeArea.AABB.Contains(ref areaBody.AABB);
-
-                        if (isTotallyWithinActiveArea)
-                        {
-                            // it's totally inside the ActiveArea AABB.
-                            areaBody.PositionStatus = AreaBodyStatus.TotallyIn;
-                        }
-                        else
-                        {
-                            // at this point, we know it must be partially within.
-                            areaBody.PositionStatus = AreaBodyStatus.PartiallyIn;
-                        }
-                    }
-                    //}
                 }
             }
         }
@@ -386,10 +447,10 @@ namespace tainicom.Aether.Physics2D.Dynamics.Hibernation
                 foreach (var hibernatedBody in hibernatedBodiesInActiveArea)
                 {
                     this.WakeBody(hibernatedBody);
-                }
 
-                // NOTE: in this case, we don't actually store the bodies in the ActiveArea. anything which 
-                //       collides is instantly woken, and there's no need to store a history.
+                    // add it to this AA
+                    activeArea.AreaBodies.Add(new AreaBody(hibernatedBody));
+                }
             }
         }
 
@@ -437,7 +498,7 @@ namespace tainicom.Aether.Physics2D.Dynamics.Hibernation
             {
                 var areaBody = activeArea.AreaBodies[bodyIndex];
 
-                this.RemoveAreaBody(activeArea, areaBody);
+                this.RemoveAreaBodyFromActiveArea(activeArea, areaBody);
             }
 
             // remove this active area...
@@ -456,7 +517,7 @@ namespace tainicom.Aether.Physics2D.Dynamics.Hibernation
             }
         }
 
-        private void RemoveAreaBody(BaseActiveArea activeArea, AreaBody areaBody)
+        private void RemoveAreaBodyFromActiveArea(BaseActiveArea activeArea, AreaBody areaBody)
         {
             // remove it from this AA.
             activeArea.AreaBodies.Remove(areaBody);
@@ -482,7 +543,9 @@ namespace tainicom.Aether.Physics2D.Dynamics.Hibernation
             // add to hibernated world
             this.HibernatedWorld.Add(body);
         }
-
+        /// <summary>
+        /// This is really only called when turning off hibernation, as the woken bodies aren't added to any AA and are essentially "orphaned."
+        /// </summary>
         internal void ReviveAll()
         {
             // wake them

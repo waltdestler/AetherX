@@ -62,7 +62,7 @@ namespace tainicom.Aether.Physics2D.Dynamics.Hibernation
             //const float AABB_MARGIN = Settings.BodyActiveAreaMargin;
             //this.AABB = new AABB(this.AABB.Center, this.AABB.Width + AABB_MARGIN, this.AABB.Height + AABB_MARGIN);
 
-            this.AABB = BaseActiveArea.CalculateBodyAABB(this.TrackedBody, BodyAABBMargin);
+            //this.AABB = BaseActiveArea.CalculateBodyAABB(this.TrackedBody, BodyAABBMargin);
 
             // add all other additional AABBs
             //for( var i = 0; i <this.AdditionalAABBs.Count; i++)
@@ -72,6 +72,7 @@ namespace tainicom.Aether.Physics2D.Dynamics.Hibernation
             //}
 
             // add all other body AABBs
+            var isAABBSet = false;
             for (var i = 0; i < this.AreaBodies.Count; i++)
             {
                 var areaBody = this.AreaBodies[i];
@@ -81,7 +82,15 @@ namespace tainicom.Aether.Physics2D.Dynamics.Hibernation
                     continue;
                 }
 
-                this.AABB.Combine(ref areaBody.AABB);
+                if( isAABBSet )
+                {
+                    this.AABB.Combine(ref areaBody.AABB);
+                }
+                else
+                {
+                    this.AABB = areaBody.AABB;
+                    isAABBSet = true;
+                }                
             }
 
             // update whether is expired

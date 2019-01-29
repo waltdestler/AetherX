@@ -442,12 +442,14 @@ namespace tainicom.Aether.Physics2D.Diagnostics
                     hibernatedFixtureCount += hibernatedWorld.BodyList[i].FixtureList.Count;
                 }
 
-                _debugPanelHibObjects.Append("- Bodies:   ").AppendNumber(hibernatedWorld.BodyList.Count).AppendLine();
-                _debugPanelHibObjects.Append("- Fixtures: ").AppendNumber(hibernatedFixtureCount).AppendLine();
-                _debugPanelHibObjects.Append("- Contacts: ").AppendNumber(hibernatedWorld.ContactCount).AppendLine();
-                _debugPanelHibObjects.Append("- Proxies:  ").AppendNumber(hibernatedWorld.ProxyCount).AppendLine();
-                _debugPanelHibObjects.Append("- Joints:   ").AppendNumber(hibernatedWorld.JointList.Count).AppendLine();
-                _debugPanelHibObjects.Append("- Controllers: ").AppendNumber(hibernatedWorld.ControllerList.Count).AppendLine();
+                _debugPanelHibObjects.Append("- Bodies:       " +
+                    "").AppendNumber(hibernatedWorld.BodyList.Count).AppendLine();
+                _debugPanelHibObjects.Append("- Fixtures:     ").AppendNumber(hibernatedFixtureCount).AppendLine();
+                _debugPanelHibObjects.Append("- Contacts:     ").AppendNumber(hibernatedWorld.ContactCount).AppendLine();
+                _debugPanelHibObjects.Append("- Proxies:      ").AppendNumber(hibernatedWorld.ProxyCount).AppendLine();
+                _debugPanelHibObjects.Append("- Joints:       ").AppendNumber(hibernatedWorld.JointList.Count).AppendLine();
+                _debugPanelHibObjects.Append("- Controllers:  ").AppendNumber(hibernatedWorld.ControllerList.Count).AppendLine();
+                _debugPanelHibObjects.Append("- Active Areas: ").AppendNumber(this.World.HibernationManager.ActiveAreas.Count).AppendLine();
             }
             else
             {

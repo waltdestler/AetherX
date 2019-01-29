@@ -91,6 +91,14 @@ namespace tainicom.Aether.Physics2D.Samples.Testbed.Framework
                 AABB newActiveArea = new AABB(this.MouseWorldPosition, this.IndependentActiveAreaRadius * 2, this.IndependentActiveAreaRadius * 2);
                 this.DebugView.DrawAABB(ref newActiveArea, independentActiveAreaColor);
 
+                foreach (var activeArea in this.World.HibernationManager.ActiveAreas)
+                {
+                    // render number of bodies within each active area
+                    Vector2 position = new Vector2(activeArea.AABB.LowerBound.X, activeArea.AABB.UpperBound.Y);
+                    position = GameInstance.ConvertWorldToScreen(position);
+                    DebugView.DrawString((int)position.X, (int)position.Y - 5, "Contains " + activeArea.AreaBodies.Count().ToString());
+                }
+
                 this.DebugView.EndCustomDraw();
             }
 

@@ -37,7 +37,7 @@ namespace tainicom.Aether.Physics2D.Dynamics.Hibernation
 
         internal static AABB CalculateBodyAABB(Body body, float margin = Settings.BodyActiveAreaMargin)
         {
-            // get body hibernation AABB
+            // get body AABB
             AABB bodyAabb;
             body.World.ContactManager.BroadPhase.GetFatAABB(body.BroadphaseProxyId, out bodyAabb);
 

@@ -16,6 +16,7 @@ namespace tainicom.Aether.Physics2D.Dynamics.Hibernation
         public AreaBody(Body body)
         {
             this.Body = body;
+            this.UpdateAABB();
         }
 
         public void UpdateAABB()
