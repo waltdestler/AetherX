@@ -63,8 +63,8 @@ namespace tainicom.Aether.Physics2D.Dynamics.Hibernation
             this.MergeDenseBodyActiveAreas();
 
             // Handle expirations.
-            // (BodyAA only)
-            //this.RemoveExpiredActiveAreas();
+            // (all AAs)
+            this.RemoveExpiredActiveAreas();
 
             // un-hibernate bodies ("wake")
             // (all AAs)
