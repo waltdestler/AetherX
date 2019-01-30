@@ -325,6 +325,12 @@ namespace tainicom.Aether.Physics2D.Diagnostics
                         if (activeArea.AreaType == ActiveAreaType.Independent)
                         {
                             this.DrawAABB(ref activeArea.AABB, independentActiveAreaColor);
+
+                            // draw connections to all bodies
+                            foreach( var areaBody in activeArea.AreaBodies )
+                            {
+                                this.DrawSegment(activeArea.AABB.Center, areaBody.AABB.Center, independentActiveAreaColor);
+                            }
                         }
                         else
                         {

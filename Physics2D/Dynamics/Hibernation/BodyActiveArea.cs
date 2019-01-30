@@ -9,7 +9,7 @@ namespace tainicom.Aether.Physics2D.Dynamics.Hibernation
 {
     public class BodyActiveArea : BaseActiveArea
     {
-        internal Body TrackedBody { get; set; }
+        //internal Body TrackedBody { get; set; }
 
         /// <summary>
         /// Creation time in UTC and ticks.
@@ -25,14 +25,14 @@ namespace tainicom.Aether.Physics2D.Dynamics.Hibernation
             }
         }
 
-        internal BodyActiveArea(Body trackedBody) : base()
+        internal BodyActiveArea(Body body) : base()
         {
             // store the body to track
-            this.TrackedBody = trackedBody;
+            //this.TrackedBody = trackedBody;
 
             // automatically add it to the list of bodies as "totally in"
-            var areaBody = new AreaBody(trackedBody);
-            areaBody.PositionStatus = AreaBodyStatus.TotallyIn;
+            var areaBody = new AreaBody(body);
+            //areaBody.PositionStatus = AreaBodyStatus.TotallyIn;
             this.AreaBodies.Add(areaBody);
             
             // set type
@@ -42,18 +42,17 @@ namespace tainicom.Aether.Physics2D.Dynamics.Hibernation
             this.RenewExpiration();
         }
 
-        public List<AABB> AdditionalAABBs = new List<AABB>();
-        public float BodyAABBMargin = Settings.BodyActiveAreaMargin;
+        //public List<AABB> AdditionalAABBs = new List<AABB>();
+        //public float BodyAABBMargin = Settings.BodyActiveAreaMargin;
 
         internal override void UpdateAABB()
         {
             //this.Center();
 
-            if (this.TrackedBody != null)
-            {
-                // simply center on the body.
-                this.Position = this.TrackedBody.Position;
-            }
+            var firstBody = this.AreaBodies[0].Body;
+                
+            // simply center on the body.
+            this.Position = firstBody.Position;
 
             // update AABB to body's AABB
             //this.TrackedBody.World.ContactManager.BroadPhase.GetFatAABB(this.TrackedBody.BroadphaseProxyId, out this.AABB);

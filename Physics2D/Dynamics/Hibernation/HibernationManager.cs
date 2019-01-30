@@ -78,12 +78,57 @@ namespace tainicom.Aether.Physics2D.Dynamics.Hibernation
             // Create body AAs for any bodies protruding outside independentAA
             this.AdjustBodyAAsForBodiesInIndependentAreas();
 
+            this.RemoveBodyAAFullyWithinIndependentAreas();
+
             // Enact ramifications of status changes.
             // TODO: optimize this.
             //this.ProcessActiveAreaBodyPositionChanges();
 
             // Hibernate all flagged bodies.
             this.HibernateBodies();
+        }
+
+        private void RemoveBodyAAFullyWithinIndependentAreas()
+        {
+            var independentActiveAreas = this.ActiveAreas.Where(aa => aa.AreaType == ActiveAreaType.Independent).ToList();
+
+            // process all independent active areas
+            for (var independentActiveAreaIndex = 0; independentActiveAreaIndex < independentActiveAreas.Count; independentActiveAreaIndex++)
+            {
+                // get current independent active area
+                var independentActiveArea = independentActiveAreas[independentActiveAreaIndex];
+
+                var bodyActiveAreas = this.ActiveAreas.Where(aa => aa.AreaType == ActiveAreaType.BodyTracking).ToList();
+                for (var bodyActiveAreaIndex = bodyActiveAreas.Count - 1; bodyActiveAreaIndex >= 0; bodyActiveAreaIndex--)
+                {
+                    // get current body active area
+                    var bodyActiveArea = bodyActiveAreas[bodyActiveAreaIndex];
+
+                    var bodyAAisEntirelyWithinIndependentAA = independentActiveArea.AABB.Contains(ref bodyActiveArea.AABB);
+                    if( bodyAAisEntirelyWithinIndependentAA )
+                    {
+                        // add all bodies to this independent AA
+                        this.MoveAreaBodies(bodyActiveArea, independentActiveArea);
+
+                        // remove it...
+                        this.RemoveActiveArea(bodyActiveArea);
+                    }
+                }
+            }
+        }
+
+        private void MoveAreaBodies(BaseActiveArea fromActiveArea, BaseActiveArea toActiveArea)
+        {
+            var fromBodies = fromActiveArea.AreaBodies.Select(ab => ab.Body);
+            var toBodies = toActiveArea.AreaBodies.Select(ab => ab.Body);
+            foreach (var fromBody in fromBodies)
+            {
+                if (!toBodies.Contains(fromBody))
+                {
+                    toActiveArea.AreaBodies.Add(new AreaBody(fromBody));
+                }
+            }
+            fromActiveArea.AreaBodies.Clear();
         }
 
         private void AdjustBodyAAsForBodiesInIndependentAreas()
