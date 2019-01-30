@@ -34,7 +34,9 @@ namespace tainicom.Aether.Physics2D.Dynamics.Hibernation
             var areaBody = new AreaBody(body);
             //areaBody.PositionStatus = AreaBodyStatus.TotallyIn;
             this.AreaBodies.Add(areaBody);
-            
+
+            this.UpdateAABB();
+                
             // set type
             this.AreaType = ActiveAreaType.BodyTracking;
 

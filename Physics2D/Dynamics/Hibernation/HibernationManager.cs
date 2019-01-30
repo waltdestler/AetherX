@@ -60,7 +60,7 @@ namespace tainicom.Aether.Physics2D.Dynamics.Hibernation
 
             // Merge body AAs which are touching. This helps things like stacks and piles stay in sync and also helps perf.
             // (BodyAA only)
-            //this.MergeDenseBodyActiveAreas();
+            this.MergeDenseBodyActiveAreas();
 
             // Handle expirations.
             // (BodyAA only)
@@ -78,7 +78,7 @@ namespace tainicom.Aether.Physics2D.Dynamics.Hibernation
             // Create body AAs for any bodies protruding outside independentAA
             this.AdjustBodyAAsForBodiesInIndependentAreas();
 
-            //this.RemoveBodyAAFullyWithinIndependentAreas();
+            this.RemoveBodyAAFullyWithinIndependentAreas();
 
             // Hibernate all flagged bodies.
             this.HibernateBodies();
@@ -272,6 +272,9 @@ namespace tainicom.Aether.Physics2D.Dynamics.Hibernation
                         {
                             // there are no non-static bodies in the area, so we remove it.
                             this.RemoveActiveArea(bodyAA);
+
+                            // now that we've decided to totally remove this AA, let's just move onto the next.
+                            break;
                         }
                     }
                 }
