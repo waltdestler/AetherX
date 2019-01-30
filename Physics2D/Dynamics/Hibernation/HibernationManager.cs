@@ -78,11 +78,7 @@ namespace tainicom.Aether.Physics2D.Dynamics.Hibernation
             // Create body AAs for any bodies protruding outside independentAA
             this.AdjustBodyAAsForBodiesInIndependentAreas();
 
-            this.RemoveBodyAAFullyWithinIndependentAreas();
-
-            // Enact ramifications of status changes.
-            // TODO: optimize this.
-            //this.ProcessActiveAreaBodyPositionChanges();
+            //this.RemoveBodyAAFullyWithinIndependentAreas();
 
             // Hibernate all flagged bodies.
             this.HibernateBodies();
@@ -149,8 +145,8 @@ namespace tainicom.Aether.Physics2D.Dynamics.Hibernation
 
                     var isFullyContained = independentActiveArea.AABB.Contains(ref areaBody.AABB);
 
-                    if( !isFullyContained )
-                    {
+                    if (!isFullyContained)
+                    { 
                         // determine if needs to create own AA. (non-static)
                         var warrantsBodyActiveArea = areaBody.Body.BodyType != BodyType.Static; //&& body.Awake; //body.AngularVelocity != 0 || body.LinearVelocity.Length() > 0;
 
@@ -568,11 +564,11 @@ namespace tainicom.Aether.Physics2D.Dynamics.Hibernation
             activeArea.AreaBodies.Remove(areaBody);
 
             // if it's not in any other AA at this point, hibernate it.
-            var activeAreasContainingBody = this.ActiveAreas.Where(aa => 
+            var isActiveAreasContainingBody = this.ActiveAreas.Any(aa => 
                 aa != activeArea // is a different active area
                 && aa.AreaBodies.Select(aab => aab.Body).Contains(areaBody.Body)); // contains the body
             
-            if (!activeAreasContainingBody.Any())
+            if (!isActiveAreasContainingBody)
             {
                 // no other active area has this body in it, so go ahead and hibernate the body
                 this.BodiesToHibernate.Add(areaBody.Body);
