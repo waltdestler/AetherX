@@ -263,7 +263,7 @@ namespace tainicom.Aether.Physics2D.Diagnostics
                         }
                     }
 
-
+                    //this.DrawString()
                 }
             }
 
@@ -770,23 +770,30 @@ namespace tainicom.Aether.Physics2D.Diagnostics
             DrawSolidPolygon(verts, 4, color, true);
         }
 
-        public void DrawString(int x, int y, string text)
+        public void DrawString(int x, int y, string text, bool isWorldPosition = false)
         {
-            DrawString(new Vector2(x, y), text);
+            DrawString(new Vector2(x, y), text, isWorldPosition);
         }
 
-        public void DrawString(Vector2 position, string text)
+        public void DrawString(Vector2 position, string text, bool isWorldPosition = false)
         {
-            _stringData.Add(new StringData(position, text, TextColor));
+            DrawString(position, new StringBuilder(text), isWorldPosition);
         }
 
-        public void DrawString(int x, int y, StringBuilder text)
+        public void DrawString(int x, int y, StringBuilder text, bool isWorldPosition = false)
         {
-            DrawString(new Vector2(x, y), text);
+            DrawString(new Vector2(x, y), text, isWorldPosition);
         }
 
-        public void DrawString(Vector2 position, StringBuilder text)
+        public void DrawString(Vector2 position, StringBuilder text, bool isWorldPosition = false)
         {
+            if(isWorldPosition)
+            {
+                // convert it to screen
+                // NOTE: GameInstance doesn't exist... inject method?
+                //position = GameInstance.ConvertWorldToScreen(position);
+            }
+
             _stringData.Add(new StringData(position, text, TextColor));
         }
 

@@ -21,6 +21,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Physics2DImporters.WINDOWS.
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HelloWorld.WINDOWS.MG", "Samples\HelloWorld\HelloWorld.WINDOWS.MG.csproj", "{F2DDED87-5B5C-4E2C-A675-30D72DEF897E}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Aether.Physics2D.Tests", "Aether.Physics2D.Tests\Aether.Physics2D.Tests.csproj", "{83A440E3-9D82-48E6-B9AC-26D60D6CB639}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -51,6 +53,10 @@ Global
 		{F2DDED87-5B5C-4E2C-A675-30D72DEF897E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F2DDED87-5B5C-4E2C-A675-30D72DEF897E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F2DDED87-5B5C-4E2C-A675-30D72DEF897E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{83A440E3-9D82-48E6-B9AC-26D60D6CB639}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{83A440E3-9D82-48E6-B9AC-26D60D6CB639}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{83A440E3-9D82-48E6-B9AC-26D60D6CB639}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{83A440E3-9D82-48E6-B9AC-26D60D6CB639}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -61,6 +67,7 @@ Global
 		{E4BBD53B-8677-4C90-9CA2-9B8FC186E8FD} = {95CC7850-C716-48DC-84EC-4735CDABF818}
 		{14B7BD4A-BD70-4564-BD11-8F0036BA20E7} = {647EE16B-DEB6-4BB0-9383-9F9BF714BEB1}
 		{F2DDED87-5B5C-4E2C-A675-30D72DEF897E} = {95CC7850-C716-48DC-84EC-4735CDABF818}
+		{83A440E3-9D82-48E6-B9AC-26D60D6CB639} = {95CC7850-C716-48DC-84EC-4735CDABF818}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {08D82B96-EB68-4CC9-97CD-141AD08AD4E5}

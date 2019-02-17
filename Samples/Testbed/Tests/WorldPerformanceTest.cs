@@ -1,5 +1,6 @@
 ﻿
 
+using Aether.Physics2D.Tests;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
 using System;
@@ -53,7 +54,7 @@ namespace tainicom.Aether.Physics2D.Samples.Testbed.Tests
         private bool EnableCoordinateRendering { get; set; }
 
         private float WorldSideSize { get; set; }
-        private float WorldRadius { get { return this.WorldSideSize / 2f; } }
+        //private float WorldRadius { get { return this.WorldSideSize / 2f; } }
         private BodyStructureType BodyStructureType = BodyStructureType.TwelveFixtureStructure;
 
         // NOTE: This should always be greater than the biggest test body, otherwise things 
@@ -70,24 +71,23 @@ namespace tainicom.Aether.Physics2D.Samples.Testbed.Tests
             this.MetersPerBody = this.MetersPerBodyOptions[Keys.X];
         }
 
+
+
         public override void Initialize()
         {
-            this.World = new World();
+            this.World = WorldPerformanceTestSetup.CreateWorld(this.WorldSideSize); //new World();
             //this.World.HibernationEnabled = true;
 
             // enable multithreading
-            this.World.ContactManager.VelocityConstraintsMultithreadThreshold = 256;
-            this.World.ContactManager.PositionConstraintsMultithreadThreshold = 256;
-            this.World.ContactManager.CollideMultithreadThreshold = 256;
+            //this.World.ContactManager.VelocityConstraintsMultithreadThreshold = 256;
+            //this.World.ContactManager.PositionConstraintsMultithreadThreshold = 256;
+            //this.World.ContactManager.CollideMultithreadThreshold = 256;
 
-            this.World.Gravity = Vector2.Zero;
+            //this.World.Gravity = Vector2.Zero;
 
-            this.CreateBounds();
+            //this.CreateBounds();
 
-            this.CreateBodies();
-
-            this.World.HibernationEnabled = true;
-
+            
             // sets up debug drawing
             base.Initialize();
 
@@ -99,74 +99,6 @@ namespace tainicom.Aether.Physics2D.Samples.Testbed.Tests
 
             // set zoom to show a meaningful part of the world
             //this.GameInstance.ViewZoom = 0.09f;
-        }
-
-        private void CreateBodies()
-        {
-            // load the game world
-            var tempWorld = new World();
-            RubeLoader.Load("data/testbodies.json", tempWorld);
-
-            // settings
-            const float MAX_LINEAR_VELOCITY = 20.0f;
-            const float MAX_ANGULAR_VELOCITY = 1.5F;
-
-            // add the specific body
-            //const int COMPLEX_BODY_INDEX = 2;
-            //const int C_BODY_INDEX = 1;
-            //const int BOX_BODY_INDEX = 0;
-
-            var selectedBodyIndex = (int)this.BodyStructureType; //BOX_BODY_INDEX;
-
-            for (var x = MetersPerBody; x <= WorldSideSize - MetersPerBody; x += MetersPerBody)
-            {
-                for (var y = MetersPerBody; y <= WorldSideSize - MetersPerBody; y += MetersPerBody)
-                {
-                    var bodyDef = tempWorld.BodyList[selectedBodyIndex];
-                    var body = bodyDef.DeepClone(this.World);
-
-                    body.Position = new Vector2(x - WorldRadius, y - WorldRadius);
-                    body.LinearVelocity = RandomGenerator.Vector2(MAX_LINEAR_VELOCITY);
-                    body.AngularVelocity = RandomGenerator.Float(-MAX_ANGULAR_VELOCITY, MAX_ANGULAR_VELOCITY);
-                }
-            }
-        }
-
-        private void CreateBounds() { 
-            // create ring of edges
-            var edgeVertices = new List<Vector2>();
-            const float EDGE_SIZE = 10f;
-            var edgesPerSide = (int)Math.Ceiling(WorldSideSize / EDGE_SIZE);
-            var edgeXOffset = (edgesPerSide * EDGE_SIZE) / -2.0f;
-            var edgeYOffset = edgeXOffset;
-            for ( var i = 0; i < edgesPerSide; i++)
-            {
-                var horz1 = new Vector2(i * EDGE_SIZE + edgeXOffset, edgeYOffset);
-                var horz2 = new Vector2((i + 1) * EDGE_SIZE + edgeXOffset, edgeYOffset);
-
-                // create a body for the TOP edge
-                var topBody = this.World.CreateBody(Vector2.Zero, 0, BodyType.Static);
-                topBody.CreateFixture(new EdgeShape(horz1, horz2));
-
-                // create a body for the BOTTOM edge
-                var bottomBody = this.World.CreateBody(Vector2.Zero, 0, BodyType.Static);
-                var bottomOffset = new Vector2(0, WorldSideSize);
-                bottomBody.CreateFixture(new EdgeShape(horz1 + bottomOffset, horz2 + bottomOffset));
-
-
-                var vert1 = new Vector2(edgeXOffset, i * EDGE_SIZE + edgeYOffset);
-                var vert2 = new Vector2(edgeXOffset, (i + 1) * EDGE_SIZE + edgeYOffset);
-
-                // create a body for the LEFT edge
-                var leftBody = this.World.CreateBody(Vector2.Zero, 0, BodyType.Static);
-                leftBody.CreateFixture(new EdgeShape(vert1, vert2));
-
-                // create a body for the RIGHT edge
-                var rightBody = this.World.CreateBody(Vector2.Zero, 0, BodyType.Static);
-                var rightOffset = new Vector2(WorldSideSize, 0);
-                rightBody.CreateFixture(new EdgeShape(vert1 + rightOffset, vert2 + rightOffset));
-
-            };
         }
 
         private bool IsControlPanelRenderEnabled { get; set; }
@@ -408,9 +340,5 @@ namespace tainicom.Aether.Physics2D.Samples.Testbed.Tests
         }
     }
 
-    public enum BodyStructureType
-    {
-        SingleFixtureBox = 0,
-        TwelveFixtureStructure = 2
-    }
+
 }

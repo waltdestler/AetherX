@@ -102,6 +102,13 @@ namespace tainicom.Aether.Physics2D.Samples.Testbed.Framework
                 this.DebugView.EndCustomDraw();
             }
 
+            foreach (var body in this.World.BodyList)
+            {
+                // render body ID
+                var position = GameInstance.ConvertWorldToScreen(body.Position);
+                DebugView.DrawString((int)position.X - 5, (int)position.Y - 5, "Id "+body.Id.ToString());
+            }
+
             DebugView.RenderDebugData(ref projection, ref view);
         }
 

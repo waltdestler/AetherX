@@ -17,14 +17,17 @@ namespace tainicom.Aether.Physics2D.Dynamics.Hibernation
 
         // TODO: only merge or spit every... 10th second?
 
-        public HibernationManager(World world)
+        public HibernationManager(World activeWorld)
         {
             // store reference to active world
-            this.ActiveWorld = world;
+            this.ActiveWorld = activeWorld;
 
             // create a new world to store hibernated bodies
             // TODO: set properties to match active world? does it matter, since we're not stepping?
             this.HibernatedWorld = new World();
+
+            // disable ID autosetting, as these should be set by the active world
+            this.HibernatedWorld.AutoAssignMissingBodyIds = false;
             
             // do an initial game-world pass to hibernate all bodies
             // going forward, all active bodies will be gauranteed in be in an AA, so this won't be neccessary.

@@ -48,6 +48,7 @@ using tainicom.Aether.Physics2D.Dynamics.Contacts;
 using tainicom.Aether.Physics2D.Dynamics.Hibernation;
 using tainicom.Aether.Physics2D.Dynamics.Joints;
 using tainicom.Aether.Physics2D.Fluids;
+using System.Linq;
 
 namespace tainicom.Aether.Physics2D.Dynamics
 {
@@ -94,6 +95,17 @@ namespace tainicom.Aether.Physics2D.Dynamics
                 }
             }
         }
+
+        #endregion
+
+        #region Body Identifiers
+
+        private int NextBodyId = 1;
+
+        /// <summary>
+        /// If a body is added and is missing an ID and this is false, then an exception will be thrown.
+        /// </summary>
+        public bool AutoAssignMissingBodyIds = true;
 
         #endregion
 
@@ -1043,6 +1055,34 @@ namespace tainicom.Aether.Physics2D.Dynamics
                 throw new ArgumentException("You are adding the same body more than once.", "body");
             if (body._world != null)
                 throw new ArgumentException("body belongs to another world.", "body");
+
+            #region Body Identifier 
+
+            if (body.Id == 0)
+            {
+                if (this.AutoAssignMissingBodyIds)
+                {
+                    // assign the next available ID
+                    body.Id = this.NextBodyId;
+
+                    // increment ID
+                    this.NextBodyId++;
+                }
+                else
+                {
+                    throw new ArgumentException("Body has no ID assigned and auto assigning is disabled.");
+                }
+            }
+
+            // Validate Body Identifier 
+            // TODO: replace with body dictionary.
+            if (this.BodyList.Any(b => b.Id == body.Id))
+            {
+                // there is already a body with this ID, so it's not unique.  
+                throw new ArgumentException("Body ID is not unique.");
+            }
+
+            #endregion
 
 #if USE_AWAKE_BODY_SET
                     Debug.Assert(!body.IsDisposed);

@@ -45,6 +45,8 @@ namespace tainicom.Aether.Physics2D.Dynamics
 {
     public partial class Body
     {
+        public int Id;
+
         private float _angularDamping;
         private BodyType _bodyType;
         private float _inertia;
