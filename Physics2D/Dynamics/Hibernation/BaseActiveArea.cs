@@ -4,21 +4,23 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using tainicom.Aether.Physics2D.Collision;
+using tainicom.Aether.Physics2D.Common;
 
 namespace tainicom.Aether.Physics2D.Dynamics.Hibernation
 {
     public abstract class BaseActiveArea
     {
+
         public AABB AABB;
         public Vector2 Position { get; protected set; }
         public float Radius { get; protected set; }
         public ActiveAreaType AreaType { get; protected set; }
-        public List<AreaBody> AreaBodies { get; protected set; }
+        public ObservableList<AreaBody> AreaBodies { get; private set; }
         public bool IsExpired { get; protected set; }
 
         public BaseActiveArea()
         {
-            this.AreaBodies = new List<AreaBody>();
+            this.AreaBodies = new ObservableList<AreaBody>();
 
         }
         

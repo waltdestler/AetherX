@@ -107,6 +107,12 @@ namespace tainicom.Aether.Physics2D.Dynamics
         /// </summary>
         public bool AutoAssignMissingBodyIds = true;
 
+        public Body GetBodyById(int id)
+        {
+            // TODO: store bodies in a dictionary instead.
+            return this.BodyList.FirstOrDefault(b => b.Id == id);
+        }
+
         #endregion
 
         private bool _stepComplete = true;

@@ -33,13 +33,14 @@ using tainicom.Aether.Physics2D.Samples.Testbed.Tests;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using tainicom.Aether.Physics2D.Utilities;
 
 namespace tainicom.Aether.Physics2D.Samples.Testbed
 {
     /// <summary>
     /// This is the main type for your game
     /// </summary>
-    public class Game1 : Game
+    public class Game1 : Game, IScreen
     {
         private TestEntry _entry;
         private GraphicsDeviceManager _graphics;

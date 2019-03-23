@@ -37,6 +37,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
 using tainicom.Aether.Physics2D.Dynamics.Hibernation;
 using System.Linq;
+using tainicom.Aether.Physics2D.Utilities;
 
 namespace tainicom.Aether.Physics2D.Samples.Testbed.Framework
 {
@@ -45,8 +46,8 @@ namespace tainicom.Aether.Physics2D.Samples.Testbed.Framework
         internal DebugView DebugView;
         internal int StepCount;
         internal World World;
-        private FixedMouseJoint _fixedMouseJoint;
         internal int TextLine;
+        WorldMouseTestUtility WorldMouseTestUtility;
 
         protected Test()
         {
@@ -67,12 +68,14 @@ namespace tainicom.Aether.Physics2D.Samples.Testbed.Framework
         {
             DebugView = new DebugView(World);
             DebugView.LoadContent(GameInstance.GraphicsDevice, GameInstance.Content);
+
+            this.WorldMouseTestUtility = new WorldMouseTestUtility(World, GameInstance);
         }
 
         protected virtual void JointRemoved(World sender, Joint joint)
         {
-            if (_fixedMouseJoint == joint)
-                _fixedMouseJoint = null;
+            //if (_fixedMouseJoint == joint)
+            //    _fixedMouseJoint = null;
         }
 
         public void DrawTitle(int x, int y, string title)
@@ -165,12 +168,16 @@ namespace tainicom.Aether.Physics2D.Samples.Testbed.Framework
         public float IndependentActiveAreaRadius = 50f;
         public virtual void Mouse(MouseState state, MouseState oldState)
         {
+            // apply world mouse updating
+            this.WorldMouseTestUtility.Update(state, oldState);
+
+
             this.MouseWorldPosition = GameInstance.ConvertScreenToWorld(state.X, state.Y);
 
-            if (state.LeftButton == ButtonState.Released && oldState.LeftButton == ButtonState.Pressed)
-                MouseUp();
-            else if (state.LeftButton == ButtonState.Pressed && oldState.LeftButton == ButtonState.Released)
-                MouseDown(this.MouseWorldPosition);
+            //if (state.LeftButton == ButtonState.Released && oldState.LeftButton == ButtonState.Pressed)
+            //    MouseUp();
+            //else if (state.LeftButton == ButtonState.Pressed && oldState.LeftButton == ButtonState.Released)
+            //    MouseDown(this.MouseWorldPosition);
 
             if (this.World.HibernationEnabled)
             {
@@ -192,39 +199,7 @@ namespace tainicom.Aether.Physics2D.Samples.Testbed.Framework
                 } 
             }
 
-            MouseMove(this.MouseWorldPosition);
-        }
-
-        private void MouseDown(Vector2 p)
-        {
-            if (_fixedMouseJoint != null)
-                return;
-
-            Fixture fixture = World.TestPoint(p);
-
-            if (fixture != null)
-            {
-                Body body = fixture.Body;
-                _fixedMouseJoint = new FixedMouseJoint(body, p);
-                _fixedMouseJoint.MaxForce = 1000.0f * body.Mass;
-                World.Add(_fixedMouseJoint);
-                body.Awake = true;
-            }
-        }
-
-        private void MouseUp()
-        {
-            if (_fixedMouseJoint != null)
-            {
-                World.Remove(_fixedMouseJoint);
-                _fixedMouseJoint = null;
-            }
-        }
-
-        private void MouseMove(Vector2 p)
-        {
-            if (_fixedMouseJoint != null)
-                _fixedMouseJoint.WorldAnchorB = p;
+            //MouseMove(this.MouseWorldPosition);
         }
 
         protected virtual void PreSolve(Contact contact, ref Manifold oldManifold)
