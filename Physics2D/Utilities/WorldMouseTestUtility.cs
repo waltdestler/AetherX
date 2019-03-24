@@ -15,6 +15,7 @@ namespace tainicom.Aether.Physics2D.Utilities
         private Vector2 MouseWorldPosition { get; set; }
         private World World;
         private IScreen Screen { get; set; }
+        private MouseState _oldMouseState;
 
         public WorldMouseTestUtility(World world, IScreen screen)
         {
@@ -29,16 +30,18 @@ namespace tainicom.Aether.Physics2D.Utilities
                 _fixedMouseJoint = null;
         }
 
-        public virtual void Update(MouseState newState, MouseState oldState)
+        public virtual void Update(MouseState newState)
         {
             this.MouseWorldPosition = this.Screen.ConvertScreenToWorld(newState.X, newState.Y);
 
-            if (newState.LeftButton == ButtonState.Released && oldState.LeftButton == ButtonState.Pressed)
+            if (newState.LeftButton == ButtonState.Released && _oldMouseState.LeftButton == ButtonState.Pressed)
                 MouseUp();
-            else if (newState.LeftButton == ButtonState.Pressed && oldState.LeftButton == ButtonState.Released)
+            else if (newState.LeftButton == ButtonState.Pressed && _oldMouseState.LeftButton == ButtonState.Released)
                 MouseDown(this.MouseWorldPosition);
 
             MouseMove(this.MouseWorldPosition);
+
+            this._oldMouseState = newState;
         }
 
         private void MouseDown(Vector2 p)

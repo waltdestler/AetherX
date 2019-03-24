@@ -169,7 +169,7 @@ namespace tainicom.Aether.Physics2D.Samples.Testbed.Framework
         public virtual void Mouse(MouseState state, MouseState oldState)
         {
             // apply world mouse updating
-            this.WorldMouseTestUtility.Update(state, oldState);
+            this.WorldMouseTestUtility.Update(state);
 
 
             this.MouseWorldPosition = GameInstance.ConvertScreenToWorld(state.X, state.Y);
