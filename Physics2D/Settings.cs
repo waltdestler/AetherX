@@ -213,6 +213,13 @@ namespace tainicom.Aether.Physics2D
         /// </summary>
         public const bool AutoClearForces = true;
 
+        #region Hibernation Settings
+
+        public const float BodyActiveAreaMargin = 1.0f; //2.0f //10f;
+        public const float SecondsUntilHibernate = 5f;
+
+        #endregion
+
         /// <summary>
         /// Friction mixing law. Feel free to customize this.
         /// </summary>

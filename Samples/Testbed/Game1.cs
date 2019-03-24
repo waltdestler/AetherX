@@ -33,13 +33,14 @@ using tainicom.Aether.Physics2D.Samples.Testbed.Tests;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using tainicom.Aether.Physics2D.Utilities;
 
 namespace tainicom.Aether.Physics2D.Samples.Testbed
 {
     /// <summary>
     /// This is the main type for your game
     /// </summary>
-    public class Game1 : Game
+    public class Game1 : Game, IScreen
     {
         private TestEntry _entry;
         private GraphicsDeviceManager _graphics;
@@ -183,15 +184,17 @@ namespace tainicom.Aether.Physics2D.Samples.Testbed
             //    ViewZoom = Math.Min((float)Math.Pow(Math.E, -0.05f) * ViewZoom, 20.0f);
             //else if (_keyboardManager.IsKeyDown(Keys.X)) // Press 'x' to zoom in.
             //    ViewZoom = Math.Max((float)Math.Pow(Math.E, +0.05f) * ViewZoom, 0.02f);
+            const float MIN_ZOOM = .002F;
+            const float MAX_ZOOM = 20.0F;
             if (_keyboardManager.IsKeyDown(Keys.Subtract)) // Press '-' to zoom out.
-                ViewZoom = Math.Min((float)Math.Pow(Math.E, -0.05f) * ViewZoom, 20.0f);
+                ViewZoom = Math.Min((float)Math.Pow(Math.E, -0.05f) * ViewZoom, MAX_ZOOM);
             else if (_keyboardManager.IsKeyDown(Keys.Add)) // Press 'x' to zoom in.
-                ViewZoom = Math.Max((float)Math.Pow(Math.E, +0.05f) * ViewZoom, 0.02f);
+                ViewZoom = Math.Max((float)Math.Pow(Math.E, +0.05f) * ViewZoom, MIN_ZOOM); //0.02f);
             else if (newMouseState.ScrollWheelValue != _oldMouseState.ScrollWheelValue) // Mouse Wheel to Zoom.
             {
-                var wheelDelta = (newMouseState.ScrollWheelValue - _oldMouseState.ScrollWheelValue)/120f;
+                var wheelDelta = (newMouseState.ScrollWheelValue - _oldMouseState.ScrollWheelValue) / 120f;
                 var zoomFactor = (float)Math.Pow(Math.E, 0.05f * wheelDelta);
-                ViewZoom = Math.Min(Math.Max(zoomFactor * ViewZoom, 0.02f), 20.0f);
+                ViewZoom = Math.Min(Math.Max(zoomFactor * ViewZoom, MIN_ZOOM), MAX_ZOOM);
             }
             else if (_keyboardManager.IsNewKeyPress(Keys.R)) // Press 'r' to reset.
                 Restart();
@@ -209,14 +212,16 @@ namespace tainicom.Aether.Physics2D.Samples.Testbed
                 if (_testSelection == _testCount)
                     _testSelection = 0;
             }
+
+            var viewCenterMoveVelocityMultiplier = 1.0f / this.ViewZoom;
             if (_keyboardManager.IsKeyDown(Keys.NumPad4)) // Press left to pan left.
-                ViewCenter = new Vector2(ViewCenter.X - 0.5f, ViewCenter.Y);
+                ViewCenter = new Vector2(ViewCenter.X - 0.5f * viewCenterMoveVelocityMultiplier, ViewCenter.Y);
             else if (_keyboardManager.IsKeyDown(Keys.NumPad6)) // Press right to pan right.
-                ViewCenter = new Vector2(ViewCenter.X + 0.5f, ViewCenter.Y);
+                ViewCenter = new Vector2(ViewCenter.X + 0.5f * viewCenterMoveVelocityMultiplier, ViewCenter.Y);
             if (_keyboardManager.IsKeyDown(Keys.NumPad2)) // Press down to pan down.
-                ViewCenter = new Vector2(ViewCenter.X, ViewCenter.Y - 0.5f);
+                ViewCenter = new Vector2(ViewCenter.X, ViewCenter.Y - 0.5f * viewCenterMoveVelocityMultiplier);
             else if (_keyboardManager.IsKeyDown(Keys.NumPad8)) // Press up to pan up.
-                ViewCenter = new Vector2(ViewCenter.X, ViewCenter.Y + 0.5f);
+                ViewCenter = new Vector2(ViewCenter.X, ViewCenter.Y + 0.5f * viewCenterMoveVelocityMultiplier);
             if (_keyboardManager.IsNewKeyPress(Keys.Home)) // Press home to reset the view.
                 ResetCamera();
             else if (_keyboardManager.IsNewKeyPress(Keys.F1))

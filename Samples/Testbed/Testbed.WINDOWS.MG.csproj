@@ -212,6 +212,10 @@
     </BootstrapperPackage>
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\Aether.Physics2D.Tests\Aether.Physics2D.Tests.csproj">
+      <Project>{83a440e3-9d82-48e6-b9ac-26d60d6cb639}</Project>
+      <Name>Aether.Physics2D.Tests</Name>
+    </ProjectReference>
     <ProjectReference Include="..\..\Physics2D.Diagnostics\Diagnostics\Aether.Physics2D.Diagnostics.WINDOWS.MG.csproj">
       <Project>{2ED9AD24-DFBA-441D-BCFB-EAA9520D804D}</Project>
       <Name>Aether.Physics2D.Diagnostics.WINDOWS.MG</Name>

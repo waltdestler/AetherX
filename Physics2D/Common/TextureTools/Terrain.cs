@@ -222,7 +222,7 @@ namespace tainicom.Aether.Physics2D.Common.TextureTools
                     {
                         for (int i = 0; i < _bodyMap[x, y].Count; i++)
                         {
-                            World.Remove(_bodyMap[x, y][i]);
+                            World.Destroy(_bodyMap[x, y][i]);
                         }
                     }
 

@@ -141,7 +141,7 @@ namespace tainicom.Aether.Physics2D.Samples.Testbed.Tests
 
             for (int i = 0; i < _removeBodies.Count; i++)
             {
-                World.Remove(_removeBodies[i]);
+                World.Destroy(_removeBodies[i]);
             }
 
             _removeBodies.Clear();

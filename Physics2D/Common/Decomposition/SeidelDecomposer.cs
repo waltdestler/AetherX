@@ -9,7 +9,7 @@
 */
 
 using System.Collections.Generic;
-using System.Diagnostics;
+using tainicom.Aether.Physics2D.Diagnostics;
 using tainicom.Aether.Physics2D.Common.Decomposition.Seidel;
 using Microsoft.Xna.Framework;
 using Point = tainicom.Aether.Physics2D.Common.Decomposition.Seidel.Point;

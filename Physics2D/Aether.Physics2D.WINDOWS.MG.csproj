@@ -103,6 +103,7 @@
     <Compile Include="Common\FixedArray.cs" />
     <Compile Include="Common\LineTools.cs" />
     <Compile Include="Common\Math.cs" />
+    <Compile Include="Common\ObservableList.cs" />
     <Compile Include="Common\Path.cs" />
     <Compile Include="Common\PathManager.cs" />
     <Compile Include="Common\Maths\Complex.cs" />
@@ -132,6 +133,7 @@
     <Compile Include="Controllers\GravityController.cs" />
     <Compile Include="Controllers\SimpleWindForce.cs" />
     <Compile Include="Controllers\VelocityLimitController.cs" />
+    <Compile Include="Diagnostics\Debug.cs" />
     <Compile Include="Diagnostics\DebugViewBase.cs" />
     <Compile Include="Diagnostics\DebugViewFlags.cs" />
     <Compile Include="Dynamics\Body.cs" />
@@ -184,6 +186,8 @@
     <Compile Include="Loaders\RUBE\RubeLoader.cs" />
     <Compile Include="Loaders\RUBE\RubeModels.cs" />
     <Compile Include="Settings.cs" />
+    <Compile Include="Utilities\WorldMouseTestUtility.cs" />
+    <Compile Include="Utilities\IScreen.cs" />
     <Compile Include="Utilities\RandomGenerator.cs" />
   </ItemGroup>
   <ItemGroup>

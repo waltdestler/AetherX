@@ -9,7 +9,7 @@
 */
 
 using System.Collections.Generic;
-using System.Diagnostics;
+using tainicom.Aether.Physics2D.Diagnostics;
 using tainicom.Aether.Physics2D.Common.Decomposition.CDT;
 using tainicom.Aether.Physics2D.Common.Decomposition.CDT.Delaunay;
 using tainicom.Aether.Physics2D.Common.Decomposition.CDT.Delaunay.Sweep;

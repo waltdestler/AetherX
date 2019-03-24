@@ -5,7 +5,7 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
+using tainicom.Aether.Physics2D.Diagnostics;
 using tainicom.Aether.Physics2D.Common.TextureTools;
 using tainicom.Aether.Physics2D.Common.Maths;
 using Microsoft.Xna.Framework;

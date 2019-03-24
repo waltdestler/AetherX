@@ -31,7 +31,8 @@ namespace tainicom.Aether.Physics2D.Loaders.RUBE
         public static void Load(string fileName, World world)
         {
             // load the R.U.B.E. file
-            using (var reader = new StreamReader(fileName))
+            using (
+                var reader = new StreamReader(fileName))
             {
                 string json = reader.ReadToEnd();
 

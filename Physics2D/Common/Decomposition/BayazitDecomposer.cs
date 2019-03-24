@@ -4,7 +4,7 @@
  */
 
 using System.Collections.Generic;
-using System.Diagnostics;
+using tainicom.Aether.Physics2D.Diagnostics;
 using Microsoft.Xna.Framework;
 
 namespace tainicom.Aether.Physics2D.Common.Decomposition

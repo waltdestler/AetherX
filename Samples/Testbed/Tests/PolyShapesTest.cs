@@ -183,7 +183,7 @@ namespace tainicom.Aether.Physics2D.Samples.Testbed.Tests
         {
             if (_bodies[_bodyIndex] != null)
             {
-                World.Remove(_bodies[_bodyIndex]);
+                World.Destroy(_bodies[_bodyIndex]);
                 _bodies[_bodyIndex] = null;
             }
 
@@ -221,7 +221,7 @@ namespace tainicom.Aether.Physics2D.Samples.Testbed.Tests
             {
                 if (_bodies[i] != null)
                 {
-                    World.Remove(_bodies[i]);
+                    World.Destroy(_bodies[i]);
                     _bodies[i] = null;
                     return;
                 }

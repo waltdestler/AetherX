@@ -28,7 +28,7 @@
 */
 
 using System;
-using System.Diagnostics;
+using tainicom.Aether.Physics2D.Diagnostics;
 using Microsoft.Xna.Framework;
 using tainicom.Aether.Physics2D.Common;
 using tainicom.Aether.Physics2D.Diagnostics;
@@ -49,7 +49,7 @@ namespace tainicom.Aether.Physics2D.Dynamics
 
         private const float LinTolSqr = Settings.LinearSleepTolerance * Settings.LinearSleepTolerance;
         private const float AngTolSqr = Settings.AngularSleepTolerance * Settings.AngularSleepTolerance;
-        private Stopwatch _watch = new Stopwatch();
+        private System.Diagnostics.Stopwatch _watch = new System.Diagnostics.Stopwatch();
 
         public Body[] Bodies;
         public int BodyCount;

@@ -37,7 +37,7 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
+using tainicom.Aether.Physics2D.Diagnostics;
 using System.Threading;
 using Microsoft.Xna.Framework;
 using tainicom.Aether.Physics2D.Collision;
@@ -48,6 +48,7 @@ using tainicom.Aether.Physics2D.Dynamics.Contacts;
 using tainicom.Aether.Physics2D.Dynamics.Hibernation;
 using tainicom.Aether.Physics2D.Dynamics.Joints;
 using tainicom.Aether.Physics2D.Fluids;
+using System.Linq;
 
 namespace tainicom.Aether.Physics2D.Dynamics
 {
@@ -87,12 +88,29 @@ namespace tainicom.Aether.Physics2D.Dynamics
                 else
                 {
                     // unhibernate everything
-                    // TODO
+                    this.HibernationManager.ReviveAll();
 
                     // dispose the hibernation manager
                     this.HibernationManager = null;
                 }
             }
+        }
+
+        #endregion
+
+        #region Body Identifiers
+
+        private int NextBodyId = 1;
+
+        /// <summary>
+        /// If a body is added and is missing an ID and this is false, then an exception will be thrown.
+        /// </summary>
+        public bool AutoAssignMissingBodyIds = true;
+
+        public Body GetBodyById(int id)
+        {
+            // TODO: store bodies in a dictionary instead.
+            return this.BodyList.FirstOrDefault(b => b.Id == id);
         }
 
         #endregion
@@ -113,7 +131,7 @@ namespace tainicom.Aether.Physics2D.Dynamics
         private Vector2 _point1;
         private Vector2 _point2;
         private List<Fixture> _testPointAllFixtures;
-        private Stopwatch _watch = new Stopwatch();
+        private System.Diagnostics.Stopwatch _watch = new System.Diagnostics.Stopwatch();
         private readonly ThreadLocal<Func<Fixture, Vector2, Vector2, float, float>> _rayCastCallback = new ThreadLocal<Func<Fixture, Vector2, Vector2, float, float>>();
         private Func<RayCastInput, int, object, float> _rayCastCallbackBroadPhaseWrapper;
         private Func<RayCastInput, int, object, float> _rayCastCallbackFixturePhaseWrapper;
@@ -535,6 +553,34 @@ namespace tainicom.Aether.Physics2D.Dynamics
 #if USE_AWAKE_BODY_SET
             AwakeBodyList.Clear();
 #endif
+        }
+
+        /// <summary>
+        /// Removes a body from this world, including its proxy, and returns it. Fixtures, events, etc., are all maintained.
+        /// </summary>
+        /// <param name="body"></param>
+        /// <returns></returns>
+        internal Body Remove(Body body)
+        {
+            this.BodyList.Remove(body);
+
+            // Delete the attached contacts.
+            ContactEdge ce = body.ContactList;
+            while (ce != null)
+            {
+                ContactEdge ce0 = ce;
+                ce = ce.Next;
+                ContactManager.Destroy(ce0.Contact);
+            }
+            body.ContactList = null;
+
+            // Destroy the proxy for this world. It will be recreated if/when it is re-added to a world.
+            body.DestroyProxy();
+
+            // Clear world ref.
+            body._world = null;
+
+            return body;
         }
 
         private void SolveTOI(ref TimeStep step, ref SolverIterations iterations)
@@ -1016,6 +1062,34 @@ namespace tainicom.Aether.Physics2D.Dynamics
             if (body._world != null)
                 throw new ArgumentException("body belongs to another world.", "body");
 
+            #region Body Identifier 
+
+            if (body.Id == 0)
+            {
+                if (this.AutoAssignMissingBodyIds)
+                {
+                    // assign the next available ID
+                    body.Id = this.NextBodyId;
+
+                    // increment ID
+                    this.NextBodyId++;
+                }
+                else
+                {
+                    throw new ArgumentException("Body has no ID assigned and auto assigning is disabled.");
+                }
+            }
+
+            // Validate Body Identifier 
+            // TODO: replace with body dictionary.
+            if (this.BodyList.Any(b => b.Id == body.Id))
+            {
+                // there is already a body with this ID, so it's not unique.  
+                throw new ArgumentException("Body ID is not unique.");
+            }
+
+            #endregion
+
 #if USE_AWAKE_BODY_SET
                     Debug.Assert(!body.IsDisposed);
                     if (body.Awake)
@@ -1062,7 +1136,7 @@ namespace tainicom.Aether.Physics2D.Dynamics
         /// </summary>
         /// <param name="body">The body.</param>
         /// <exception cref="System.InvalidOperationException">Thrown when the world is Locked/Stepping.</exception>
-        public virtual void Remove(Body body)
+        public virtual void Destroy(Body body)
         {
             if (IsLocked)
                 throw new InvalidOperationException("The World is locked.");
@@ -1333,7 +1407,7 @@ namespace tainicom.Aether.Physics2D.Dynamics
                     Debug.WriteLine("The body is already marked for removal. You are removing the body more than once.");
             }
             else
-                Remove(body);
+                Destroy(body);
 
 #if USE_AWAKE_BODY_SET
             if (AwakeBodySet.Contains(body))
@@ -1407,7 +1481,7 @@ namespace tainicom.Aether.Physics2D.Dynamics
             if (_bodyRemoveList.Count > 0)
             {
                 foreach (Body body in _bodyRemoveList)
-                    Remove(body);
+                    Destroy(body);
                 _bodyRemoveList.Clear();
             }
 
@@ -1834,7 +1908,7 @@ namespace tainicom.Aether.Physics2D.Dynamics
 
             for (int i = BodyList.Count - 1; i >= 0; i--)
             {
-                Remove(BodyList[i]);
+                Destroy(BodyList[i]);
             }
 
             for (int i = ControllerList.Count - 1; i >= 0; i--)

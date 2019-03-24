@@ -49,6 +49,23 @@ namespace tainicom.Aether.Physics2D.Diagnostics
             Flags &= ~flags;
         }
 
+        public bool HasFlag(DebugViewFlags flag)
+        {
+            return (Flags & flag) == flag;
+        }
+
+        public void ToggleFlag(DebugViewFlags flag)
+        {
+            if (this.HasFlag(flag))
+            {
+                this.RemoveFlags(flag);
+            }
+            else
+            {
+                this.AppendFlags(flag);
+            }
+        }
+
         /// <summary>
         /// Draw a closed polygon provided in CCW order.
         /// </summary>

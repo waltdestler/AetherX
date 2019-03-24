@@ -26,7 +26,7 @@
 */
 
 using System;
-using System.Diagnostics;
+using tainicom.Aether.Physics2D.Diagnostics;
 using System.Runtime.InteropServices;
 using Microsoft.Xna.Framework;
 using tainicom.Aether.Physics2D.Common.Maths;

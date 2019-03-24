@@ -30,7 +30,7 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
+using tainicom.Aether.Physics2D.Diagnostics;
 using tainicom.Aether.Physics2D.Collision;
 using tainicom.Aether.Physics2D.Collision.Shapes;
 using tainicom.Aether.Physics2D.Common;
@@ -45,6 +45,8 @@ namespace tainicom.Aether.Physics2D.Dynamics
 {
     public partial class Body
     {
+        public int Id;
+
         private float _angularDamping;
         private BodyType _bodyType;
         private float _inertia;
@@ -69,16 +71,18 @@ namespace tainicom.Aether.Physics2D.Dynamics
         internal int _lock;
         internal int _lockOrder;
 
-        private int _proxyId = -1;
-        public int ProxyId
+        private int _broadphaseProxyId = -1;
+        public int BroadphaseProxyId
         {
             get
             {
-                return this._proxyId;
+                return this._broadphaseProxyId;
             }
         }
 
         public ControllerFilter ControllerFilter = new ControllerFilter(ControllerCategory.All);
+
+        public bool HasContacts { get { return ContactList != null; } }
 
         public Body()
         {
@@ -162,7 +166,7 @@ namespace tainicom.Aether.Physics2D.Dynamics
                 if (World != null)
                 {
                     // Touch the proxies so that new contacts will be created (when appropriate)
-                    _world.ContactManager.BroadPhase.TouchProxy(_proxyId);
+                    _world.ContactManager.BroadPhase.TouchProxy(_broadphaseProxyId);
                     //IBroadPhase broadPhase = World.ContactManager.BroadPhase;
                     //foreach (Fixture fixture in FixtureList)
                     //    fixture.TouchProxies(broadPhase);
@@ -623,7 +627,7 @@ namespace tainicom.Aether.Physics2D.Dynamics
         // These support body activation/deactivation.
         internal void CreateProxy()
         {
-            Debug.Assert(_proxyId < 0);
+            Debug.Assert(_broadphaseProxyId < 0);
 
             // Create proxy.
             BodyProxy proxy;
@@ -631,15 +635,15 @@ namespace tainicom.Aether.Physics2D.Dynamics
             AABB.Transform(ref _xf, ref proxy.AABB);
             proxy.Body = this;
             proxy.ProxyId = -1; // NOTE: We set to -1 only initially. It will be set to actual ID within AddProxy.
-            _proxyId = _world.ContactManager.BroadPhase.AddProxy(ref proxy);
+            _broadphaseProxyId = _world.ContactManager.BroadPhase.AddProxy(ref proxy);
         }
 
         internal void DestroyProxy()
         {
-            Debug.Assert(_proxyId >= 0);
+            Debug.Assert(_broadphaseProxyId >= 0);
 
-            _world.ContactManager.BroadPhase.RemoveProxy(_proxyId);
-            _proxyId = -1;
+            _world.ContactManager.BroadPhase.RemoveProxy(_broadphaseProxyId);
+            _broadphaseProxyId = -1;
         }
 
         ///<summary>
@@ -1212,7 +1216,7 @@ namespace tainicom.Aether.Physics2D.Dynamics
 
             _displacement = transform2.Position - transform1.Position;
 
-            _world.ContactManager.BroadPhase.MoveProxy(_proxyId, ref aabb1, _displacement);
+            _world.ContactManager.BroadPhase.MoveProxy(_broadphaseProxyId, ref aabb1, _displacement);
         }
 
         internal void SynchronizeTransform()

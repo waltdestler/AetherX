@@ -86,7 +86,7 @@ namespace tainicom.Aether.Physics2D.Samples.Testbed.Tests
             {
                 if (_bullet != null)
                 {
-                    World.Remove(_bullet);
+                    World.Destroy(_bullet);
                     _bullet = null;
                 }
 

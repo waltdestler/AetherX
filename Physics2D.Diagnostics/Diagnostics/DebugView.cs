@@ -1,3 +1,4 @@
+
 // Copyright (c) 2017 Kastellanos Nikolaos
 
 /* Original source Farseer Physics Engine:
@@ -19,6 +20,7 @@ using tainicom.Aether.Physics2D.Common.Maths;
 using tainicom.Aether.Physics2D.Controllers;
 using tainicom.Aether.Physics2D.Dynamics;
 using tainicom.Aether.Physics2D.Dynamics.Contacts;
+using tainicom.Aether.Physics2D.Dynamics.Hibernation;
 using tainicom.Aether.Physics2D.Dynamics.Joints;
 
 namespace tainicom.Aether.Physics2D.Diagnostics
@@ -50,7 +52,7 @@ namespace tainicom.Aether.Physics2D.Diagnostics
         public Color TextColor = Color.White;
         public Color PolygonVertexColor = Color.Red;
         public Color BodyAabbColor = new Color(0.3f, 0.9f, 0.3f);
-        public Color BodyAabbRadiusColor = new Color(0.1f, 0.3f, 0.1f);
+        public Color HibernatedBodyAabbColor = new Color(0.25f, 0.25f, 0.25f);
         public Color FixtureAabbColor = new Color(0.9f, 0.3f, 0.9f);
         public Color JointSegmentColor = new Color(0.5f, 0.8f, 0.8f);
 
@@ -68,7 +70,8 @@ namespace tainicom.Aether.Physics2D.Diagnostics
         private StringBuilder _graphSbMax = new StringBuilder();   
         private StringBuilder _graphSbAvg = new StringBuilder();   
         private StringBuilder _graphSbMin = new StringBuilder();   
-        private StringBuilder _debugPanelSbObjects = new StringBuilder();        
+        private StringBuilder _debugPanelSbObjects = new StringBuilder();
+        private StringBuilder _debugPanelHibObjects = new StringBuilder();
         private StringBuilder _debugPanelSbUpdate = new StringBuilder();
 
         //Performance graph
@@ -78,7 +81,7 @@ namespace tainicom.Aether.Physics2D.Diagnostics
         public TimeSpan MinimumValue;
         public TimeSpan MaximumValue = TimeSpan.FromMilliseconds(10);
         private List<TimeSpan> _graphValues = new List<TimeSpan>(500);
-        public Rectangle PerformancePanelBounds = new Rectangle(330, 100, 200, 100);
+        public Rectangle PerformancePanelBounds = new Rectangle(500, 100, 300, 100);
         private Vector2[] _background = new Vector2[4];
         public bool Enabled = true;
         
@@ -94,6 +97,8 @@ namespace tainicom.Aether.Physics2D.Diagnostics
             AppendFlags(DebugViewFlags.Shape);
             AppendFlags(DebugViewFlags.Controllers);
             AppendFlags(DebugViewFlags.Joint);
+            AppendFlags(DebugViewFlags.HibernatedBodyAABBs);
+            AppendFlags(DebugViewFlags.ActiveAreas);
         }
 
         #region IDisposable Members
@@ -107,7 +112,7 @@ namespace tainicom.Aether.Physics2D.Diagnostics
 
         private void PreSolve(Contact contact, ref Manifold oldManifold)
         {
-            if ((Flags & DebugViewFlags.ContactPoints) == DebugViewFlags.ContactPoints)
+            if (this.HasFlag(DebugViewFlags.ContactPoints))
             {
                 Manifold manifold = contact.Manifold;
 
@@ -143,28 +148,36 @@ namespace tainicom.Aether.Physics2D.Diagnostics
         /// </summary>
         private void DrawDebugData()
         {
-            if ((Flags & DebugViewFlags.Shape) == DebugViewFlags.Shape)
+            if (this.HasFlag(DebugViewFlags.Shape))
             {
                 foreach (Body b in World.BodyList)
                 {
+                    Color color;
+                    if (b.Enabled == false)
+                        color = InactiveShapeColor;
+                    else if (b.BodyType == BodyType.Static)
+                        color = StaticShapeColor;
+                    else if (b.BodyType == BodyType.Kinematic)
+                        color = KinematicShapeColor;
+                    else if (b.Awake == false)
+                        color = SleepingShapeColor;
+                    else
+                        color = DefaultShapeColor;
+
+                    //if(b.HasContacts)
+                    //{
+                    //    color = Color.Red;
+                    //}
+
                     Transform xf = b.GetTransform();
                     foreach (Fixture f in b.FixtureList)
                     {
-                        if (b.Enabled == false)
-                            DrawShape(f, xf, InactiveShapeColor);
-                        else if (b.BodyType == BodyType.Static)
-                            DrawShape(f, xf, StaticShapeColor);
-                        else if (b.BodyType == BodyType.Kinematic)
-                            DrawShape(f, xf, KinematicShapeColor);
-                        else if (b.Awake == false)
-                            DrawShape(f, xf, SleepingShapeColor);
-                        else
-                            DrawShape(f, xf, DefaultShapeColor);
+                        DrawShape(f, xf, color);
                     }
                 }
             }
 
-            if ((Flags & DebugViewFlags.ContactPoints) == DebugViewFlags.ContactPoints)
+            if (this.HasFlag(DebugViewFlags.ContactPoints))
             {
                 const float axisScale = 0.3f;
 
@@ -188,7 +201,7 @@ namespace tainicom.Aether.Physics2D.Diagnostics
                 _pointCount = 0;
             }
 
-            if ((Flags & DebugViewFlags.PolygonPoints) == DebugViewFlags.PolygonPoints)
+            if (this.HasFlag(DebugViewFlags.PolygonPoints))
             {
                 foreach (Body body in World.BodyList)
                 {
@@ -209,7 +222,7 @@ namespace tainicom.Aether.Physics2D.Diagnostics
                 }
             }
 
-            if ((Flags & DebugViewFlags.Joint) == DebugViewFlags.Joint)
+            if (this.HasFlag(DebugViewFlags.Joint))
             {
                 foreach (Joint j in World.JointList)
                 {
@@ -217,7 +230,7 @@ namespace tainicom.Aether.Physics2D.Diagnostics
                 }
             }
 
-            if ((Flags & DebugViewFlags.AABB) == DebugViewFlags.AABB)
+            if (this.HasFlag(DebugViewFlags.AABB))
             {
                 var bodyBroadphase = World.ContactManager.BroadPhase;
 
@@ -230,11 +243,8 @@ namespace tainicom.Aether.Physics2D.Diagnostics
 
                     // render body AABBs
                     AABB aabb;
-                    bodyBroadphase.GetFatAABB(body.ProxyId, out aabb);
+                    bodyBroadphase.GetFatAABB(body.BroadphaseProxyId, out aabb);
                     DrawAABB(ref aabb, BodyAabbColor);
-
-                    // also draw the bounding radius, as it is used for "active areas" if hibernation is enabled.
-                    //this.DrawCircle(aabb.Center, aabb.Extents.Length(), BodyAabbRadiusColor);
 
                     // render fixture AABBs
                     var fixtureTree = body.FixtureTree;
@@ -253,11 +263,11 @@ namespace tainicom.Aether.Physics2D.Diagnostics
                         }
                     }
 
-
+                    //this.DrawString()
                 }
             }
 
-            if ((Flags & DebugViewFlags.CenterOfMass) == DebugViewFlags.CenterOfMass)
+            if (this.HasFlag(DebugViewFlags.CenterOfMass))
             {
                 foreach (Body b in World.BodyList)
                 {
@@ -267,7 +277,7 @@ namespace tainicom.Aether.Physics2D.Diagnostics
                 }
             }
 
-            if ((Flags & DebugViewFlags.Controllers) == DebugViewFlags.Controllers)
+            if (this.HasFlag(DebugViewFlags.Controllers))
             {
                 for (int i = 0; i < World.ControllerList.Count; i++)
                 {
@@ -278,6 +288,60 @@ namespace tainicom.Aether.Physics2D.Diagnostics
                     {
                         AABB container = buoyancy.Container;
                         DrawAABB(ref container, Color.LightBlue);
+                    }
+                }
+            }
+
+            if (this.World.HibernationEnabled)
+            {
+                // render hibernated body AABBs
+                if (this.HasFlag(DebugViewFlags.HibernatedBodyAABBs))
+                {
+                    var hiberatedWorld = this.World.HibernationManager.HibernatedWorld;
+                    var bodyBroadphase = hiberatedWorld.ContactManager.BroadPhase;
+
+                    foreach (Body body in hiberatedWorld.BodyList)
+                    {
+                        if (body.Enabled == false)
+                            continue;
+
+                        var bodyTransform = body.GetTransform();
+
+                        AABB aabb;
+                        bodyBroadphase.GetFatAABB(body.BroadphaseProxyId, out aabb);
+                        DrawAABB(ref aabb, this.HibernatedBodyAabbColor);
+                    }
+                }
+
+                if (this.HasFlag(DebugViewFlags.ActiveAreas))
+                {
+                    // render active areas
+                    Color independentActiveAreaColor = new Color(0.9f, 0.3f, 0.3f);
+                    Color bodyActiveAreaColor = new Color(0.8f, 0.4f, 0.3f);
+
+                    foreach (var activeArea in this.World.HibernationManager.ActiveAreas)
+                    {
+
+                        if (activeArea.AreaType == ActiveAreaType.Independent)
+                        {
+                            this.DrawAABB(ref activeArea.AABB, independentActiveAreaColor);
+
+                            // draw connections to all bodies
+                            foreach( var areaBody in activeArea.AreaBodies )
+                            {
+                                this.DrawSegment(activeArea.AABB.Center, areaBody.AABB.Center, independentActiveAreaColor);
+                            }
+                        }
+                        else
+                        {
+                            this.DrawAABB(ref activeArea.AABB, bodyActiveAreaColor);
+                        }
+
+                        /* UNCOMMENT TO: render number of bodies within each active area
+                        Vector2 position = new Vector2(activeArea.AABB.LowerBound.X, activeArea.AABB.UpperBound.Y);
+                        position = GameInstance.ConvertWorldToScreen(position);
+                        DebugView.DrawString((int)position.X, (int)position.Y - 5, "Contains " + activeArea.Bodies.Count.ToString());
+                        */
                     }
                 }
             }
@@ -370,16 +434,52 @@ namespace tainicom.Aether.Physics2D.Diagnostics
             _debugPanelSbObjects.Append("- Joints:   ").AppendNumber(World.JointList.Count).AppendLine();
             _debugPanelSbObjects.Append("- Controllers: ").AppendNumber(World.ControllerList.Count).AppendLine();
             DrawString(x, y, _debugPanelSbObjects);
-            
+
+            _debugPanelHibObjects.Clear();
+            _debugPanelHibObjects.Append("Hibernated:").AppendLine();
+
+            if( this.World.HibernationEnabled )
+            {
+                var hibernatedWorld = World.HibernationManager.HibernatedWorld;
+
+                int hibernatedFixtureCount = 0;
+                for (int i = 0; i < hibernatedWorld.BodyList.Count; i++)
+                {
+                    hibernatedFixtureCount += hibernatedWorld.BodyList[i].FixtureList.Count;
+                }
+
+                _debugPanelHibObjects.Append("- Bodies:       " +
+                    "").AppendNumber(hibernatedWorld.BodyList.Count).AppendLine();
+                _debugPanelHibObjects.Append("- Fixtures:     ").AppendNumber(hibernatedFixtureCount).AppendLine();
+                _debugPanelHibObjects.Append("- Contacts:     ").AppendNumber(hibernatedWorld.ContactCount).AppendLine();
+                _debugPanelHibObjects.Append("- Proxies:      ").AppendNumber(hibernatedWorld.ProxyCount).AppendLine();
+                _debugPanelHibObjects.Append("- Joints:       ").AppendNumber(hibernatedWorld.JointList.Count).AppendLine();
+                _debugPanelHibObjects.Append("- Controllers:  ").AppendNumber(hibernatedWorld.ControllerList.Count).AppendLine();
+                _debugPanelHibObjects.Append("- Active Areas: ").AppendNumber(this.World.HibernationManager.ActiveAreas.Count).AppendLine();
+            }
+            else
+            {
+                _debugPanelHibObjects.Append("N/A (disabled)");
+            }
+
+            DrawString(x + 125, y, _debugPanelHibObjects);
+
             _debugPanelSbUpdate.Clear();
             _debugPanelSbUpdate.Append("Update time:").AppendLine();
-            _debugPanelSbUpdate.Append("- Body:    ").AppendNumber(  (float)World.SolveUpdateTime.TotalMilliseconds, 3).Append(" ms").AppendLine();
-            _debugPanelSbUpdate.Append("- Contact: ").AppendNumber(  (float)World.ContactsUpdateTime.TotalMilliseconds, 3).Append(" ms").AppendLine();
-            _debugPanelSbUpdate.Append("- CCD:     ").AppendNumber(  (float)World.ContinuousPhysicsTime.TotalMilliseconds, 3).Append(" ms").AppendLine();
-            _debugPanelSbUpdate.Append("- Joint:   ").AppendNumber(  (float)World.Island.JointUpdateTime.TotalMilliseconds, 3).Append(" ms").AppendLine();
-            _debugPanelSbUpdate.Append("- Controller:").AppendNumber((float)World.ControllersUpdateTime.TotalMilliseconds, 3).Append(" ms").AppendLine();
-            _debugPanelSbUpdate.Append("- Total:   ").AppendNumber(  (float)World.UpdateTime.TotalMilliseconds, 3).Append(" ms").AppendLine();
-            DrawString(x + 110, y, _debugPanelSbUpdate);
+
+            if (this.World.HibernationEnabled)
+            {
+                _debugPanelSbUpdate.Append("- Hibernation: ").AppendNumber((float)World.HibernateTime.TotalMilliseconds, 3).Append(" ms").AppendLine();
+            }
+            _debugPanelSbUpdate.Append("- Body:        ").AppendNumber(  (float)World.SolveUpdateTime.TotalMilliseconds, 3).Append(" ms").AppendLine();
+            _debugPanelSbUpdate.Append("- Add/Rem Bod: ").AppendNumber((float)World.AddRemoveTime.TotalMilliseconds, 3).Append(" ms").AppendLine();
+            _debugPanelSbUpdate.Append("- N Fix Cntct: ").AppendNumber((float)World.NewContactsTime.TotalMilliseconds, 3).Append(" ms").AppendLine();
+            _debugPanelSbUpdate.Append("- Contact:     ").AppendNumber(  (float)World.ContactsUpdateTime.TotalMilliseconds, 3).Append(" ms").AppendLine();
+            _debugPanelSbUpdate.Append("- CCD:         ").AppendNumber(  (float)World.ContinuousPhysicsTime.TotalMilliseconds, 3).Append(" ms").AppendLine();
+            _debugPanelSbUpdate.Append("- Joint:       ").AppendNumber(  (float)World.Island.JointUpdateTime.TotalMilliseconds, 3).Append(" ms").AppendLine();
+            _debugPanelSbUpdate.Append("- Controller:  ").AppendNumber((float)World.ControllersUpdateTime.TotalMilliseconds, 3).Append(" ms").AppendLine();
+            _debugPanelSbUpdate.Append("- Total:       ").AppendNumber(  (float)World.UpdateTime.TotalMilliseconds, 3).Append(" ms").AppendLine();
+            DrawString(x + 250, y, _debugPanelSbUpdate);
         }
 
         public void DrawAABB(ref AABB aabb, Color color)
@@ -670,23 +770,30 @@ namespace tainicom.Aether.Physics2D.Diagnostics
             DrawSolidPolygon(verts, 4, color, true);
         }
 
-        public void DrawString(int x, int y, string text)
+        public void DrawString(int x, int y, string text, bool isWorldPosition = false)
         {
-            DrawString(new Vector2(x, y), text);
+            DrawString(new Vector2(x, y), text, isWorldPosition);
         }
 
-        public void DrawString(Vector2 position, string text)
+        public void DrawString(Vector2 position, string text, bool isWorldPosition = false)
         {
-            _stringData.Add(new StringData(position, text, TextColor));
+            DrawString(position, new StringBuilder(text), isWorldPosition);
         }
 
-        public void DrawString(int x, int y, StringBuilder text)
+        public void DrawString(int x, int y, StringBuilder text, bool isWorldPosition = false)
         {
-            DrawString(new Vector2(x, y), text);
+            DrawString(new Vector2(x, y), text, isWorldPosition);
         }
 
-        public void DrawString(Vector2 position, StringBuilder text)
+        public void DrawString(Vector2 position, StringBuilder text, bool isWorldPosition = false)
         {
+            if(isWorldPosition)
+            {
+                // convert it to screen
+                // NOTE: GameInstance doesn't exist... inject method?
+                //position = GameInstance.ConvertWorldToScreen(position);
+            }
+
             _stringData.Add(new StringData(position, text, TextColor));
         }
 

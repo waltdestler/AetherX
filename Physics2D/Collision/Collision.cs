@@ -29,7 +29,7 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
+using tainicom.Aether.Physics2D.Diagnostics;
 using System.Runtime.InteropServices;
 using tainicom.Aether.Physics2D.Collision.Shapes;
 using tainicom.Aether.Physics2D.Common;
@@ -458,6 +458,11 @@ namespace tainicom.Aether.Physics2D.Collision
             return true;
         }
 
+        public bool Overlaps(ref AABB aabb)
+        {
+            return AABB.TestOverlap(ref this, ref aabb);
+        }
+
         /// <summary>
         /// Raycast against this AABB using the specificed points and maxfraction (found in input)
         /// </summary>
@@ -590,6 +595,14 @@ namespace tainicom.Aether.Physics2D.Collision
             aabb.UpperBound = Vector2.Max(
                 Vector2.Max(p1, p2),
                 Vector2.Max(p3, p4));
+        }
+
+        public static AABB operator *(float scaleFactor, AABB value) {
+            return new AABB(value.LowerBound * scaleFactor, value.UpperBound * scaleFactor);
+        }
+        public static AABB operator *(AABB value, float scaleFactor)
+        {
+            return new AABB(value.LowerBound * scaleFactor, value.UpperBound * scaleFactor);
         }
     }
 

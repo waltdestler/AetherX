@@ -10,7 +10,7 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
+using tainicom.Aether.Physics2D.Diagnostics;
 using System.Text;
 using tainicom.Aether.Physics2D.Collision;
 using Microsoft.Xna.Framework;
@@ -55,7 +55,7 @@ namespace tainicom.Aether.Physics2D.Common
         SideTooSmall
     }
     
-    [DebuggerDisplay("Count = {Count} Vertices = {ToString()}")]
+    [System.Diagnostics.DebuggerDisplay("Count = {Count} Vertices = {ToString()}")]
     public class Vertices : List<Vector2>
     {
         public Vertices() { }
