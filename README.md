@@ -11,7 +11,7 @@ Box2D is the foundational physics engine, which was then ported to C# as Farseer
 
 **Ability to load a R.U.B.E. (Really Useful Box2D Editor) world via JSON.**
 
-**Additional test bed cases (MaxBodyTest) to benchmark performance of very large worlds.**
+**Additional test bed cases (WorldPerformanceTest) to benchmark performance of very large worlds.**
 
 
 # Existing Features
