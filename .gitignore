@@ -502,3 +502,6 @@ Samples/Testbed/bin/Debug/Windows.MG/System.Xml.XmlDocument.dll
 Samples/Testbed/bin/Debug/Windows.MG/System.Xml.XmlSerializer.dll
 Samples/Testbed/bin/Debug/Windows.MG/System.Xml.XPath.dll
 Samples/Testbed/bin/Debug/Windows.MG/System.Xml.XPath.XDocument.dll
+/.vs/
+/_ReSharper.Caches/
+/bin/
